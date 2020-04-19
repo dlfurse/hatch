@@ -11,8 +11,11 @@ namespace hatch {
   class future {
     friend class promise<T...>;
 
+    static constexpr bool simple = sizeof...(T) == 1;
+    static constexpr bool complex = sizeof...(T) > 1;
+
     using reduced = flatwrapped<std::tuple, T...>;
-    using stored = std::conditional_t<sizeof...(T) == 1, std::tuple_element_t<0, reduced>, reduced>;
+    using stored = std::conditional_t<simple, std::tuple_element_t<0, reduced>, reduced>;
 
     /**
      * Construction.
@@ -48,12 +51,12 @@ namespace hatch {
 
   private:
     template <class F, class ...A>
-    static std::enable_if_t<sizeof...(T) == 1, std::result_of_t<F(T...)>> apply(F&& function, A&&... arguments) {
+    static std::enable_if_t<simple, std::result_of_t<F(T...)>> apply(F&& function, A&&... arguments) {
       return function(arguments...);
     }
 
     template <class F, class ...A>
-    static std::enable_if_t<sizeof...(T) > 1, std::result_of_t<F(T...)>> apply(F&& function, A&&... arguments) {
+    static std::enable_if_t<complex, std::result_of_t<F(T...)>> apply(F&& function, A&&... arguments) {
       return std::apply(function, arguments...);
     }
 
@@ -82,7 +85,7 @@ namespace hatch {
     } _storage;
 
   private:
-    std::enable_if_t<(sizeof...(T) > 1), void> complete(const stored& data);
+    std::enable_if_t<complex, void> complete(const stored& data);
     void complete(const T&... data);
     void fail(const std::exception_ptr& excp);
 

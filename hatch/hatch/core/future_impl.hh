@@ -142,7 +142,7 @@ namespace hatch {
   }
 
   template <class ...T>
-  std::enable_if_t<(sizeof...(T) > 1), void> future<T...>::complete(const stored& data) {
+  std::enable_if_t<future<T...>::complex, void> future<T...>::complete(const stored& data) {
     assert(_state == state::pending);
     new (&_storage._value) typename future<T...>::stored(data);
     _state = state::completed;

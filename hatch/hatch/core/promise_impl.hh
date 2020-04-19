@@ -72,7 +72,7 @@ namespace hatch {
   }
 
   template <class ...T>
-  std::enable_if_t<(sizeof...(T) > 1), void> promise<T...>::complete(const stored& data) {
+  std::enable_if_t<promise<T...>::complex, void> promise<T...>::complete(const stored& data) {
     assert(_state == state::pending);
 
     _state = state::completed;
@@ -133,7 +133,7 @@ namespace hatch {
 
   template <class ...T>
   template <class F, class P>
-  std::enable_if_t<(sizeof...(T) > 1), void> promise<T...>::continued<F, P>::complete(const stored& data) {
+  std::enable_if_t<promise<T...>::complex, void> promise<T...>::continued<F, P>::complete(const stored& data) {
     try {
       _promise.complete(std::apply(_function, data));
     } catch (...) {
@@ -198,4 +198,4 @@ namespace hatch {
 
 } // namespace hatch
 
-// HATCH_PROMISE_IMPL_HH
+#endif // HATCH_PROMISE_IMPL_HH

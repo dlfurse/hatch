@@ -11,8 +11,11 @@ namespace hatch {
   class promise {
     friend class future<T...>;
 
+    static constexpr bool simple = sizeof...(T) == 1;
+    static constexpr bool complex = sizeof...(T) > 1;
+
     using reduced = flatwrapped<std::tuple, T...>;
-    using stored = std::conditional_t<sizeof...(T) == 1, std::tuple_element_t<0, reduced>, reduced>;
+    using stored = std::conditional_t<simple, std::tuple_element_t<0, reduced>, reduced>;
 
     /**
      * Construction.
@@ -55,7 +58,7 @@ namespace hatch {
     bool is_completed() const;
     bool is_failed() const;
 
-    std::enable_if_t<(sizeof...(T) > 1), void> complete(const stored& data);
+    std::enable_if_t<complex, void> complete(const stored& data);
     void complete(const T&... data);
     void fail(const std::exception_ptr& excp);
 
@@ -74,7 +77,7 @@ namespace hatch {
   private:
     class continuation {
     public:
-      virtual std::enable_if_t<(sizeof...(T) > 1), void> complete(const stored& data) = 0;
+      virtual std::enable_if_t<complex, void> complete(const stored& data) = 0;
       virtual void complete(const T&... data) = 0;
       virtual void fail(const std::exception_ptr& excp) = 0;
       virtual ~continuation() = default;
@@ -83,7 +86,7 @@ namespace hatch {
     template <class F, class P = mapped_promise<F, T...>>
     class continued final : public continuation {
       public:
-      std::enable_if_t<(sizeof...(T) > 1), void> complete(const stored& data) override;
+      std::enable_if_t<complex, void> complete(const stored& data) override;
       void complete(const T&... data) override ;
       void fail(const std::exception_ptr& excp) override;
       continued(F&& function, P&& promise);
