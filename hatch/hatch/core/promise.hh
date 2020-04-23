@@ -1,11 +1,27 @@
 #ifndef HATCH_PROMISE_HH
 #define HATCH_PROMISE_HH
 
-#ifndef HATCH_ASYNCHRONOUS_HH
-#error "do not include promise.hh directly. include asynchronous.hh instead."
+#ifndef HATCH_ASYNC_HH
+#error "do not include promise.hh directly. include async.hh instead."
 #endif
 
+#include <cassert> // assert
+
+#include <exception> // std::exception_ptr
+#include <list> // std::list
+#include <memory> // std::unique_ptr
+#include <tuple> // std::tuple, std::tuple_element_t
+#include <type_traits> // std::conditional_t, std::enable_if_t
+#include <unordered_set> // std::unordered_set
+
 namespace hatch {
+
+  /**
+   * Promise.
+   *
+   * Promises are unique, writable interfaces which represent a value that has not yet been
+   * computed.  Futures are the corresponding readable interfaces.
+   */
 
   template <class ...T>
   class promise {
@@ -20,8 +36,7 @@ namespace hatch {
     /**
      * Construction.
      *
-     * Promises are unique, writable interfaces which represent a value which has not yet been
-     * computed. Promises may not be copied, only moved.
+     * Promises may not be copied, only moved.
      */
 
   public:
@@ -58,7 +73,8 @@ namespace hatch {
     bool is_completed() const;
     bool is_failed() const;
 
-    std::enable_if_t<complex, void> complete(const stored& data);
+    template <class S, class = std::enable_if_t<complex && std::is_same_v<S, stored>>>
+    void complete(const S& data);
     void complete(const T&... data);
     void fail(const std::exception_ptr& excp);
 
@@ -77,7 +93,6 @@ namespace hatch {
   private:
     class continuation {
     public:
-      virtual std::enable_if_t<complex, void> complete(const stored& data) = 0;
       virtual void complete(const T&... data) = 0;
       virtual void fail(const std::exception_ptr& excp) = 0;
       virtual ~continuation() = default;
@@ -85,11 +100,10 @@ namespace hatch {
 
     template <class F, class P = mapped_promise<F, T...>>
     class continued final : public continuation {
-      public:
-      std::enable_if_t<complex, void> complete(const stored& data) override;
+    public:
       void complete(const T&... data) override ;
       void fail(const std::exception_ptr& excp) override;
-      continued(F&& function, P&& promise);
+      explicit continued(F&& function, P&& promise);
 
       private:
       F _function;

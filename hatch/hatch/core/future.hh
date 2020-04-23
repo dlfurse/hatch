@@ -1,9 +1,16 @@
 #ifndef HATCH_FUTURE_HH
 #define HATCH_FUTURE_HH
 
-#ifndef HATCH_ASYNCHRONOUS_HH
-#error "do not include future.hh directly.  include asynchronous.hh instead."
+#ifndef HATCH_ASYNC_HH
+#error "do not include future.hh directly.  include async.hh instead."
 #endif
+
+#include <cassert> // std::assert
+
+#include <exception> // std::exception_ptr
+#include <tuple> // std::apply, std::tuple, std::tuple_element_t
+#include <type_traits> // std::conditional_t, std::enable_if_t
+#include <utility> // std::forward, std::move
 
 namespace hatch {
 
@@ -34,8 +41,8 @@ namespace hatch {
     future(future&& moved) noexcept;
     future& operator=(future&& moved) noexcept;
 
-    template <class = std::enable_if_t<(sizeof...(T) > 1)>>
-    future(const stored& data);
+    template <class S, class = std::enable_if_t<complex && std::is_same_v<S, stored>>>
+    future(const S& data);
     future(const T&... data);
     future(const std::exception_ptr& excp);
 
@@ -84,8 +91,6 @@ namespace hatch {
       std::exception_ptr _exception;
     } _storage;
 
-  private:
-    std::enable_if_t<complex, void> complete(const stored& data);
     void complete(const T&... data);
     void fail(const std::exception_ptr& excp);
 

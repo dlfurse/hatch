@@ -4,7 +4,7 @@
 namespace hatch {
   class SocketTest : public ::testing::Test {
   protected:
-    socket<socket_domain::inet4, socket_type::tcp> _inet4_tcp_socket;
+    //socket<socket_domain::inet4, socket_type::tcp> _inet4_tcp_socket;
 
   protected:
     void SetUp() override {
@@ -13,6 +13,6 @@ namespace hatch {
   };
 
   TEST_F(SocketTest, SimpleSocketTest) {
-    _inet4_tcp_socket._fd;
+    //_inet4_tcp_socket._fd;
   }
 }

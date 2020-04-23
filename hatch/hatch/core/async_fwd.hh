@@ -1,13 +1,8 @@
-#ifndef HATCH_ASYNCHRONOUS_HH
-#define HATCH_ASYNCHRONOUS_HH
+#ifndef HATCH_ASYNC_FWD_HH
+#define HATCH_ASYNC_FWD_HH
 
-#include <cassert>
-#include <functional>
-#include <list>
-#include <memory>
-#include <tuple>
-#include <type_traits>
-#include <unordered_set>
+#include <tuple> // std::tuple
+#include <type_traits> // std::type_traits
 
 #include <hatch/utility/rewrapper.hh>
 
@@ -26,9 +21,4 @@ namespace hatch {
   using mapped_future = rewrapped<future, std::tuple, std::result_of_t<F(T...)>>;
 }
 
-#include <hatch/core/promise.hh>
-#include <hatch/core/future.hh>
-#include <hatch/core/promise_impl.hh>
-#include <hatch/core/future_impl.hh>
-
-#endif // HATCH_FUTURE_HH
+#endif // HATCH_ASYNC_FWD_HH

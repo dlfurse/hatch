@@ -1,8 +1,8 @@
 #ifndef HATCH_FUTURE_IMPL_HH
 #define HATCH_FUTURE_IMPL_HH
 
-#ifndef HATCH_ASYNCHRONOUS_HH
-#error "do not include future_impl.hh directly.  include asynchronous.hh instead."
+#ifndef HATCH_ASYNC_HH
+#error "do not include future_impl.hh directly.  include async.hh instead."
 #endif
 
 namespace hatch {
@@ -127,8 +127,8 @@ namespace hatch {
   }
 
   template <class ...T>
-  template <class>
-  future<T...>::future(const stored& data) :
+  template <class S, class>
+  future<T...>::future(const S& data) :
       _promise{nullptr},
       _state{state::completed} {
     new (&_storage._value) stored(data);
@@ -139,14 +139,6 @@ namespace hatch {
       _promise{nullptr},
       _state{state::failed} {
     new (&_storage._exception) std::exception_ptr(excp);
-  }
-
-  template <class ...T>
-  std::enable_if_t<future<T...>::complex, void> future<T...>::complete(const stored& data) {
-    assert(_state == state::pending);
-    new (&_storage._value) typename future<T...>::stored(data);
-    _state = state::completed;
-    _promise = nullptr;
   }
 
   template <class ...T>

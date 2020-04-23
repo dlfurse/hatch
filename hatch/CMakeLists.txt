@@ -2,7 +2,7 @@
 # global #
 ##########
 
-cmake_minimum_required(VERSION 2.8)
+cmake_minimum_required(VERSION 2.8.2)
 project(hatch C CXX)
 
 set(MODULE_VERSION_MAJOR 0)
@@ -15,6 +15,10 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${PROJECT_SOURCE_DIR}/cmake/")
 add_definitions(-Wall)
 add_definitions(-std=c++17)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
+
+#########
+# gtest #
+#########
 
 configure_file(CMakeLists.gtest.in.txt googletest/download/CMakeLists.txt)
 execute_process(COMMAND ${CMAKE_COMMAND} -G "${CMAKE_GENERATOR}" .
@@ -37,6 +41,31 @@ add_subdirectory(${CMAKE_CURRENT_BINARY_DIR}/googletest/src
 		${CMAKE_CURRENT_BINARY_DIR}/googletest/build
 		EXCLUDE_FROM_ALL)
 
+############
+# libressl #
+############
+
+configure_file(CMakeLists.libressl.in.txt libressl/download/CMakeLists.txt)
+execute_process(COMMAND ${CMAKE_COMMAND} -G "${CMAKE_GENERATOR}" .
+		RESULT_VARIABLE result
+		WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/libressl/download)
+
+if(result)
+	message(FATAL_ERROR "CMake step for libressl failed: ${result}")
+endif()
+
+execute_process(COMMAND ${CMAKE_COMMAND} --build .
+		RESULT_VARIABLE result
+		WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/libressl/download)
+
+if(result)
+	message(FATAL_ERROR "Build step for libressl failed: ${result}")
+endif()
+
+add_subdirectory(${CMAKE_CURRENT_BINARY_DIR}/libressl/src
+		${CMAKE_CURRENT_BINARY_DIR}/libressl/build
+		EXCLUDE_FROM_ALL)
+
 ###########
 # utility #
 ###########
@@ -50,11 +79,12 @@ set(hatch_utility_sources.hh
 ########
 
 set(hatch_core_sources
+	hatch/core/async.hh
+	hatch/core/async_fwd.hh
 	hatch/core/promise.hh
 	hatch/core/promise_impl.hh
 	hatch/core/future.hh
   hatch/core/future_impl.hh
-	hatch/core/asynchronous.hh
 	hatch/core/socket.hh
 	hatch/core/reactor.hh
 	hatch/core/reactor.cc
@@ -67,7 +97,7 @@ add_library(hatch_core STATIC ${hatch_core_sources})
 ########
 
 set(hatch_core_test_sources
-	test/core/asynchronous.cc
+		test/core/async.cc
 	test/core/socket.cc
 )
 

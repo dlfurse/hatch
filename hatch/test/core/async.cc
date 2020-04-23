@@ -1,4 +1,4 @@
-#include <hatch/core/asynchronous.hh>
+#include <hatch/core/async.hh>
 #include <gtest/gtest.h>
 
 namespace hatch {
@@ -74,8 +74,17 @@ namespace hatch {
     EXPECT_TRUE(_simple_future_one.is_pending());
   }
 
-  TEST_F(AsyncTest, SimplestCompletionTest) {
+  TEST_F(AsyncTest, SimplestCompletionTestValues) {
     _simple_promise->complete(true, 2, 22.2);
+    EXPECT_TRUE(_simple_promise->is_completed());
+    EXPECT_TRUE(_simple_future_zero.is_completed());
+    EXPECT_EQ(_simple_future_zero.get(), std::make_tuple(true, 2, 22.2));
+    EXPECT_TRUE(_simple_future_one.is_completed());
+    EXPECT_EQ(_simple_future_one.get(), 44.4);
+  }
+
+  TEST_F(AsyncTest, SimplestCompletionTestTuple) {
+    _simple_promise->complete(std::make_tuple(true, 2, 22.2));
     EXPECT_TRUE(_simple_promise->is_completed());
     EXPECT_TRUE(_simple_future_zero.is_completed());
     EXPECT_EQ(_simple_future_zero.get(), std::make_tuple(true, 2, 22.2));

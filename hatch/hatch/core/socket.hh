@@ -2,6 +2,7 @@
 #define HATCH_SOCKET_HH
 
 #include <limits>
+#include <string>
 
 //#include <unistd.h>
 //#include <sys/types.h>
@@ -9,7 +10,7 @@
 //#include <netinet/in.h>
 #include <arpa/inet.h>
 
-#include <hatch/core/asynchronous.hh>
+#include <hatch/core/async.hh>
 
 namespace hatch {
   enum class socket_domain {

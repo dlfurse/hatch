@@ -21,9 +21,13 @@ Vagrant.configure("2") do |config|
     sudo yum install -y gcc-c++
     sudo yum install -y gdb
     sudo yum install -y git
+    sudo yum install -y patch
     sudo yum install -y make
     sudo yum install -y cmake3
+    sudo yum install -y automake
+    sudo yum install -y libtool
     sudo yum install -y python3
+    sudo yum install -y perl
     
   EOF
 

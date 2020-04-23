@@ -1,9 +1,11 @@
 #ifndef HATCH_PROMISE_IMPL_HH
 #define HATCH_PROMISE_IMPL_HH
 
-#ifndef HATCH_ASYNCHRONOUS_HH
-#error "do not include promise_impl.hh directly. include asynchronous.hh instead."
+#ifndef HATCH_ASYNC_HH
+#error "do not include promise_impl.hh directly. include async.hh instead."
 #endif
+
+#include <functional>
 
 namespace hatch {
 
@@ -72,17 +74,18 @@ namespace hatch {
   }
 
   template <class ...T>
-  std::enable_if_t<promise<T...>::complex, void> promise<T...>::complete(const stored& data) {
+  template <class S, class>
+  void promise<T...>::complete(const S& data) {
     assert(_state == state::pending);
 
     _state = state::completed;
 
-    for (const auto& future : _futures) {
-      future->complete(data);
+    for (const auto& f : _futures) {
+      std::apply([&](const T&... args){f->complete(args...);}, data);
     }
 
-    for (const auto& continuation : _continuations) {
-      continuation->complete(data);
+    for (const auto& c : _continuations) {
+      std::apply([&](const T&... args){c->complete(args...);}, data);
     }
   }
 
@@ -130,16 +133,6 @@ namespace hatch {
   promise<T...>::continued<F, P>::continued(F&& function, P&& promise) :
       _function{std::move(function)},
       _promise{std::move(promise)} {}
-
-  template <class ...T>
-  template <class F, class P>
-  std::enable_if_t<promise<T...>::complex, void> promise<T...>::continued<F, P>::complete(const stored& data) {
-    try {
-      _promise.complete(std::apply(_function, data));
-    } catch (...) {
-      _promise.fail(std::move(std::current_exception()));
-    }
-  }
 
   template <class ...T>
   template <class F, class P>
