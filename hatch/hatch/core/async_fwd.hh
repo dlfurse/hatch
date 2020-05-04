@@ -2,7 +2,7 @@
 #define HATCH_ASYNC_FWD_HH
 
 #include <tuple> // std::tuple
-#include <type_traits> // std::type_traits
+#include <type_traits> // std::result_of_t
 
 #include <hatch/utility/rewrapper.hh>
 

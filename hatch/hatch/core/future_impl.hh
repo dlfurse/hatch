@@ -3,7 +3,7 @@
 
 #ifndef HATCH_ASYNC_HH
 #error "do not include future_impl.hh directly.  include async.hh instead."
-#endif
+#endif // HATCH_ASYNC_HH
 
 namespace hatch {
 
@@ -11,18 +11,20 @@ namespace hatch {
   future<T...>::future(promise<T...>* promise) :
       _promise{promise},
       _state{state::pending} {
-    if (_promise) {
-      _promise->_futures.insert(this);
-    }
+    this->insert_after(_promise);
+  }
+
+  template <class ...T>
+  future<T...>::future() :
+      _promise{nullptr},
+      _state{state::detached} {
   }
 
   template <class ...T>
   future<T...>::~future() {
-    if (_promise) {
-      _promise->_futures.erase(this);
-    }
-
-    if (_state == state::completed) {
+    if (_state == state::pending) {
+      this->detach();
+    } else if (_state == state::completed) {
       _storage._value.~stored();
     } else if (_state == state::failed) {
       _storage._exception.~exception_ptr();
@@ -33,11 +35,9 @@ namespace hatch {
   future<T...>::future(future&& moved) noexcept :
       _promise{moved._promise},
       _state{moved._state} {
-    if (_promise) {
-      _promise->_futures.insert(this);
-    }
-
-    if (_state == state::completed) {
+    if (_state == state::pending) {
+      this->supplant(&moved);
+    } else if (_state == state::completed) {
       new (&_storage._value) stored(std::move(moved._storage._value));
       moved._storage._value.~stored();
     } else if (_state == state::failed) {
@@ -45,27 +45,22 @@ namespace hatch {
       moved._storage._exception.~exception_ptr();
     }
 
-    if (moved._promise) {
-      moved._promise->_futures.erase(&moved);
-    }
     moved._promise = nullptr;
-    moved._state = state::moved;
+    moved._state = state::detached;
   }
 
   template <class ...T>
   future<T...>& future<T...>::operator=(future&& moved) noexcept {
-    if (_promise) {
-      _promise->_futures.erase(this);
+    if (_state == state::pending) {
+      this->detach();
     }
 
     _promise = moved._promise;
     _state = moved._state;
 
-    if (_promise) {
-      _promise->_futures.insert(this);
-    }
-
-    if (_state == state::completed) {
+    if (_state == state::pending) {
+      this->supplant(&moved);
+    } else if (_state == state::completed) {
       new (&_storage._value) stored(std::move(moved._storage._value));
       moved._storage._value.~stored();
     } else if (_state == state::failed) {
@@ -73,11 +68,8 @@ namespace hatch {
       moved._storage._exception.~exception_ptr();
     }
 
-    if (moved._promise) {
-      moved._promise->_futures.erase(&moved);
-    }
     moved._promise = nullptr;
-    moved._state = state::moved;
+    moved._state = state::detached;
 
     return *this;
   }
@@ -86,11 +78,9 @@ namespace hatch {
   future<T...>::future(const future& copied) :
       _promise{copied._promise},
       _state{copied._state} {
-    if (_promise) {
-      _promise->_futures.insert(this);
-    }
-
-    if (_state == state::completed) {
+    if (_state == state::pending) {
+      this->insert_after(const_cast<future<T...>*>(&copied));
+    } else if (_state == state::completed) {
       new (&_storage._value) stored(copied._storage._value);
     } else if (_state == state::failed) {
       new (&_storage._exception) std::exception_ptr(copied._storage._exception);
@@ -99,18 +89,16 @@ namespace hatch {
 
   template <class ...T>
   future<T...>& future<T...>::operator=(const future& copied) {
-    if (_promise) {
-      _promise->_futures.erase(this);
+    if (_state == state::pending) {
+      this->detach();
     }
 
     _promise = copied._promise;
     _state = copied._state;
 
-    if (_promise) {
-      _promise->_futures.insert(this);
-    }
-
-    if (_state == state::completed) {
+    if (_state == state::pending) {
+      this->insert_after(&copied);
+    } else if (_state == state::completed) {
       new (&_storage._value) stored(copied._storage._value);
     } else if (_state == state::failed) {
       new (&_storage._exception) std::exception_ptr(copied._storage._exception);
@@ -121,7 +109,6 @@ namespace hatch {
 
   template <class ...T>
   future<T...>::future(const T&... data) :
-      _promise{nullptr},
       _state{state::completed} {
     new (&_storage._value) stored(data...);
   }
@@ -129,32 +116,19 @@ namespace hatch {
   template <class ...T>
   template <class S, class>
   future<T...>::future(const S& data) :
-      _promise{nullptr},
       _state{state::completed} {
     new (&_storage._value) stored(data);
   }
 
   template <class ...T>
   future<T...>::future(const std::exception_ptr& excp) :
-      _promise{nullptr},
       _state{state::failed} {
     new (&_storage._exception) std::exception_ptr(excp);
   }
 
   template <class ...T>
-  void future<T...>::complete(const T&... data) {
-    assert(_state == state::pending);
-    new (&_storage._value) typename future<T...>::stored(data...);
-    _state = state::completed;
-    _promise = nullptr;
-  }
-
-  template <class ...T>
-  void future<T...>::fail(const std::exception_ptr &excp) {
-    assert(_state == state::pending);
-    new (&_storage._exception) std::exception_ptr(excp);
-    _state = state::failed;
-    _promise = nullptr;
+  bool future<T...>::is_detached() const {
+    return _state == state::detached;
   }
 
   template <class ...T>
@@ -175,11 +149,6 @@ namespace hatch {
   template <class ...T>
   bool future<T...>::is_failed() const {
     return _state == state::failed;
-  }
-
-  template <class ...T>
-  bool future<T...>::is_moved() const {
-    return _state == state::moved;
   }
 
   template <class ...T>
@@ -228,7 +197,6 @@ namespace hatch {
   mapped_future<F, T...> future<T...>::then(F&& function) {
     switch (_state) {
       case state::pending:
-        assert(_promise);
         return _promise->then(std::move(function));
       case state::completed:
         try {
@@ -243,7 +211,7 @@ namespace hatch {
     }
 
     assert(false);
-    return {nullptr};
+    return {};
   }
 
   template <class ...T>
@@ -251,7 +219,6 @@ namespace hatch {
   future<T...> future<T...>::recover(F&& function) {
     switch (_state) {
       case state::pending:
-        assert(_promise);
         return _promise->recover(std::move(function));
       case state::completed:
         return future<T...>(*this);
@@ -266,7 +233,7 @@ namespace hatch {
     }
 
     assert(false);
-    return {nullptr};
+    return {};
   }
 
 } // namespace hatch

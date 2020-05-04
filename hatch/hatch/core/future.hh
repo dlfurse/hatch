@@ -3,19 +3,21 @@
 
 #ifndef HATCH_ASYNC_HH
 #error "do not include future.hh directly.  include async.hh instead."
-#endif
+#endif // HATCH_ASYNC_HH
 
-#include <cassert> // std::assert
+#include <hatch/core/list.hh> // node<future<T...>>
 
 #include <exception> // std::exception_ptr
 #include <tuple> // std::apply, std::tuple, std::tuple_element_t
 #include <type_traits> // std::conditional_t, std::enable_if_t
 #include <utility> // std::forward, std::move
 
+#include <cassert> // std::assert
+
 namespace hatch {
 
   template <class ...T>
-  class future {
+  class future : public node<future<T...>> {
     friend class promise<T...>;
 
     static constexpr bool simple = sizeof...(T) == 1;
@@ -31,9 +33,14 @@ namespace hatch {
      * promises.
      */
 
+
+  private:
+    mutable promise<T...>* _promise;
+    future(promise<T...>* promise);
+
   public:
     ~future();
-    future(promise<T...>* promise = nullptr);
+    future();
 
     future(const future& copied);
     future& operator=(const future& copied);
@@ -46,34 +53,34 @@ namespace hatch {
     future(const T&... data);
     future(const std::exception_ptr& excp);
 
-  private:
-    promise<T...>* _promise;
-
-  public:
-    template<class F>
-    mapped_future<F, T...> then(F&& function);
-
-    template <class F>
-    future<T...> recover(F&& function);
+    /**
+     * State.
+     *
+     * Future state elaboration.
+     */
 
   private:
-    template <class F, class ...A>
-    static std::enable_if_t<simple, std::result_of_t<F(T...)>> apply(F&& function, A&&... arguments) {
-      return function(arguments...);
-    }
-
-    template <class F, class ...A>
-    static std::enable_if_t<complex, std::result_of_t<F(T...)>> apply(F&& function, A&&... arguments) {
-      return std::apply(function, arguments...);
-    }
-
-    enum class state {
-      moved = 0,
+    mutable enum class state {
+      detached = 0,
       pending = 1,
       completed = 2,
       failed = 3,
     } _state;
 
+  public:
+    bool is_detached() const;
+    bool is_pending() const;
+    bool is_finished() const;
+    bool is_completed() const;
+    bool is_failed() const;
+
+    /**
+     * Value.
+     *
+     * Futures hold a durable copy of the promise's value.
+     */
+
+  private:
     union storage {
       storage() {};
       ~storage() {};
@@ -91,16 +98,7 @@ namespace hatch {
       std::exception_ptr _exception;
     } _storage;
 
-    void complete(const T&... data);
-    void fail(const std::exception_ptr& excp);
-
   public:
-    bool is_moved() const;
-    bool is_pending() const;
-    bool is_finished() const;
-    bool is_completed() const;
-    bool is_failed() const;
-
     const stored& get() const&;
     stored&& get() &&;
 
@@ -108,6 +106,30 @@ namespace hatch {
     stored&& value() &&;
 
     std::exception_ptr exception() const;
+
+    /**
+     * Continuations.
+     *
+     * Futures can be linked to other futures by functions which map values.
+     */
+
+  private:
+    template <class F, class ...A>
+    static std::enable_if_t<simple, std::result_of_t<F(T...)>> apply(F&& function, A&&... arguments) {
+      return function(arguments...);
+    }
+
+    template <class F, class ...A>
+    static std::enable_if_t<complex, std::result_of_t<F(T...)>> apply(F&& function, A&&... arguments) {
+      return std::apply(function, arguments...);
+    }
+
+  public:
+    template<class F>
+    mapped_future<F, T...> then(F&& function);
+
+    template <class F>
+    future<T...> recover(F&& function);
   };
 
 } // namespace hatch

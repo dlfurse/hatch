@@ -3,17 +3,12 @@
 ##########
 
 cmake_minimum_required(VERSION 2.8.2)
-project(hatch C CXX)
-
-set(MODULE_VERSION_MAJOR 0)
-set(MODULE_VERSION_MINOR 1)
-set(MODULE_VERSION_PATCH 0)
-set(MODULE_VERSION "${MODULE_VERSION_MAJOR}.${MODULE_VERSION_MINOR}.${MODULE_VERSION_PATCH}")
-set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${PROJECT_SOURCE_DIR}/cmake/")
-
+cmake_policy(SET CMP0048 NEW)
+project(hatch
+		VERSION 0.1.0
+		LANGUAGES C CXX)
 
 add_definitions(-Wall)
-add_definitions(-std=c++17)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 
 #########
@@ -79,29 +74,41 @@ set(hatch_utility_sources.hh
 ########
 
 set(hatch_core_sources
+	hatch/core/memory.hh
+	hatch/core/pointer.hh
+	hatch/core/pointer_impl.hh
+	hatch/core/allocator.hh
+	hatch/core/allocator_impl.hh
+	hatch/core/tree.hh
 	hatch/core/async.hh
 	hatch/core/async_fwd.hh
 	hatch/core/promise.hh
 	hatch/core/promise_impl.hh
 	hatch/core/future.hh
   hatch/core/future_impl.hh
+	hatch/core/streamer.hh
+	hatch/core/streamer.cc
 	hatch/core/socket.hh
 	hatch/core/reactor.hh
 	hatch/core/reactor.cc
 )
 
 add_library(hatch_core STATIC ${hatch_core_sources})
+set_property(TARGET hatch_core PROPERTY CXX_STANDARD 17)
 
 ########
 # test #
 ########
 
 set(hatch_core_test_sources
-		test/core/async.cc
-	test/core/socket.cc
+#	test/core/memory.cc
+	test/core/async.cc
+#	test/core/buffer.cc
+#	test/core/socket.cc
 )
 
 add_executable(hatch_core_test ${hatch_core_test_sources})
-target_link_libraries(hatch_core_test gtest_main)
+set_property(TARGET hatch_core_test PROPERTY CXX_STANDARD 17)
+target_link_libraries(hatch_core_test gtest_main tls)
 
 add_test(NAME hatch_core_test COMMAND hatch_core_test)

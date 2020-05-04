@@ -5,6 +5,8 @@
 #error "do not include promise.hh directly. include async.hh instead."
 #endif
 
+#include <hatch/core/list.hh>
+
 #include <cassert> // assert
 
 #include <exception> // std::exception_ptr
@@ -24,7 +26,7 @@ namespace hatch {
    */
 
   template <class ...T>
-  class promise {
+  class promise : public precessor<future<T...>> {
     friend class future<T...>;
 
     static constexpr bool simple = sizeof...(T) == 1;
@@ -73,39 +75,29 @@ namespace hatch {
     bool is_completed() const;
     bool is_failed() const;
 
-    template <class S, class = std::enable_if_t<complex && std::is_same_v<S, stored>>>
-    void complete(const S& data);
-    void complete(const T&... data);
-    void fail(const std::exception_ptr& excp);
-
-  private:
-    std::unordered_set<future<T...>*> _futures;
-
-  public:
-    future<T...> awaited();
-
     /**
      * Continuations and Recoveries.
      *
-     * Promises can be linked to other, dependent values.
+     * Promises can be linked to other, dependent values by functions.
      */
 
-  private:
     class continuation {
     public:
+      virtual ~continuation() = default;
+
       virtual void complete(const T&... data) = 0;
       virtual void fail(const std::exception_ptr& excp) = 0;
-      virtual ~continuation() = default;
     };
 
     template <class F, class P = mapped_promise<F, T...>>
     class continued final : public continuation {
     public:
-      void complete(const T&... data) override ;
-      void fail(const std::exception_ptr& excp) override;
       explicit continued(F&& function, P&& promise);
 
-      private:
+      void complete(const T&... data) override ;
+      void fail(const std::exception_ptr& excp) override;
+
+    private:
       F _function;
       P _promise;
     };
@@ -114,15 +106,17 @@ namespace hatch {
 
     class recovery {
     public:
-      virtual void handle(const std::exception_ptr& excp, promise& p) = 0;
       virtual ~recovery() = default;
+
+      virtual void handle(const std::exception_ptr& excp, promise& p) = 0;
     };
 
     template <class F>
     class recovered final : public recovery {
     public:
-      void handle(const std::exception_ptr& excp, promise& p) override;
       explicit recovered(F&& function);
+
+      void handle(const std::exception_ptr& excp, promise& p) override;
 
     private:
       F _function;
@@ -131,6 +125,13 @@ namespace hatch {
     std::unique_ptr<recovery> _recovery;
 
   public:
+    template <class S, class = std::enable_if_t<complex && std::is_same_v<S, stored>>>
+    void complete(const S& value);
+    void complete(const T&... values);
+    void fail(const std::exception_ptr& exception);
+
+    future<T...> awaited();
+
     template <class F>
     mapped_future<F, T...> then(F&& function);
 

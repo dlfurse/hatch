@@ -1,6 +1,8 @@
 #include <hatch/core/async.hh>
 #include <gtest/gtest.h>
 
+#include <iostream>
+
 namespace hatch {
   class AsyncTest : public ::testing::Test {
   protected:
@@ -122,7 +124,7 @@ namespace hatch {
 
   TEST_F(AsyncTest, SimplestMoveFutureTest) {
     future<double> f = std::move(_simple_future_one);
-    EXPECT_TRUE(_simple_future_one.is_moved());
+    EXPECT_TRUE(_simple_future_one.is_detached());
     EXPECT_TRUE(f.is_pending());
 
     _simple_promise->complete(true, 2, 22.2);

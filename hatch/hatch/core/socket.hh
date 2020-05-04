@@ -16,7 +16,7 @@ namespace hatch {
   enum class socket_domain {
     inet4 = 0,
     inet6 = 1,
-    unix = 2,
+    local = 2,
   };
 
   template <socket_domain D>
@@ -38,7 +38,7 @@ namespace hatch {
   };
 
   template <>
-  class socket_domain_traits<socket_domain::unix> {
+  class socket_domain_traits<socket_domain::local> {
   public:
     static constexpr sa_family_t value() { return PF_UNIX; }
   };
