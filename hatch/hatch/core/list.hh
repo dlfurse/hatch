@@ -1,53 +1,89 @@
 #ifndef HATCH_LIST_HH
 #define HATCH_LIST_HH
 
+#ifndef HATCH_STRUCTURES_HH
+#error "do not include list.hh directly. include structures.hh instead."
+#endif
+
+#include <type_traits> // std::is_base_of_v
+
 namespace hatch {
 
   template <class T>
-  class node;
+  class list;
 
   template <class T>
-  class successor;
+  class list_node;
 
   template <class T>
-  class precessor;
+  class list_base {
+  public:
+    friend class list<T>;
+    friend class list_node<T>;
+
+  public:
+    list_base();
+    ~list_base() = default;
+
+    bool operator!=(const list_base& compared) const;
+
+    list_base& operator++();
+    const list_base& operator++() const;
+
+    list_base& operator--();
+    const list_base& operator--() const;
+
+    T& operator*();
+    const T& operator*() const;
+
+  private:
+    list_base* _prev;
+    list_base* _next;
+  };
 
   template <class T>
-  class successor {
+  class list_node : public list_base<T> {
   protected:
-    explicit successor(precessor<T>* prec = nullptr);
-    precessor<T>* _prec{nullptr};
+    list_node() = default;
 
   public:
-    friend class node<T>;
-    precessor<T>* prec();
+    friend class list<T>;
+    ~list_node();
+
+    void detach();
+    void detach_and_exchange_with(list_node& node);
+    void detach_and_insert_after(list_node& prev);
+    void detach_and_insert_before(list_node& next);
   };
 
   template <class T>
-  class precessor {
-  protected:
-    explicit precessor(successor<T>* succ = nullptr);
-    successor<T>* _succ{nullptr};
-
+  class list : public list_base<T> {
   public:
-    friend class node<T>;
-    successor<T>* succ();
+    static_assert(std::is_base_of_v<list_node<T>, T>);
+    list();
+    ~list();
+
+    list(list&& moved) noexcept;
+    list& operator=(list&& moved) noexcept;
+
+    bool empty() const;
+    void clear();
+
+    list_base<T>& begin();
+    const list_base<T>& begin() const;
+
+    list_base<T>& end();
+    const list_base<T>& end() const;
+
+    T* get_front() const;
+    T* pop_front();
+    void push_front(T& node);
+
+    T* get_back() const;
+    T* pop_back();
+    void push_back(T& node);
   };
 
-  template <class T>
-  class node : public successor<T>, public precessor<T>  {
-  public:
-    explicit node(precessor<T>* prec = nullptr, successor<T>* succ = nullptr);
-
-  public:
-    bool detach();
-    bool supplant(node<T>* node);
-    bool insert_after(precessor<T>* prec);
-    bool insert_before(successor<T>* succ);
-  };
-
-}
-
-#include <hatch/core/list_impl.hh>
+} // namespace hatch
 
 #endif // HATCH_LIST_HH

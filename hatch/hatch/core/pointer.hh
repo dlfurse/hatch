@@ -20,8 +20,10 @@ namespace hatch {
   public:
     pointer(const pointer& ptr);
     pointer& operator=(const pointer& ptr);
+
     pointer(pointer&& ptr) noexcept;
     pointer& operator=(pointer&& ptr);
+
     ~pointer();
 
   public:

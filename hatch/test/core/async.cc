@@ -4,6 +4,7 @@
 #include <iostream>
 
 namespace hatch {
+
   class AsyncTest : public ::testing::Test {
   protected:
     std::unique_ptr<promise<bool, int, double>> _simple_promise;
@@ -185,4 +186,5 @@ namespace hatch {
       FAIL() << "complex failure test threw wrong type";
     }
   }
+
 }

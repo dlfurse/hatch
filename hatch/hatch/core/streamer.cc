@@ -308,7 +308,7 @@ namespace hatch {
   }
 
 
-  buffer streamer::create(producer& producer) {
+  streamer::buffer streamer::create(producer& producer) {
     iovec* iovec = _iovecs;
     size_t count = 0;
 

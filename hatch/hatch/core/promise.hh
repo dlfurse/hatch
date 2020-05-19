@@ -5,9 +5,7 @@
 #error "do not include promise.hh directly. include async.hh instead."
 #endif
 
-#include <hatch/core/list.hh>
-
-#include <cassert> // assert
+#include <hatch/core/structures.hh> // list<T>
 
 #include <exception> // std::exception_ptr
 #include <list> // std::list
@@ -15,6 +13,8 @@
 #include <tuple> // std::tuple, std::tuple_element_t
 #include <type_traits> // std::conditional_t, std::enable_if_t
 #include <unordered_set> // std::unordered_set
+
+#include <cassert> // assert
 
 namespace hatch {
 
@@ -26,7 +26,7 @@ namespace hatch {
    */
 
   template <class ...T>
-  class promise : public precessor<future<T...>> {
+  class promise {
     friend class future<T...>;
 
     static constexpr bool simple = sizeof...(T) == 1;
@@ -80,6 +80,12 @@ namespace hatch {
      *
      * Promises can be linked to other, dependent values by functions.
      */
+
+  private:
+    void dispossess_futures();
+    void repossess_futures();
+
+    future<T...>* _future;
 
     class continuation {
     public:

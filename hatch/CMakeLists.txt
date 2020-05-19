@@ -5,8 +5,8 @@
 cmake_minimum_required(VERSION 2.8.2)
 cmake_policy(SET CMP0048 NEW)
 project(hatch
-		VERSION 0.1.0
-		LANGUAGES C CXX)
+    VERSION 0.1.0
+    LANGUAGES C CXX)
 
 add_definitions(-Wall)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
@@ -17,24 +17,24 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 
 configure_file(CMakeLists.gtest.in.txt googletest/download/CMakeLists.txt)
 execute_process(COMMAND ${CMAKE_COMMAND} -G "${CMAKE_GENERATOR}" .
-		RESULT_VARIABLE result
-		WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/googletest/download)
+    RESULT_VARIABLE result
+    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/googletest/download)
 
 if(result)
-	message(FATAL_ERROR "CMake step for googletest failed: ${result}")
+  message(FATAL_ERROR "CMake step for googletest failed: ${result}")
 endif()
 
 execute_process(COMMAND ${CMAKE_COMMAND} --build .
-		RESULT_VARIABLE result
-		WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/googletest/download)
+    RESULT_VARIABLE result
+    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/googletest/download)
 
 if(result)
-	message(FATAL_ERROR "Build step for googletest failed: ${result}")
+  message(FATAL_ERROR "Build step for googletest failed: ${result}")
 endif()
 
 add_subdirectory(${CMAKE_CURRENT_BINARY_DIR}/googletest/src
-		${CMAKE_CURRENT_BINARY_DIR}/googletest/build
-		EXCLUDE_FROM_ALL)
+    ${CMAKE_CURRENT_BINARY_DIR}/googletest/build
+    EXCLUDE_FROM_ALL)
 
 ############
 # libressl #
@@ -42,31 +42,31 @@ add_subdirectory(${CMAKE_CURRENT_BINARY_DIR}/googletest/src
 
 configure_file(CMakeLists.libressl.in.txt libressl/download/CMakeLists.txt)
 execute_process(COMMAND ${CMAKE_COMMAND} -G "${CMAKE_GENERATOR}" .
-		RESULT_VARIABLE result
-		WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/libressl/download)
+    RESULT_VARIABLE result
+    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/libressl/download)
 
 if(result)
-	message(FATAL_ERROR "CMake step for libressl failed: ${result}")
+  message(FATAL_ERROR "CMake step for libressl failed: ${result}")
 endif()
 
 execute_process(COMMAND ${CMAKE_COMMAND} --build .
-		RESULT_VARIABLE result
-		WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/libressl/download)
+    RESULT_VARIABLE result
+    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/libressl/download)
 
 if(result)
-	message(FATAL_ERROR "Build step for libressl failed: ${result}")
+  message(FATAL_ERROR "Build step for libressl failed: ${result}")
 endif()
 
 add_subdirectory(${CMAKE_CURRENT_BINARY_DIR}/libressl/src
-		${CMAKE_CURRENT_BINARY_DIR}/libressl/build
-		EXCLUDE_FROM_ALL)
+    ${CMAKE_CURRENT_BINARY_DIR}/libressl/build
+    EXCLUDE_FROM_ALL)
 
 ###########
 # utility #
 ###########
 
 set(hatch_utility_sources.hh
-	hatch/utility/rewrapper.hh
+  hatch/utility/rewrapper.hh
 )
 
 ########
@@ -74,23 +74,31 @@ set(hatch_utility_sources.hh
 ########
 
 set(hatch_core_sources
-	hatch/core/memory.hh
-	hatch/core/pointer.hh
-	hatch/core/pointer_impl.hh
-	hatch/core/allocator.hh
-	hatch/core/allocator_impl.hh
-	hatch/core/tree.hh
-	hatch/core/async.hh
-	hatch/core/async_fwd.hh
-	hatch/core/promise.hh
-	hatch/core/promise_impl.hh
-	hatch/core/future.hh
+  hatch/core/structures.hh
+  hatch/core/structures_fwd.hh
+  hatch/core/list.hh
+  hatch/core/list_impl.hh
+  hatch/core/tree.hh
+
+  hatch/core/memory.hh
+  hatch/core/memory_fwd.hh
+  hatch/core/pointer.hh
+  hatch/core/pointer_impl.hh
+  hatch/core/allocator.hh
+  hatch/core/allocator_impl.hh
+
+  hatch/core/async.hh
+  hatch/core/async_fwd.hh
+  hatch/core/promise.hh
+  hatch/core/promise_impl.hh
+  hatch/core/future.hh
   hatch/core/future_impl.hh
-	hatch/core/streamer.hh
-	hatch/core/streamer.cc
-	hatch/core/socket.hh
-	hatch/core/reactor.hh
-	hatch/core/reactor.cc
+
+#  hatch/core/streamer.hh
+#  hatch/core/streamer.cc
+  hatch/core/socket.hh
+  hatch/core/reactor.hh
+  hatch/core/reactor.cc
 )
 
 add_library(hatch_core STATIC ${hatch_core_sources})
@@ -101,8 +109,9 @@ set_property(TARGET hatch_core PROPERTY CXX_STANDARD 17)
 ########
 
 set(hatch_core_test_sources
-#	test/core/memory.cc
-	test/core/async.cc
+#  test/core/structures.cc
+  test/core/memory.cc
+  test/core/async.cc
 #	test/core/buffer.cc
 #	test/core/socket.cc
 )

@@ -5,73 +5,45 @@
 #error "do not include promise_impl.hh directly. include async.hh instead."
 #endif
 
-#include <iostream>
-
 namespace hatch {
 
   template <class ...T>
   promise<T...>::promise() :
       _state{state::pending},
+      _future{nullptr},
       _continuations{},
       _recovery{} {
   }
 
   template <class ...T>
   promise<T...>::~promise() {
-    if (is_pending()) {
-      while (auto* succ = this->succ()) {
-        auto* fut = static_cast<future<T...>*>(succ);
-        fut->detach();
-        fut->_promise = nullptr;
-        fut->_state = future<T...>::state::detached;
-      }
-    }
+    dispossess_futures();
   }
 
   template <class ...T>
   promise<T...>::promise(promise&& moved) noexcept :
       _state{moved._state},
+      _future{moved._future},
       _continuations{std::move(moved._continuations)},
       _recovery{std::move(moved._recovery)} {
-    if (is_pending()) {
-      if (auto* succ = static_cast<future<T...>*>(moved.succ())) {
-        this->_succ = succ;
-        succ->_prec = this;
-        while (succ) {
-          succ->_promise = this;
-          succ = static_cast<future<T...>*>(succ->succ());
-        }
-      }
-    }
-    moved._succ = nullptr;
+    repossess_futures();
     moved._state = state::moved;
+    moved._future = nullptr;
   }
 
   template <class ...T>
   promise<T...>& promise<T...>::operator=(promise&& moved) noexcept {
-    if (is_pending()) {
-      while (auto* succ = this->succ()) {
-        auto* fut = static_cast<future<T...>*>(succ);
-        fut->detach();
-        fut->_promise = nullptr;
-        fut->_state = future<T...>::state::detached;
-      }
-    }
+    dispossess_futures();
+
     _state = moved._state;
+    _future = moved._future;
     _continuations = std::move(moved._continuations);
     _recovery = std::move(moved._recovery);
-    if (is_pending()) {
-      if (auto* succ = static_cast<future<T...>*>(moved.succ())) {
-        this->_succ = succ;
-        succ->_prec = this;
-        while (succ) {
-          succ->_promise = this;
-          succ = static_cast<future<T...>*>(succ->succ());
-        }
-      }
-    }
-    moved._succ = nullptr;
+
+    repossess_futures();
     moved._state = state::moved;
+    moved._future = nullptr;
+
     return *this;
   }
 
@@ -100,73 +72,24 @@ namespace hatch {
     return _state == state::failed;
   }
 
+
   template <class ...T>
-  template <class S, class>
-  void promise<T...>::complete(const S& data) {
-    assert(is_pending());
-
-    _state = state::completed;
-
-    while (auto* f = static_cast<future<T...>*>(this->succ())) {
-      new (&f->_storage._value) typename future<T...>::stored(data);
-      f->detach();
-      f->_promise = nullptr;
-      f->_state = future<T...>::state::completed;
-    }
-
-    for (const auto& c : _continuations) {
-      std::apply([&](const T&... args){c->complete(args...);}, data);
-    }
+  void promise<T...>::dispossess_futures() {
+    while (_future) {
+      _future->_promise = nullptr;
+      _future->_state = future<T...>::state::detached;
+      _future->detach();
+    };
   }
 
   template <class ...T>
-  void promise<T...>::complete(const T&... data) {
-    assert(is_pending());
-
-    _state = state::completed;
-
-    while (auto* f = static_cast<future<T...>*>(this->succ())) {
-      new (&f->_storage._value) typename future<T...>::stored(data...);
-      f->detach();
-      f->_promise = nullptr;
-      f->_state = future<T...>::state::completed;
-    }
-
-    for (const auto& continuation : _continuations) {
-      continuation->complete(data...);
-    }
-  }
-
-  template <class ...T>
-  void promise<T...>::fail(const std::exception_ptr& excp) {
-    assert(is_pending());
-
-    if (_recovery) {
-      auto* recovery = _recovery.release();
-      _recovery.reset();
-      recovery->handle(excp, *this);
-      delete recovery;
-    } else {
-      _state = state::failed;
-
-      while (auto* f = static_cast<future<T...>*>(this->succ())) {
-        new (&f->_storage._exception) std::exception_ptr(excp);
-        f->detach();
-        f->_promise = nullptr;
-        f->_state = future<T...>::state::failed;
-      }
-
-      while (auto* continuation = _continuations.front().release()) {
-        _continuations.pop_front();
-        continuation->fail(excp);
-        delete continuation;
-      }
-    }
-  }
-
-  template <class ...T>
-  future<T...> promise<T...>::awaited() {
-    return {this};
+  void promise<T...>::repossess_futures() {
+    auto* current = _future;
+    while (current) {
+      current->_promise = this;
+      assert(current->_state == future<T...>::state::pending);
+      current = current->_next;
+    };
   }
 
 
@@ -208,6 +131,83 @@ namespace hatch {
     }
   }
 
+
+  template <class ...T>
+  template <class S, class>
+  void promise<T...>::complete(const S& data) {
+    assert(is_pending());
+    _state = state::completed;
+
+    while (_future) {
+      auto& current = *_future;
+      _future->detach();
+      new (&current._storage._value) typename future<T...>::stored(data);
+      current._state = future<T...>::state::completed;
+      current._promise = nullptr;
+    };
+
+    for (const auto& c : _continuations) {
+      std::apply([&](const T&... args){c->complete(args...);}, data);
+    }
+  }
+
+  template <class ...T>
+  void promise<T...>::complete(const T&... data) {
+    assert(is_pending());
+    _state = state::completed;
+
+    while (_future) {
+      auto& current = *_future;
+      _future->detach();
+      new (&current._storage._value) typename future<T...>::stored(data...);
+      current._state = future<T...>::state::completed;
+      current._promise = nullptr;
+    };
+
+    for (const auto& continuation : _continuations) {
+      continuation->complete(data...);
+    }
+  }
+
+  template <class ...T>
+  void promise<T...>::fail(const std::exception_ptr& excp) {
+    assert(is_pending());
+
+    if (_recovery) {
+      auto* recovery = _recovery.release();
+      _recovery.reset();
+      recovery->handle(excp, *this);
+      delete recovery;
+    } else {
+      _state = state::failed;
+
+      while (_future) {
+        auto& current = *_future;
+        _future->detach();
+        new (&current._storage._exception) std::exception_ptr(excp);
+        current._state = future<T...>::state::failed;
+        current._promise = nullptr;
+      };
+
+      for (const auto& continuation : _continuations) {
+        continuation->fail(excp);
+      }
+    }
+  }
+
+  template <class ...T>
+  future<T...> promise<T...>::awaited() {
+    future<T...> future(this);
+
+    if (_future) {
+      _future->before(future);
+    } else {
+      _future = &future;
+    }
+
+    return future;
+  }
+
   template <class ...T>
   template <class F>
   mapped_future<F, T...> promise<T...>::then(F&& function) {
@@ -222,13 +222,13 @@ namespace hatch {
 
   template <class ...T>
   template <class F>
-  future<T...> promise<T...>::recover(F &&function) {
+  future<T...> promise<T...>::recover(F&& function) {
     assert(!_recovery);
 
     auto recovery = new recovered<F>(std::move(function));
     _recovery.reset(recovery);
 
-    return this;
+    return awaited();
   }
 
 } // namespace hatch

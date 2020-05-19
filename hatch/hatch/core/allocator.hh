@@ -24,25 +24,17 @@ namespace hatch {
     allocator(uint64_t min_capacity = 1024, uint8_t max_doubling = 8);
     ~allocator();
 
+  public:
     template <class ...Args>
     pointer<T> create(Args&&... args);
+
     void destroy(pointer<T>& destroyed);
 
-    uint64_t allocated() const {
-      return _allocated;
-    }
-
-    uint64_t capacity() const {
-      return _capacity;
-    }
-
-    uint64_t growth_increment() const {
-      return _growth_increment;
-    }
-
-    uint64_t shrink_threshold() const {
-      return _shrink_threshold;
-    }
+  public:
+    uint64_t allocated() const;
+    uint64_t capacity() const;
+    uint64_t growth_increment() const;
+    uint64_t shrink_threshold() const;
 
   private:
     class node {

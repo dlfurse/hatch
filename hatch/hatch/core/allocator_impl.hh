@@ -28,13 +28,12 @@ namespace hatch {
 
     _free = 0;
     for (uint64_t index = 0; index < _capacity; index++) {
-      node* pointer = &_data[index];
       if (index == _capacity - 1) {
-        *pointer = {index - 1, 0, nullptr};
+        _data[index] = {index - 1, 0, nullptr};
       } else if (index == 0) {
-        *pointer = {_capacity - 1, index + 1, nullptr};
+        _data[index] = {_capacity - 1, index + 1, nullptr};
       } else {
-        *pointer = {index - 1, index + 1, nullptr};
+        _data[index] = {index - 1, index + 1, nullptr};
       }
     }
   }
@@ -136,6 +135,7 @@ namespace hatch {
             }
             ++old_index;
           }
+          std::free(old_data);
 
           _free = new_index;
           for (uint64_t index = new_index; index < _capacity; index++) {
@@ -171,6 +171,26 @@ namespace hatch {
       pointer = pointer->_next;
     }
     destroyed_node.created = nullptr;
+  }
+
+  template <class T>
+  uint64_t allocator<T>::allocated() const {
+    return _allocated;
+  }
+
+  template <class T>
+  uint64_t allocator<T>::capacity() const {
+    return _capacity;
+  }
+
+  template <class T>
+  uint64_t allocator<T>::growth_increment() const {
+    return _growth_increment;
+  }
+
+  template <class T>
+  uint64_t allocator<T>::shrink_threshold() const {
+    return _shrink_threshold;
   }
 
 }

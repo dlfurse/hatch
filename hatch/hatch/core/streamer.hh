@@ -78,8 +78,6 @@ namespace hatch {
     iovec* _iovecs;
   };
 
-  using buffer = streamer::buffer;
-
 }
 
 #endif

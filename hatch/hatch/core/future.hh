@@ -5,7 +5,7 @@
 #error "do not include future.hh directly.  include async.hh instead."
 #endif // HATCH_ASYNC_HH
 
-#include <hatch/core/list.hh> // node<future<T...>>
+#include <hatch/core/structures.hh> // list_node<T>
 
 #include <exception> // std::exception_ptr
 #include <tuple> // std::apply, std::tuple, std::tuple_element_t
@@ -17,7 +17,7 @@
 namespace hatch {
 
   template <class ...T>
-  class future : public node<future<T...>> {
+  class future {
     friend class promise<T...>;
 
     static constexpr bool simple = sizeof...(T) == 1;
@@ -35,8 +35,16 @@ namespace hatch {
 
 
   private:
-    mutable promise<T...>* _promise;
+    void detach();
+    void before(future& future);
+    void after(future& future);
+    void replace(future& future);
+
     future(promise<T...>* promise);
+
+    future<T...>* _prev;
+    future<T...>* _next;
+    promise<T...>* _promise;
 
   public:
     ~future();
@@ -60,7 +68,7 @@ namespace hatch {
      */
 
   private:
-    mutable enum class state {
+    enum class state {
       detached = 0,
       pending = 1,
       completed = 2,
