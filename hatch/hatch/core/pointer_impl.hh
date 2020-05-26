@@ -16,6 +16,18 @@ namespace hatch {
     _allocator->_data[index].created = this;
   }
 
+
+  template <class T>
+  pointer<T>::pointer() :
+      _allocator{nullptr},
+      _index{0} {
+  }
+
+  template <class T>
+  pointer<T>::~pointer() {
+    detach();
+  }
+
   template <class T>
   pointer<T>::pointer(const pointer& ptr) {
     after(ptr);
@@ -23,8 +35,10 @@ namespace hatch {
 
   template <class T>
   pointer<T>& pointer<T>::operator=(const pointer& ptr) {
-    detach();
-    after(ptr);
+    if (this != &ptr) {
+      detach();
+      after(ptr);
+    }
     return *this;
   }
 
@@ -34,15 +48,12 @@ namespace hatch {
   }
 
   template <class T>
-  pointer<T>& pointer<T>::operator=(pointer<T> &&ptr) {
-    detach();
-    replace(ptr);
+  pointer<T>& pointer<T>::operator=(pointer<T> &&ptr) noexcept {
+    if (this != &ptr) {
+      detach();
+      replace(ptr);
+    }
     return *this;
-  }
-
-  template <class T>
-  pointer<T>::~pointer() {
-    detach();
   }
 
   template <class T>
@@ -73,6 +84,7 @@ namespace hatch {
         }
       }
     }
+    _allocator = nullptr;
   }
 
   template <class T>

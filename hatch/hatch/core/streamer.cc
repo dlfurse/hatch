@@ -1,97 +1,10 @@
 #include <hatch/core/streamer.hh>
 
+#include <hatch/core/memory.hh>
+
 #include <cassert>
 
 namespace hatch {
-
-  class streamer::block {
-  public:
-    uint8_t* head;
-    uint8_t* writable;
-    uint8_t* readable;
-  };
-
-  class streamer::chunk {
-  public:
-    size_t size;
-    block* head;
-    chunk* succ;
-    chunk* prec;
-    chunk* next;
-    chunk* prev;
-  };
-
-  streamer::chunk* streamer::alloc_chunk() {
-    auto chunk = _next_chunk;
-    auto prev = _next_chunk->prev;
-    auto next = _next_chunk->next;
-
-    prev->next = next;
-    next->prev = prev;
-
-    chunk->size = 0;
-    chunk->head = nullptr;
-    chunk->next = nullptr;
-    chunk->prev = nullptr;
-    chunk->succ = nullptr;
-    chunk->prec = nullptr;
-
-    _next_chunk = next;
-    return chunk;
-  }
-
-  void streamer::free_chunk(streamer::chunk *chunk) {
-    auto prev = _next_chunk->prev;
-    auto next = _next_chunk;
-
-    prev->next = chunk;
-    next->prev = chunk;
-
-    chunk->prev = prev;
-    chunk->next = next;
-
-    return;
-  }
-
-  class streamer::index {
-  public:
-    size_t color;
-    chunk* chunk;
-    index* head;
-    index* next;
-    index* prev;
-  };
-
-  streamer::index* streamer::alloc_index() {
-    auto index = _next_index;
-    auto prev = _next_index->prev;
-    auto next = _next_index->next;
-
-    prev->next = next;
-    next->prev = prev;
-
-    index->color = 0;
-    index->chunk = nullptr;
-    index->head = nullptr;
-    index->next = nullptr;
-    index->prev = nullptr;
-
-    _next_index = next;
-    return index;
-  }
-
-  void streamer::free_index(index *index) {
-    auto prev = _next_index->prev;
-    auto next = _next_index;
-
-    prev->next = index;
-    next->prev = index;
-
-    index->prev = prev;
-    index->next = next;
-
-    return;
-  }
 
   void streamer::prev_rotate(index* here) {
     auto head = here->head;
@@ -191,39 +104,7 @@ namespace hatch {
     return;
   }
 
-  class streamer::chain {
-  public:
-    size_t size;
-    chunk* head;
-    chain* next;
-    chain* prev;
-  };
 
-  streamer::chain* streamer::alloc_chain() {
-    auto chain = _next_chain;
-    auto prev = _next_chain->prev;
-    auto next = _next_chain->next;
-
-    prev->next = next;
-    next->prev = prev;
-    chain->next = nullptr;
-    chain->prev = nullptr;
-
-    _next_chain = next;
-    return chain;
-  }
-
-  void streamer::free_chain(streamer::chain *chain) {
-    auto prev = _next_chain->prev;
-    auto next = _next_chain;
-
-    chain->prev = prev;
-    prev->next = chain;
-    chain->next = next;
-    next->prev = chain;
-
-    return;
-  }
 
   streamer::streamer(size_t size, size_t count, size_t limit) :
       _size{size},
@@ -244,6 +125,8 @@ namespace hatch {
       block->writable = address;
       block->readable = nullptr;
     }
+
+    // TODO: replace the crap below with allocators
 
     _chunk = new chunk[_count];
     _next_chunk = _chunk;

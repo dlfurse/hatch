@@ -76,9 +76,10 @@ set(hatch_utility_sources.hh
 set(hatch_core_sources
   hatch/core/structures.hh
   hatch/core/structures_fwd.hh
-  hatch/core/list.hh
-  hatch/core/list_impl.hh
-  hatch/core/tree.hh
+  hatch/core/pointer_list.hh
+  hatch/core/pointer_list_impl.hh
+  hatch/core/pointer_list_iterator.hh
+  hatch/core/pointer_list_iterator_impl.hh
 
   hatch/core/memory.hh
   hatch/core/memory_fwd.hh
@@ -109,7 +110,7 @@ set_property(TARGET hatch_core PROPERTY CXX_STANDARD 17)
 ########
 
 set(hatch_core_test_sources
-#  test/core/structures.cc
+  test/core/structures.cc
   test/core/memory.cc
   test/core/async.cc
 #	test/core/buffer.cc
@@ -118,6 +119,6 @@ set(hatch_core_test_sources
 
 add_executable(hatch_core_test ${hatch_core_test_sources})
 set_property(TARGET hatch_core_test PROPERTY CXX_STANDARD 17)
-target_link_libraries(hatch_core_test gtest_main tls)
+target_link_libraries(hatch_core_test gtest_main)
 
 add_test(NAME hatch_core_test COMMAND hatch_core_test)

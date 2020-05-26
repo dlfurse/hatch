@@ -7,9 +7,9 @@ namespace hatch {
 
   class StructuresTest : public ::testing::Test {
   protected:
-    class data : public list_node<data> {
+    class pointer_list_data : public pointer_list<pointer_list_data> {
     public:
-      data(unsigned int numerator, unsigned int denominator, double precise) :
+      pointer_list_data(unsigned int numerator, unsigned int denominator, double precise) :
           numerator{numerator},
           denominator{denominator},
           precise{precise} {
@@ -27,19 +27,17 @@ namespace hatch {
   };
 
   TEST_F(StructuresTest, SimpleListTest) {
-    list<data> list;
-    data first{1, 10, 1.1};
-    data second{2, 20, 2.2};
-    data third{3, 30, 3.3};
+    pointer_list_data first{1, 10, 1.1};
+    pointer_list_data second{2, 20, 2.2};
+    pointer_list_data third{3, 30, 3.3};
 
-    EXPECT_TRUE(list.empty());
-    list.push_front(first);
-    EXPECT_FALSE(list.empty());
-    list.push_back(second);
-    list.push_back(third);
+    EXPECT_TRUE(first.detached());
+    second.insert_after(first);
+    EXPECT_FALSE(first.detached());
+    third.insert_before(first);
 
     int count = 0;
-    for (auto& data : list) {
+    for (auto& data : first) {
       if (count == 0) {
         EXPECT_EQ(data.numerator, 1);
         EXPECT_EQ(data.denominator, 10);

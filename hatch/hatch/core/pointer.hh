@@ -18,13 +18,14 @@ namespace hatch {
     pointer(allocator<T>* allocator, uint64_t index);
 
   public:
+    pointer();
+    ~pointer();
+
     pointer(const pointer& ptr);
     pointer& operator=(const pointer& ptr);
 
     pointer(pointer&& ptr) noexcept;
-    pointer& operator=(pointer&& ptr);
-
-    ~pointer();
+    pointer& operator=(pointer&& ptr) noexcept;
 
   public:
     T* operator->();
@@ -37,8 +38,8 @@ namespace hatch {
 
     mutable const pointer<T>* _next{nullptr};
     mutable const pointer<T>* _prev{nullptr};
-    mutable allocator<T>* _allocator;
-    mutable uint64_t _index;
+    mutable allocator<T>* _allocator{nullptr};
+    mutable uint64_t _index{0};
   };
 
 } // end namespace hatch

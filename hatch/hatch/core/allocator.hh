@@ -13,9 +13,6 @@
 namespace hatch {
 
   template <class T>
-  class allocator;
-
-  template <class T>
   class allocator {
   public:
     friend class pointer<T>;
@@ -39,9 +36,23 @@ namespace hatch {
   private:
     class node {
     public:
-      uint64_t prev;
-      uint64_t next;
-      const pointer<T>* created;
+      class tree {
+        uint64_t color;
+        int64_t parent;
+        int64_t left;
+        int64_t right;
+      };
+
+      class list {
+        pointer<T>* head;
+        pointer<T>* tail;
+      };
+
+    public:
+      union {
+        tree tree;
+        list list;
+      } header;
       typename std::aligned_storage<sizeof(T), alignof(T)>::type data;
     };
 

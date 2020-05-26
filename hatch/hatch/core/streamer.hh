@@ -1,6 +1,8 @@
 #ifndef HATCH_BUFFER_HH
 #define HATCH_BUFFER_HH
 
+#include <hatch/core/memory.hh>
+
 #include <cstddef>
 #include <cstdint>
 
@@ -11,9 +13,31 @@
 
 namespace hatch {
 
-  class reader {
+  class block {
   public:
-    virtual ~reader() = default;
+    uint8_t* head;
+    uint8_t* writable;
+    uint8_t* readable;
+  };
+
+  class chunk {
+  public:
+    size_t size; // number of blocks in this chunk
+    block* head; // address of first block in this chunk
+    pointer<chunk> prev; // next chunk in chain
+    pointer<chunk> next; // previous chunk in chain
+  };
+
+  class chain {
+  public:
+    size_t size; // size of the chain in bytes
+    pointer<chunk> head; // first chunk in the chain
+    pointer<chunk> tail; // last chunk in the chain
+  };
+
+  class consumer {
+  public:
+    virtual ~consumer() = default;
     virtual size_t pull_from(const uint8_t* data, size_t length) = 0;
     virtual size_t pull_from(const iovec* data, size_t length) = 0;
   };
@@ -26,23 +50,13 @@ namespace hatch {
   };
 
   class streamer {
-  private:
-    class block;
-    class chunk;
-    class index;
-    class chain;
-
   public:
-    using buffer = std::unique_ptr<chain>;
 
     streamer(size_t block_size, size_t block_count, size_t limit);
     ~streamer();
 
-    buffer create(producer& producer);
-    void destroy(buffer& buffer);
-
-    void produce(producer& producer, buffer& buffer);
-    void consume(reader& reader, buffer& buffer);
+    pointer<chain> produce(producer& producer, pointer<chain> buffer);
+    pointer<chain> consume(consumer& consumer, pointer<chain> buffer);
 
   private:
     const size_t _size;
@@ -52,28 +66,23 @@ namespace hatch {
     uint8_t* _memory;
     block* _block;
 
-    chunk* _chunk;
-    chunk* _next_chunk;
-    chunk* alloc_chunk();
-    void free_chunk(chunk* chunk);
+    class index {
+    public:
+      size_t color;
+      pointer<index> head;
+      pointer<index> prev;
+      pointer<index> next;
+      pointer<chunk> chunk;
+    };
 
-    index* _index;
-    index* _next_index;
-    index* alloc_index();
-    void free_index(index* index);
+    pointer<index> _root;
 
-    void prev_rotate(index* index);
-    void next_rotate(index* index);
-    void insert_fixup(index* index);
-    void delete_fixup(index* index);
-    void insert_index(index* index);
-    void delete_index(index* index);
-
-
-    chain* _chain;
-    chain* _next_chain;
-    chain* alloc_chain();
-    void free_chain(chain* chain);
+    void prev_rotate(pointer<index> index);
+    void next_rotate(pointer<index> index);
+    void insert_fixup(pointer<index> index);
+    void delete_fixup(pointer<index> index);
+    void insert_index(pointer<index> index);
+    void delete_index(pointer<index> index);
 
     iovec* _iovecs;
   };
