@@ -80,6 +80,10 @@ set(hatch_core_sources
   hatch/core/pointer_list_impl.hh
   hatch/core/pointer_list_iterator.hh
   hatch/core/pointer_list_iterator_impl.hh
+  hatch/core/indexed_list.hh
+  hatch/core/indexed_list_impl.hh
+  hatch/core/indexed_list_iterator.hh
+  hatch/core/indexed_list_iterator_impl.hh
 
   hatch/core/memory.hh
   hatch/core/memory_fwd.hh

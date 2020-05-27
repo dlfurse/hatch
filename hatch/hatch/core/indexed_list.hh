@@ -28,8 +28,8 @@ namespace hatch {
     bool detached() const;
     bool detach(T* data);
 
-    void replace_item(T* data, indexed_list& item);
-    void replace_list(T* data, indexed_list& item);
+    void insert_replacing(T* data, indexed_list& item);
+    void splice_replacing(T* data, indexed_list& item);
 
     void insert_before(T* data, indexed_list& item);
     void splice_before(T* data, indexed_list& item);

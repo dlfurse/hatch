@@ -22,12 +22,15 @@ namespace hatch {
 
   public:
     friend class indexed_list<T>;
-    static_assert(std::is_base_of_v<indexed_list, T>);
+    static_assert(std::is_base_of_v<indexed_list<T>, T>);
 
     bool operator!=(const indexed_list_iterator& compared) const;
 
     T& operator*();
     std::add_const_t<T>& operator*() const;
+
+    T* operator->();
+    std::add_const_t<T>* operator->() const;
 
     indexed_list_iterator& operator++();
     const indexed_list_iterator& operator++() const;

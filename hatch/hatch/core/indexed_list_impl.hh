@@ -15,7 +15,6 @@ namespace hatch {
 
   template <class T>
   indexed_list<T>::~indexed_list() {
-    detach();
   }
 
   template <class T>
@@ -58,15 +57,15 @@ namespace hatch {
   }
 
   template <class T>
-  void indexed_list<T>::replace_item(T* data, indexed_list& item) {
-    detach();
+  void indexed_list<T>::insert_replacing(T* data, indexed_list& item) {
+    detach(data);
 
     auto here = static_cast<T*>(this) - data;
     auto prev = item._prev;
     auto next = item._next;
 
     if (!item.detached()) {
-      item.detach();
+      item.detach(data);
 
       data[next]._prev = here;
       data[here]._next = next;
@@ -77,13 +76,13 @@ namespace hatch {
   }
 
   template <class T>
-  void indexed_list<T>::replace_list(T* data, indexed_list& item) {
+  void indexed_list<T>::splice_replacing(T* data, indexed_list& item) {
     auto here = static_cast<T*>(this) - data;
     auto prev = item._prev;
     auto next = item._next;
 
     if (!item.detached()) {
-      item.detach();
+      item.detach(data);
 
       data[next]._prev = _prev;
       data[_prev]._next = next;
@@ -95,7 +94,7 @@ namespace hatch {
 
   template <class T>
   void indexed_list<T>::insert_before(T* data, indexed_list& item) {
-    detach();
+    detach(data);
 
     auto here = static_cast<T*>(this) - data;
     auto next = static_cast<T*>(&item) - data;
@@ -118,8 +117,6 @@ namespace hatch {
 
   template <class T>
   void indexed_list<T>::splice_before(T* data, indexed_list& item) {
-    detach();
-
     auto here = static_cast<T*>(this) - data;
     auto next = static_cast<T*>(&item) - data;
     auto prev = item._prev;
@@ -141,7 +138,7 @@ namespace hatch {
 
   template <class T>
   void indexed_list<T>::insert_after(T* data, indexed_list& item) {
-    detach();
+    detach(data);
 
     auto here = static_cast<T*>(this) - data;
     auto prev = static_cast<T*>(&item) - data;
@@ -164,8 +161,6 @@ namespace hatch {
 
   template <class T>
   void indexed_list<T>::splice_after(T* data, indexed_list& item) {
-    detach();
-
     auto here = static_cast<T*>(this) - data;
     auto prev = static_cast<T*>(&item) - data;
     auto next = item._next;

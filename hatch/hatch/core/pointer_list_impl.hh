@@ -56,7 +56,7 @@ namespace hatch {
   }
 
   template <class T>
-  void pointer_list<T>::replace_item(pointer_list& item) {
+  void pointer_list<T>::insert_replacing(pointer_list& item) {
     detach();
 
     auto* prev = item._prev;
@@ -74,7 +74,7 @@ namespace hatch {
   }
 
   template <class T>
-  void pointer_list<T>::replace_list(pointer_list& list) {
+  void pointer_list<T>::splice_replacing(pointer_list& list) {
     auto* prev = list._prev;
     auto* next = list._next;
 
@@ -112,8 +112,6 @@ namespace hatch {
 
   template <class T>
   void pointer_list<T>::splice_before(pointer_list& list) {
-    detach();
-
     auto* prev = list._prev;
 
     if (!list.detached()) {
@@ -154,8 +152,6 @@ namespace hatch {
 
   template <class T>
   void pointer_list<T>::splice_after(pointer_list& list) {
-    detach();
-
     auto* next = list._next;
 
     if (!list.detached()) {
@@ -172,6 +168,7 @@ namespace hatch {
       list._next = this;
     }
   }
+
 }
 
 #endif // HATCH_POINTER_LIST_IMPL_HH

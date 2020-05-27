@@ -26,8 +26,8 @@ namespace hatch {
     bool detached() const;
     bool detach();
 
-    void replace_item(pointer_list& item);
-    void replace_list(pointer_list& list);
+    void insert_replacing(pointer_list& item);
+    void splice_replacing(pointer_list& list);
 
     void insert_before(pointer_list& next);
     void splice_before(pointer_list& next);

@@ -16,7 +16,7 @@ namespace hatch {
 
   template <class T>
   bool indexed_list_iterator<T>::operator!=(const indexed_list_iterator& compared) const {
-    return _here != compared._here && _root != compared._root;
+    return _here != compared._here;
   }
 
   template <class T>
@@ -30,8 +30,18 @@ namespace hatch {
   }
 
   template <class T>
+  T* indexed_list_iterator<T>::operator->() {
+    return static_cast<T*>(&_data[_here]);
+  }
+
+  template <class T>
+  std::add_const_t<T>* indexed_list_iterator<T>::operator->() const {
+    return static_cast<std::add_const_t<T>*>(&_data[_here]);
+  }
+
+  template <class T>
   indexed_list_iterator<T>& indexed_list_iterator<T>::operator++() {
-    if (_here > 0) {
+    if (_here >= 0) {
       _here = _data[_here]._next;
       if (_here == _root) {
         _here = -1;
@@ -42,7 +52,7 @@ namespace hatch {
 
   template <class T>
   const indexed_list_iterator<T>& indexed_list_iterator<T>::operator++() const {
-    if (_here > 0) {
+    if (_here >= 0) {
       _here = _data[_here]._next;
       if (_here == _root) {
         _here = -1;
@@ -53,7 +63,7 @@ namespace hatch {
 
   template <class T>
   indexed_list_iterator<T>& indexed_list_iterator<T>::operator--() {
-    if (_here > 0) {
+    if (_here >= 0) {
       _here = _data[_here]._prev;
       if (_here == _root) {
         _here = -1;
@@ -64,7 +74,7 @@ namespace hatch {
 
   template <class T>
   const indexed_list_iterator<T>& indexed_list_iterator<T>::operator--() const {
-    if (_here > 0) {
+    if (_here >= 0) {
       _here = _data[_here]._prev;
       if (_here == _root) {
         _here = -1;

@@ -15,7 +15,7 @@ namespace hatch {
 
   template <class T>
   bool pointer_list_iterator<T>::operator!=(const pointer_list_iterator& compared) const {
-    return _here != compared._here && _root != compared._root;
+    return _here != compared._here;
   }
 
   template <class T>
