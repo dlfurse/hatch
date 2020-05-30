@@ -10,5 +10,7 @@
 #include <hatch/core/indexed_list.hh>
 #include <hatch/core/indexed_list_iterator_impl.hh>
 #include <hatch/core/indexed_list_impl.hh>
+#include <hatch/core/pointer_tree.hh>
+#include <hatch/core/pointer_tree_impl.hh>
 
 #endif // HATCH_STRUCTURES_HH
