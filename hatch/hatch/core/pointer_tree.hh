@@ -23,11 +23,11 @@ namespace hatch {
     pointer_tree();
     ~pointer_tree();
 
-    void rotate_prev(pointer_tree* here);
-    void rotate_next(pointer_tree* here);
+    void rotate_prev();
+    void rotate_next();
 
-    void insert_binary(pointer_tree* here);
-    void insert_fix(pointer_tree* here);
+    pointer_tree* predecessor();
+    pointer_tree* successor();
 
     int black_depth();
 
@@ -35,8 +35,11 @@ namespace hatch {
     T& operator*();
     const T& operator*() const;
 
-    void insert(pointer_tree& tree);
+    bool detached();
+
     void detach();
+
+    void insert(pointer_tree& node);
   };
 
 } // namespace hatch

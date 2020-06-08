@@ -24,6 +24,7 @@ namespace hatch {
     pointer_list_iterator<T> end();
 
     bool detached() const;
+
     bool detach();
 
     void insert_replacing(pointer_list& item);
