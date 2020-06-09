@@ -1,40 +1,40 @@
-#ifndef HATCH_POINTER_LIST_IMPL_HH
-#define HATCH_POINTER_LIST_IMPL_HH
+#ifndef HATCH_POINTER_LIST_NODE_IMPL_HH
+#define HATCH_POINTER_LIST_NODE_IMPL_HH
 
-#ifndef HATCH_STRUCTURES_HH
-#error "do not include pointer_list_impl.hh directly. include structures.hh instead."
+#ifndef HATCH_POINTER_LIST_HH
+#error "do not include pointer_list_node_impl.hh directly. include pointer_list_node.hh instead."
 #endif
 
 namespace hatch {
 
   template <class T>
-  pointer_list<T>::pointer_list() :
+  pointer_list_node<T>::pointer_list_node() :
       _prev{nullptr},
       _next{nullptr} {
   }
 
   template <class T>
-  pointer_list<T>::~pointer_list() {
+  pointer_list_node<T>::~pointer_list_node() {
     detach();
   }
 
   template <class T>
-  pointer_list_iterator<T> pointer_list<T>::begin() {
+  pointer_list_iterator<T> pointer_list_node<T>::begin() {
     return {this, this};
   }
 
   template <class T>
-  pointer_list_iterator<T> pointer_list<T>::end() {
-    return {nullptr, this};
+  pointer_list_iterator<T> pointer_list_node<T>::end() {
+    return {this, nullptr};
   }
 
   template <class T>
-  bool pointer_list<T>::detached() const {
+  bool pointer_list_node<T>::detached() const {
     return _prev == nullptr && _next == nullptr;
   }
 
   template <class T>
-  bool pointer_list<T>::detach() {
+  bool pointer_list_node<T>::detach() {
     if (!detached()) {
       auto* prev = _prev;
       auto* next = _next;
@@ -56,7 +56,7 @@ namespace hatch {
   }
 
   template <class T>
-  void pointer_list<T>::insert_replacing(pointer_list& item) {
+  void pointer_list_node<T>::insert_replacing(pointer_list_node& item) {
     detach();
 
     auto* prev = item._prev;
@@ -74,7 +74,7 @@ namespace hatch {
   }
 
   template <class T>
-  void pointer_list<T>::splice_replacing(pointer_list& list) {
+  void pointer_list_node<T>::splice_replacing(pointer_list_node& list) {
     auto* prev = list._prev;
     auto* next = list._next;
 
@@ -90,7 +90,7 @@ namespace hatch {
   }
 
   template <class T>
-  void pointer_list<T>::insert_before(pointer_list& item) {
+  void pointer_list_node<T>::insert_before(pointer_list_node& item) {
     detach();
 
     auto* prev = item._prev;
@@ -111,7 +111,7 @@ namespace hatch {
   }
 
   template <class T>
-  void pointer_list<T>::splice_before(pointer_list& list) {
+  void pointer_list_node<T>::splice_before(pointer_list_node& list) {
     auto* prev = list._prev;
 
     if (!list.detached()) {
@@ -130,7 +130,7 @@ namespace hatch {
   }
 
   template <class T>
-  void pointer_list<T>::insert_after(pointer_list& item) {
+  void pointer_list_node<T>::insert_after(pointer_list_node& item) {
     detach();
 
     auto* next = item._next;
@@ -151,7 +151,7 @@ namespace hatch {
   }
 
   template <class T>
-  void pointer_list<T>::splice_after(pointer_list& list) {
+  void pointer_list_node<T>::splice_after(pointer_list_node& list) {
     auto* next = list._next;
 
     if (!list.detached()) {
@@ -171,4 +171,4 @@ namespace hatch {
 
 }
 
-#endif // HATCH_POINTER_LIST_IMPL_HH
+#endif // HATCH_POINTER_LIST_NODE_IMPL_HH
