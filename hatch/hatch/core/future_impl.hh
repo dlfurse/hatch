@@ -7,74 +7,70 @@
 
 namespace hatch {
 
-  template <class ...T>
-  void future<T...>::detach() {
-    if (_prev) {
-      _prev->_next = _next;
-      if (_next) {
-        _next->_prev = _prev;
-      }
-    } else {
-      if (_next) {
-        _promise->_future = _next;
-        _next->_prev = _prev;
-      } else {
-        _promise->_future = nullptr;
-      }
-    }
-  }
-
-  template <class ...T>
-  void future<T...>::before(future& future) {
-    _prev = future._prev;
-    if (_prev) {
-      _prev->_next = this;
-    }
-    _next = &future;
-    future._prev = this;
-  }
-
-  template <class ...T>
-  void future<T...>::after(future& future) {
-    _next = future._next;
-    if (_next) {
-      _next->_prev = this;
-    }
-    _prev = &future;
-    future._next = this;
-  }
-
-  template <class ...T>
-  void future<T...>::replace(future& future) {
-    _promise = future._promise;
-    if (_promise) {
-      _state = future._state;
-      _next = future._next;
-      if (_next) {
-        _next->_prev = this;
-      }
-      _prev = future._prev;
-      if (_prev) {
-        _prev->_next = this;
-      } else {
-        _promise->_future = this;
-      }
-    }
-    future._promise = nullptr;
-  }
+//  template <class ...T>
+//  void future<T...>::detach() {
+//    if (_prev) {
+//      _prev->_next = _next;
+//      if (_next) {
+//        _next->_prev = _prev;
+//      }
+//    } else {
+//      if (_next) {
+//        _promise->_future = _next;
+//        _next->_prev = _prev;
+//      } else {
+//        _promise->_future = nullptr;
+//      }
+//    }
+//  }
+//
+//  template <class ...T>
+//  void future<T...>::before(future& future) {
+//    _prev = future._prev;
+//    if (_prev) {
+//      _prev->_next = this;
+//    }
+//    _next = &future;
+//    future._prev = this;
+//  }
+//
+//  template <class ...T>
+//  void future<T...>::after(future& future) {
+//    _next = future._next;
+//    if (_next) {
+//      _next->_prev = this;
+//    }
+//    _prev = &future;
+//    future._next = this;
+//  }
+//
+//  template <class ...T>
+//  void future<T...>::replace(future& future) {
+//    _promise = future._promise;
+//    if (_promise) {
+//      _state = future._state;
+//      _next = future._next;
+//      if (_next) {
+//        _next->_prev = this;
+//      }
+//      _prev = future._prev;
+//      if (_prev) {
+//        _prev->_next = this;
+//      } else {
+//        _promise->_future = this;
+//      }
+//    }
+//    future._promise = nullptr;
+//  }
 
   template <class ...T>
   future<T...>::future(promise<T...>* promise) :
-      _prev{nullptr},
-      _next{nullptr},
       _promise{promise},
       _state{state::pending} {
   }
 
   template <class ...T>
   future<T...>::future() :
-      _prev{nullptr},
-      _next{nullptr},
       _promise{nullptr},
       _state{state::detached} {
   }
@@ -82,7 +78,13 @@ namespace hatch {
   template <class ...T>
   future<T...>::~future() {
     if (_state == state::pending) {
-      detach();
+      if (_promise->_future == this) {
+        if (this->_next) {
+          _promise->_future = &**(this->_next);
+        } else {
+          _promise->_future = nullptr;
+        }
+      }
     } else if (_state == state::completed) {
       _storage._value.~stored();
     } else if (_state == state::failed) {
@@ -92,13 +94,12 @@ namespace hatch {
 
   template <class ...T>
   future<T...>::future(future&& moved) noexcept :
-      _prev{nullptr},
-      _next{nullptr},
       _promise{moved._promise},
       _state{moved._state} {
 
     if (_state == state::pending) {
-      replace(moved);
+      insert_replacing(moved);
+      //replace(moved);
     } else if (_state == state::completed) {
       new (&_storage._value) stored(std::move(moved._storage._value));
       moved._storage._value.~stored();
@@ -121,7 +122,8 @@ namespace hatch {
     _state = moved._state;
 
     if (_state == state::pending) {
-      replace(moved);
+      insert_replacing(moved);
+      //replace(moved);
     } else if (_state == state::completed) {
       new (&_storage._value) stored(std::move(moved._storage._value));
       moved._storage._value.~stored();
@@ -138,12 +140,11 @@ namespace hatch {
 
   template <class ...T>
   future<T...>::future(const future& copied) :
-      _prev{nullptr},
-      _next{nullptr},
       _promise{copied._promise},
       _state{copied._state} {
     if (_state == state::pending) {
-      after(const_cast<future&>(copied));
+      insert_after(const_cast<future&>(copied));
+      //after(const_cast<future&>(copied));
     } else if (_state == state::completed) {
       new (&_storage._value) stored(copied._storage._value);
     } else if (_state == state::failed) {
@@ -161,7 +162,8 @@ namespace hatch {
     _state = copied._state;
 
     if (_state == state::pending) {
-      after(copied);
+      insert_after(const_cast<future&>(copied));
+      //after(copied);
     } else if (_state == state::completed) {
       new (&_storage._value) stored(copied._storage._value);
     } else if (_state == state::failed) {

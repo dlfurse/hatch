@@ -8,7 +8,7 @@
 namespace hatch {
 
   template <class T>
-  pointer_list_iterator<T>::pointer_list_iterator(pointer_list_node<T>* root, pointer_list_node<T>* node) :
+  pointer_list_iterator<T>::pointer_list_iterator(pointer_list_root<T>* root, pointer_list_node<T>* node) :
       _root{root},
       _node{node} {
   }
@@ -42,7 +42,7 @@ namespace hatch {
   pointer_list_iterator<T>& pointer_list_iterator<T>::operator++() {
     if (_node) {
       _node = _node->_next;
-      if (_node == _root) {
+      if (_node == _root->_head) {
         _node = nullptr;
       }
     }
@@ -53,7 +53,7 @@ namespace hatch {
   const pointer_list_iterator<T>& pointer_list_iterator<T>::operator++() const {
     if (_node) {
       _node = _node->_next;
-      if (_node == _root) {
+      if (_node == _root->_head) {
         _node = nullptr;
       }
     }
@@ -64,7 +64,7 @@ namespace hatch {
   pointer_list_iterator<T>& pointer_list_iterator<T>::operator--() {
     if (_node) {
       _node = _node->_prev;
-      if (_node == _root) {
+      if (_node == _root->_head) {
         _node = nullptr;
       }
     }
@@ -75,13 +75,13 @@ namespace hatch {
   const pointer_list_iterator<T>& pointer_list_iterator<T>::operator--() const {
     if (_node) {
       _node = _node->_prev;
-      if (_node == _root) {
+      if (_node == _root->_head) {
         _node = nullptr;
       }
     }
     return *this;
   }
 
-}
+} // namespace hatch
 
 #endif // HATCH_POINTER_LIST_ITERATOR_IMPL_HH

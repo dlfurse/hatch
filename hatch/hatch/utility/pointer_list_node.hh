@@ -9,7 +9,11 @@ namespace hatch {
 
   template <class T>
   class pointer_list_node {
-  protected:
+  public:
+    friend class pointer_list_iterator<T>;
+    friend class pointer_list_root<T>;
+
+  private:
     pointer_list_node* _prev;
     pointer_list_node* _next;
 
@@ -18,22 +22,23 @@ namespace hatch {
     ~pointer_list_node();
 
   public:
-    friend class pointer_list_iterator<T>;
+    T& data();
+    const T& data() const;
 
-    pointer_list_iterator<T> begin();
-    pointer_list_iterator<T> end();
+    const pointer_list_node* prev() const;
+    const pointer_list_node* next() const;
 
-    bool detached() const;
     bool detach();
+    bool detached() const;
 
     void insert_replacing(pointer_list_node& item);
     void splice_replacing(pointer_list_node& list);
 
-    void insert_before(pointer_list_node& next);
-    void splice_before(pointer_list_node& next);
+    void insert_before(pointer_list_node& item);
+    void splice_before(pointer_list_node& list);
 
-    void insert_after(pointer_list_node& prev);
-    void splice_after(pointer_list_node& prev);
+    void insert_after(pointer_list_node& item);
+    void splice_after(pointer_list_node& list);
   };
 
 } // namespace hatch

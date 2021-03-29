@@ -7,6 +7,9 @@ namespace hatch {
   class pointer_list_node;
 
   template <class T>
+  class pointer_list_root;
+
+  template <class T>
   class pointer_list_iterator;
 
 } // namespace hatch

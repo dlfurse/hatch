@@ -50,8 +50,8 @@ namespace hatch {
 
     public:
       union {
-        tree tree;
-        list list;
+        tree thetree;
+        list thelist;
       } header;
       typename std::aligned_storage<sizeof(T), alignof(T)>::type data;
     };

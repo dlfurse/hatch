@@ -42,4 +42,4 @@ namespace hatch {
   using flatwrapped = typename rewrapper<Wrap<>, Wrap<T...>>::type;
 }
 
-#endif //HATCH_REWRAPPER_HH
+#endif // HATCH_REWRAPPER_HH

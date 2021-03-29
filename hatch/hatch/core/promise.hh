@@ -5,7 +5,7 @@
 #error "do not include promise.hh directly. include async.hh instead."
 #endif
 
-#include <hatch/core/structures.hh> // list<T>
+#include <hatch/utility/pointer_list.hh> // pointer_list_node<T>
 
 #include <exception> // std::exception_ptr
 #include <list> // std::list

@@ -6,5 +6,7 @@
 #include <hatch/utility/pointer_list_iterator_impl.hh>
 #include <hatch/utility/pointer_list_node.hh>
 #include <hatch/utility/pointer_list_node_impl.hh>
+#include <hatch/utility/pointer_list_root.hh>
+#include <hatch/utility/pointer_list_root_impl.hh>
 
 #endif

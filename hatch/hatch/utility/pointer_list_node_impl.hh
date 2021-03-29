@@ -19,18 +19,25 @@ namespace hatch {
   }
 
   template <class T>
-  pointer_list_iterator<T> pointer_list_node<T>::begin() {
-    return {this, this};
+  T& pointer_list_node<T>::data() {
+    static_assert(std::is_base_of_v<pointer_list_node<T>, T>);
+    return static_cast<T&>(*this);
   }
 
   template <class T>
-  pointer_list_iterator<T> pointer_list_node<T>::end() {
-    return {this, nullptr};
+  const T& pointer_list_node<T>::data() const {
+    static_assert(std::is_base_of_v<pointer_list_node<T>, T>);
+    return static_cast<const T&>(*this);
   }
 
   template <class T>
-  bool pointer_list_node<T>::detached() const {
-    return _prev == nullptr && _next == nullptr;
+  const pointer_list_node<T>* pointer_list_node<T>::prev() const {
+    return _prev;
+  }
+
+  template <class T>
+  const pointer_list_node<T>* pointer_list_node<T>::next() const {
+    return _next;
   }
 
   template <class T>
@@ -53,6 +60,11 @@ namespace hatch {
       return true;
     }
     return false;
+  }
+
+  template <class T>
+  bool pointer_list_node<T>::detached() const {
+    return _prev == nullptr && _next == nullptr;
   }
 
   template <class T>
@@ -169,6 +181,6 @@ namespace hatch {
     }
   }
 
-}
+} // namespace hatch
 
 #endif // HATCH_POINTER_LIST_NODE_IMPL_HH

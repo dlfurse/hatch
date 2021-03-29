@@ -6,6 +6,7 @@ Vagrant.configure("2") do |config|
   config.vm.synced_folder ".", "/vagrant", disabled: true
 
   config.vm.provider :virtualbox do |vb|
+    vb.name = "nest"
     vb.customize ["modifyvm", :id, "--memory", "2048"]
     vb.customize ["modifyvm", :id, "--cpus", "4"]
     vb.customize ["modifyvm", :id, "--natdnshostresolver1", "on"]
@@ -23,8 +24,9 @@ Vagrant.configure("2") do |config|
     sudo yum install -y git
     sudo yum install -y patch
     sudo yum install -y make
-    sudo yum install -y cmake3
+    sudo yum install -y cmake
     sudo yum install -y automake
+    sudo yum install -y libarchive
     sudo yum install -y libtool
     sudo yum install -y python3
     sudo yum install -y perl

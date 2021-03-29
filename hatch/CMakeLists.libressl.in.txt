@@ -19,3 +19,10 @@ ExternalProject_Add_Step(libressl autogen
   COMMAND           "./autogen.sh"
   WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/libressl/src"
 )
+
+#ExternalProject_Add_Step(libressl stashdrop
+#  DEPENDERS         update
+#  COMMAND           git stash drop || echo &> /dev/null
+#  WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/libressl/src"
+#  LOG               1
+#)

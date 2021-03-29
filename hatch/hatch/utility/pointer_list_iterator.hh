@@ -11,16 +11,17 @@ namespace hatch {
 
   template <class T>
   class pointer_list_iterator {
-  private:
-    mutable pointer_list_node<T>* _root;
-    mutable pointer_list_node<T>* _node;
-
-    pointer_list_iterator(pointer_list_node<T>* root, pointer_list_node<T>* node);
-
   public:
-    friend class pointer_list_node<T>;
+    friend class pointer_list_root<T>;
     static_assert(std::is_base_of_v<pointer_list_node<T>, T>);
 
+  private:
+    mutable pointer_list_root<T>* _root;
+    mutable pointer_list_node<T>* _node;
+
+    pointer_list_iterator(pointer_list_root<T>* root, pointer_list_node<T>* node);
+
+  public:
     bool operator!=(const pointer_list_iterator& compared) const;
 
     T& operator*();
@@ -34,8 +35,18 @@ namespace hatch {
 
     pointer_list_iterator& operator--();
     const pointer_list_iterator& operator--() const;
+
+  public:
+    pointer_list_iterator& insert_replacing(pointer_list_iterator& other);
+    pointer_list_iterator& splice_replacing(pointer_list_iterator& other);
+
+    pointer_list_iterator& insert_before(pointer_list_iterator& other);
+    pointer_list_iterator& splice_before(pointer_list_iterator& other);
+
+    pointer_list_iterator& insert_after(pointer_list_iterator& other);
+    pointer_list_iterator& splice_after(pointer_list_iterator& other);
   };
 
-}
+} // namespace hatch
 
 #endif // HATCH_POINTER_LIST_ITERATOR_HH

@@ -74,6 +74,8 @@ set(hatch_utility_sources.hh
   hatch/core/pointer_list_node_impl.hh
   hatch/core/pointer_list_iterator.hh
   hatch/core/pointer_list_iterator_impl.hh
+  hatch/core/pointer_list_root.hh
+  hatch/core/pointer_list_root_impl.hh
 
   hatch/core/indexed_list.hh
   hatch/core/indexed_list_fwd.hh
@@ -133,8 +135,8 @@ add_test(NAME hatch_utility_test COMMAND hatch_utility_test)
 set(hatch_core_test_sources
   test/core/memory.cc
   test/core/async.cc
-  #	test/core/buffer.cc
-  #	test/core/socket.cc
+  test/core/buffer.cc
+  test/core/socket.cc
 )
 
 add_executable(hatch_core_test ${hatch_core_test_sources})
