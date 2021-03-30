@@ -22,11 +22,11 @@ namespace hatch {
     ~pointer_list_node();
 
   public:
-    T& data();
-    const T& data() const;
-
     const pointer_list_node* prev() const;
     const pointer_list_node* next() const;
+
+    T& data();
+    const T& data() const;
 
     bool detach();
     bool detached() const;

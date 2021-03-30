@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 2.8.2)
+cmake_minimum_required(VERSION 3.18.2)
 
 project(libressl-download NONE)
 
@@ -7,7 +7,16 @@ ExternalProject_Add(libressl
   GIT_REPOSITORY    https://github.com/libressl-portable/portable.git
   GIT_TAG           master
   SOURCE_DIR        "${CMAKE_CURRENT_BINARY_DIR}/libressl/src"
-  BINARY_DIR        "${CMAKE_CURRENT_BINARY_DIR}/libressl/build"
+
+  LOG_DOWNLOAD      1
+  LOG_UPDATE        1
+  LOG_PATCH         1
+  LOG_CONFIGURE     1
+  LOG_BUILD         1
+  LOG_INSTALL       1
+
+  BUILD_IN_SOURCE   1
+
   CONFIGURE_COMMAND ""
   BUILD_COMMAND     ""
   INSTALL_COMMAND   ""
@@ -19,10 +28,3 @@ ExternalProject_Add_Step(libressl autogen
   COMMAND           "./autogen.sh"
   WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/libressl/src"
 )
-
-#ExternalProject_Add_Step(libressl stashdrop
-#  DEPENDERS         update
-#  COMMAND           git stash drop || echo &> /dev/null
-#  WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/libressl/src"
-#  LOG               1
-#)

@@ -20,11 +20,10 @@ namespace hatch {
   class future : public pointer_list_node<future<T...>> {
     friend class promise<T...>;
 
-    static constexpr bool simple = sizeof...(T) == 1;
-    static constexpr bool complex = sizeof...(T) > 1;
+    static constexpr bool singular = sizeof...(T) == 1;
 
     using reduced = flatwrapped<std::tuple, T...>;
-    using stored = std::conditional_t<simple, std::tuple_element_t<0, reduced>, reduced>;
+    using stored = std::conditional_t<singular, std::tuple_element_t<0, reduced>, reduced>;
 
     /**
      * Construction.
