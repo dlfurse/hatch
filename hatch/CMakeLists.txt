@@ -2,7 +2,7 @@
 # global #
 ##########
 
-cmake_minimum_required(VERSION 3.18.2)
+cmake_minimum_required(VERSION 3.16.3)
 cmake_policy(SET CMP0048 NEW)
 project(hatch
     VERSION 0.1.0
@@ -123,7 +123,6 @@ set_property(TARGET hatch_core PROPERTY CXX_STANDARD 17)
 
 set(hatch_utility_test_sources
   test/utility/pointer_list.cc
-  test/utility/indexed_list.cc
 )
 
 add_executable(hatch_utility_test ${hatch_utility_test_sources})
