@@ -22,20 +22,25 @@ namespace hatch {
     ~pointer_list_node();
 
   public:
-    const pointer_list_node* prev() const;
-    const pointer_list_node* next() const;
-
     T& data();
     const T& data() const;
 
-    bool detach();
     bool detached() const;
 
-    void insert_replacing(pointer_list_node& item);
-    void splice_replacing(pointer_list_node& list);
+    pointer_list_node* prev();
+    const pointer_list_node* prev() const;
+
+    pointer_list_node* next();
+    const pointer_list_node* next() const;
+
+  protected:
+    void detach();
 
     void insert_before(pointer_list_node& item);
     void splice_before(pointer_list_node& list);
+
+    void insert_replacing(pointer_list_node& item);
+    void splice_replacing(pointer_list_node& list);
 
     void insert_after(pointer_list_node& item);
     void splice_after(pointer_list_node& list);
