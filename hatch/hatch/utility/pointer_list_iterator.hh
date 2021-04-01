@@ -13,7 +13,6 @@ namespace hatch {
   class pointer_list_iterator {
   public:
     friend class pointer_list_root<T>;
-    static_assert(std::is_base_of_v<pointer_list_node<T>, T>);
 
   private:
     mutable pointer_list_root<T>* _root;

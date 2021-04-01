@@ -11,7 +11,6 @@ namespace hatch {
   class pointer_list_root final {
   public:
     friend class pointer_list_iterator<T>;
-    static_assert(std::is_base_of_v<pointer_list_node<T>, T>);
 
   private:
     pointer_list_node<T>* _head;
@@ -22,35 +21,34 @@ namespace hatch {
 
     bool empty() const;
 
-    T* front() const;
-    T* pop_front();
-
-    T* back() const;
-    T* pop_back();
-
     pointer_list_iterator<T> begin();
     pointer_list_iterator<T> end();
 
   public:
-    T* replace_front(pointer_list_node<T>& node);
-    T* replace_front(pointer_list_iterator<T>& iterator);
+    T* get_front() const;
+    T* pop_front();
 
     void push_front(pointer_list_node<T>& node);
+    void push_front(pointer_list_root<T>& root);
     void push_front(pointer_list_iterator<T>& iterator);
+    void push_front(pointer_list_iterator<T>& start, pointer_list_iterator<T>& after);
 
-    void splice_front(pointer_list_node<T>& node);
-    void splice_front(pointer_list_root<T>& root);
+    T* replace_front(pointer_list_node<T>& node);
+    T* replace_front(pointer_list_root<T>& root);
+    T* replace_front(pointer_list_iterator<T>& iterator);
+    T* replace_front(pointer_list_iterator<T>& start, pointer_list_iterator<T>& after);
 
   public:
+    T* get_back() const;
+    T* pop_back();
 
     T* replace_back(pointer_list_node<T>& node);
     T* replace_back(pointer_list_iterator<T>& iterator);
+    T* replace_back(pointer_list_iterator<T>& start, pointer_list_iterator<T>& after);
 
     void push_back(pointer_list_node<T>& node);
     void push_back(pointer_list_iterator<T>& iterator);
-
-    void splice_back(pointer_list_node<T>& node);
-    void splice_back(pointer_list_root<T>& root);
+    void push_back(pointer_list_iterator<T>& start, pointer_list_iterator<T>& after);
   };
 
 } // namespace hatch
