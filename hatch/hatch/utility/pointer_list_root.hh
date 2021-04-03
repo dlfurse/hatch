@@ -19,36 +19,31 @@ namespace hatch {
     pointer_list_root();
     ~pointer_list_root();
 
+    pointer_list_root(pointer_list_root&& moved);
+    pointer_list_root& operator=(pointer_list_root&& moved);
+
+    pointer_list_root(const pointer_list_root&) = delete;
+    pointer_list_root& operator=(const pointer_list_root&) = delete;
+
     bool empty() const;
 
-    pointer_list_iterator<T> begin();
-    pointer_list_iterator<T> end();
-
   public:
-    T* get_front() const;
-    T* pop_front();
+    T* front();
+    const T* front() const;
+    pointer_list_iterator<T> begin();
 
+    T* pop_front();
     void push_front(pointer_list_node<T>& node);
     void push_front(pointer_list_root<T>& root);
-    void push_front(pointer_list_iterator<T>& iterator);
-    void push_front(pointer_list_iterator<T>& start, pointer_list_iterator<T>& after);
-
-    T* replace_front(pointer_list_node<T>& node);
-    T* replace_front(pointer_list_root<T>& root);
-    T* replace_front(pointer_list_iterator<T>& iterator);
-    T* replace_front(pointer_list_iterator<T>& start, pointer_list_iterator<T>& after);
 
   public:
-    T* get_back() const;
+    T* back();
+    const T* back() const;
+    pointer_list_iterator<T> end();
+
     T* pop_back();
-
-    T* replace_back(pointer_list_node<T>& node);
-    T* replace_back(pointer_list_iterator<T>& iterator);
-    T* replace_back(pointer_list_iterator<T>& start, pointer_list_iterator<T>& after);
-
     void push_back(pointer_list_node<T>& node);
-    void push_back(pointer_list_iterator<T>& iterator);
-    void push_back(pointer_list_iterator<T>& start, pointer_list_iterator<T>& after);
+    void push_back(pointer_list_root<T>& root);
   };
 
 } // namespace hatch

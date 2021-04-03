@@ -55,7 +55,7 @@ namespace hatch {
      * State.
      *
      * Upon construction, a promise is in the pending state.  If a promise is moved to another
-     * promise variable, the orignal promise will be in the moved state.  When the promise is
+     * promise variable, the original promise will be in the moved state.  When the promise is
      * completed it moves to the completed state, and if it's failed, it moves to the failed state.
      * No other transitions are possible.
      */
@@ -82,10 +82,11 @@ namespace hatch {
      */
 
   private:
-    void dispossess_futures();
     void repossess_futures();
+    void dispossess_futures();
+    void discard_futures();
 
-    future<T...>* _future;
+    pointer_list_root<future<T...>> _futures;
 
     class continuation {
     public:

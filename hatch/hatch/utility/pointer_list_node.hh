@@ -34,16 +34,11 @@ namespace hatch {
     const pointer_list_node* next() const;
 
   protected:
-    void detach();
+    pointer_list_node<T>& detach();
 
-    void insert_before(pointer_list_node& item);
-    void splice_before(pointer_list_node& list);
-
-    void insert_replacing(pointer_list_node& item);
-    void splice_replacing(pointer_list_node& list);
-
-    void insert_after(pointer_list_node& item);
-    void splice_after(pointer_list_node& list);
+    void splice_before(pointer_list_node& node);
+    void splice_replacing(pointer_list_node& node);
+    void splice_after(pointer_list_node& node);
   };
 
 } // namespace hatch

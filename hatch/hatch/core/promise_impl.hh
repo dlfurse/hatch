@@ -10,7 +10,7 @@ namespace hatch {
   template <class ...T>
   promise<T...>::promise() :
       _state{state::pending},
-      _future{nullptr},
+      _futures{},
       _continuations{},
       _recovery{} {
   }
@@ -18,31 +18,31 @@ namespace hatch {
   template <class ...T>
   promise<T...>::~promise() {
     dispossess_futures();
+    discard_futures();
   }
 
   template <class ...T>
   promise<T...>::promise(promise&& moved) noexcept :
       _state{moved._state},
-      _future{moved._future},
+      _futures{std::move(moved._futures)},
       _continuations{std::move(moved._continuations)},
       _recovery{std::move(moved._recovery)} {
     repossess_futures();
     moved._state = state::moved;
-    moved._future = nullptr;
   }
 
   template <class ...T>
   promise<T...>& promise<T...>::operator=(promise&& moved) noexcept {
     dispossess_futures();
+    discard_futures();
 
     _state = moved._state;
-    _future = moved._future;
+    _futures = std::move(moved._futures);
     _continuations = std::move(moved._continuations);
     _recovery = std::move(moved._recovery);
 
     repossess_futures();
     moved._state = state::moved;
-    moved._future = nullptr;
 
     return *this;
   }
@@ -72,24 +72,25 @@ namespace hatch {
     return _state == state::failed;
   }
 
-
   template <class ...T>
-  void promise<T...>::dispossess_futures() {
-    while (_future) {
-      _future->_promise = nullptr;
-      _future->_state = future<T...>::state::detached;
-      _future->detach();
-    };
+  void promise<T...>::repossess_futures() {
+    for (auto& f : _futures) {
+      f._promise = this;
+      assert(f._state == future<T...>::state::pending);
+    }
   }
 
   template <class ...T>
-  void promise<T...>::repossess_futures() {
-    auto* current = _future;
-    while (current) {
-      current->_promise = this;
-      assert(current->_state == future<T...>::state::pending);
-      current = current->_next;
-    };
+  void promise<T...>::dispossess_futures() {
+    for (auto& f : _futures) {
+      f._promise = nullptr;
+      f._state = future<T...>::state::detached;
+    }
+  }
+
+  template <class ...T>
+  void promise<T...>::discard_futures() {
+    while (_futures.pop_front());
   }
 
 
@@ -138,17 +139,17 @@ namespace hatch {
     assert(is_pending());
     _state = state::completed;
 
-    while (_future) {
-      auto& current = *_future;
-      _future->detach();
-      new (&current._storage._value) typename future<T...>::stored(data);
-      current._state = future<T...>::state::completed;
-      current._promise = nullptr;
-    };
+    for (auto& f : _futures) {
+      new (&f._storage._value) typename future<T...>::stored(data);
+      f._state = future<T...>::state::completed;
+      f._promise = nullptr;
+    }
 
     for (const auto& c : _continuations) {
       std::apply([&](const T&... args){c->complete(args...);}, data);
     }
+
+    discard_futures();
   }
 
   template <class ...T>
@@ -156,17 +157,17 @@ namespace hatch {
     assert(is_pending());
     _state = state::completed;
 
-    while (_future) {
-      auto& current = *_future;
-      _future->detach();
-      new (&current._storage._value) typename future<T...>::stored(data...);
-      current._state = future<T...>::state::completed;
-      current._promise = nullptr;
-    };
+    for (auto& f : _futures) {
+      new (&f._storage._value) typename future<T...>::stored(data...);
+      f._state = future<T...>::state::completed;
+      f._promise = nullptr;
+    }
 
     for (const auto& continuation : _continuations) {
       continuation->complete(data...);
     }
+
+    discard_futures();
   }
 
   template <class ...T>
@@ -181,17 +182,17 @@ namespace hatch {
     } else {
       _state = state::failed;
 
-      while (_future) {
-        auto& current = *_future;
-        _future->detach();
-        new (&current._storage._exception) std::exception_ptr(excp);
-        current._state = future<T...>::state::failed;
-        current._promise = nullptr;
-      };
+      for (auto& f : _futures) {
+        new (&f._storage._exception) std::exception_ptr(excp);
+        f._state = future<T...>::state::failed;
+        f._promise = nullptr;
+      }
 
       for (const auto& continuation : _continuations) {
         continuation->fail(excp);
       }
+
+      discard_futures();
     }
   }
 
@@ -199,11 +200,7 @@ namespace hatch {
   future<T...> promise<T...>::awaited() {
     future<T...> future(this);
 
-    if (_future) {
-      _future->before(future);
-    } else {
-      _future = &future;
-    }
+    _futures.push_back(future);
 
     return future;
   }

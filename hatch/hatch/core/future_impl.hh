@@ -78,12 +78,10 @@ namespace hatch {
   template <class ...T>
   future<T...>::~future() {
     if (_state == state::pending) {
-      if (_promise->_future == this) {
-        if (this->_next) {
-          _promise->_future = &**(this->_next);
-        } else {
-          _promise->_future = nullptr;
-        }
+      if (_promise->_futures.front() == this) {
+        _promise->_futures.pop_front();
+      } else {
+        pointer_list_node<future<T...>>::detach();
       }
     } else if (_state == state::completed) {
       _storage._value.~stored();
@@ -98,8 +96,12 @@ namespace hatch {
       _state{moved._state} {
 
     if (_state == state::pending) {
-      insert_replacing(moved);
-      //replace(moved);
+      if (_promise->_futures.front() == &moved) {
+        _promise->_futures.pop_front();
+        _promise->_futures.push_front(*this);
+      } else {
+        pointer_list_node<future<T...>>::splice_replacing(moved);
+      }
     } else if (_state == state::completed) {
       new (&_storage._value) stored(std::move(moved._storage._value));
       moved._storage._value.~stored();
@@ -115,15 +117,23 @@ namespace hatch {
   template <class ...T>
   future<T...>& future<T...>::operator=(future&& moved) noexcept {
     if (_state == state::pending) {
-      detach();
+      if (_promise->_futures.front() == this) {
+        _promise->_futures.pop_front();
+      } else {
+        pointer_list_node<future<T...>>::detach();
+      }
     }
 
     _promise = moved._promise;
     _state = moved._state;
 
     if (_state == state::pending) {
-      insert_replacing(moved);
-      //replace(moved);
+      if (_promise->_futures.front() == &moved) {
+        _promise->_futures.pop_front();
+        _promise->_futures.push_front(*this);
+      } else {
+        pointer_list_node<future<T...>>::splice_replacing(moved);
+      }
     } else if (_state == state::completed) {
       new (&_storage._value) stored(std::move(moved._storage._value));
       moved._storage._value.~stored();
@@ -143,8 +153,7 @@ namespace hatch {
       _promise{copied._promise},
       _state{copied._state} {
     if (_state == state::pending) {
-      insert_after(const_cast<future&>(copied));
-      //after(const_cast<future&>(copied));
+      pointer_list_node<future<T...>>::splice_after(const_cast<future<T...>&>(copied));
     } else if (_state == state::completed) {
       new (&_storage._value) stored(copied._storage._value);
     } else if (_state == state::failed) {
@@ -155,15 +164,18 @@ namespace hatch {
   template <class ...T>
   future<T...>& future<T...>::operator=(const future& copied) {
     if (_state == state::pending) {
-      detach();
+      if (_promise->_futures.front() == this) {
+        _promise->_futures.pop_front();
+      } else {
+        pointer_list_node<future<T...>>::detach();
+      }
     }
 
     _promise = copied._promise;
     _state = copied._state;
 
     if (_state == state::pending) {
-      insert_after(const_cast<future&>(copied));
-      //after(copied);
+      pointer_list_node<future<T...>>::splice_after(const_cast<future<T...>&>(copied));
     } else if (_state == state::completed) {
       new (&_storage._value) stored(copied._storage._value);
     } else if (_state == state::failed) {

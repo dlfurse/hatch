@@ -58,7 +58,7 @@ namespace hatch {
 
 
   template <class T>
-  void pointer_list_node<T>::detach() {
+  pointer_list_node<T>& pointer_list_node<T>::detach() {
     if (!detached()) {
       auto* prev = _prev;
       auto* next = _next;
@@ -69,33 +69,28 @@ namespace hatch {
       _prev = this;
       _next = this;
     }
+    return *this;
   }
 
   template <class T>
-  void pointer_list_node<T>::insert_replacing(pointer_list_node& item) {
-    detach();
+  void pointer_list_node<T>::splice_before(pointer_list_node& node) {
+    auto* prev = node._prev;
+    auto* next = &node;
 
-    auto* prev = item._prev;
-    auto* next = item._next;
+    _prev->_next = next;
+    next->_prev = _prev;
 
-    if (!item.detached()) {
-      item.detach();
-
-      this->_next = next;
-      next->_prev = this;
-
-      this->_prev = prev;
-      prev->_next = this;
-    }
+    this->_prev = prev;
+    prev->_next = this;
   }
 
   template <class T>
-  void pointer_list_node<T>::splice_replacing(pointer_list_node& list) {
-    auto* prev = list._prev;
-    auto* next = list._next;
+  void pointer_list_node<T>::splice_replacing(pointer_list_node& node) {
+    auto* prev = node._prev;
+    auto* next = node._next;
 
-    if (!list.detached()) {
-      list.detach();
+    if (!node.detached()) {
+      node.detach();
 
       _prev->_next = next;
       next->_prev = _prev;
@@ -106,83 +101,15 @@ namespace hatch {
   }
 
   template <class T>
-  void pointer_list_node<T>::insert_before(pointer_list_node& item) {
-    detach();
+  void pointer_list_node<T>::splice_after(pointer_list_node& node) {
+    auto* prev = &node;
+    auto* next = node._next;
 
-    auto* prev = item._prev;
+    _prev->_next = next;
+    next->_prev = _prev;
 
-    if (!item.detached()) {
-      this->_prev = prev;
-      prev->_next = this;
-
-      this->_next = &item;
-      item._prev = this;
-    } else {
-      this->_prev = &item;
-      item._next = this;
-
-      this->_next = &item;
-      item._prev = this;
-    }
-  }
-
-  template <class T>
-  void pointer_list_node<T>::splice_before(pointer_list_node& list) {
-    auto* prev = list._prev;
-
-    if (!list.detached()) {
-      _prev->_next = &list;
-      list._prev = _prev;
-
-      this->_prev = prev;
-      prev->_next = this;
-    } else {
-      _prev->_next = &list;
-      list._prev = _prev;
-
-      this->_prev = &list;
-      list._next = this;
-    }
-  }
-
-  template <class T>
-  void pointer_list_node<T>::insert_after(pointer_list_node& item) {
-    detach();
-
-    auto* next = item._next;
-
-    if (!item.detached()) {
-      this->_prev = &item;
-      item._next = this;
-
-      this->_next = next;
-      next->_prev = this;
-    } else {
-      this->_prev = &item;
-      item._next = this;
-
-      this->_next = &item;
-      item._prev = this;
-    }
-  }
-
-  template <class T>
-  void pointer_list_node<T>::splice_after(pointer_list_node& list) {
-    auto* next = list._next;
-
-    if (!list.detached()) {
-      _prev->_next = next;
-      next->_prev = _prev;
-
-      this->_prev = &list;
-      list._next = this;
-    } else {
-      _prev->_next = &list;
-      list._prev = this;
-
-      this->_prev = &list;
-      list._next = this;
-    }
+    this->_prev = prev;
+    prev->_next = this;
   }
 
 } // namespace hatch

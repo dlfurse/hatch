@@ -18,8 +18,31 @@ namespace hatch {
   }
 
   template <class T>
+  pointer_list_root<T>::pointer_list_root(pointer_list_root&& moved) :
+      _head{moved._head} {
+    moved._head = nullptr;
+  }
+
+  template <class T>
+  pointer_list_root<T>& pointer_list_root<T>::operator=(pointer_list_root&& moved) {
+    _head = moved._head;
+    moved._head = nullptr;
+  }
+
+  template <class T>
   bool pointer_list_root<T>::empty() const {
     return _head == nullptr;
+  }
+
+
+  template <class T>
+  T* pointer_list_root<T>::front() {
+    return _head ? static_cast<T*>(_head) : nullptr;
+  }
+
+  template <class T>
+  const T* pointer_list_root<T>::front() const {
+    return _head ? static_cast<const T*>(_head) : nullptr;
   }
 
   template <class T>
@@ -27,233 +50,93 @@ namespace hatch {
     return {this, _head};
   }
 
-  template <class T>
-  pointer_list_iterator<T> pointer_list_root<T>::end() {
-    return {this, nullptr};
-  }
-
-  template <class T>
-  T* pointer_list_root<T>::get_front() const {
-    if (_head) {
-      return static_cast<T*>(_head);
-    }
-    return nullptr;
-  }
 
   template <class T>
   T* pointer_list_root<T>::pop_front() {
-    auto* popped = _head;
+    auto* popped = front();
     if (popped) {
-      _head = popped->next();
-      popped->detach();
+      if (popped->detached()) {
+        _head = nullptr;
+      } else {
+        _head = popped->next();
+        popped->detach();
+      }
     }
     return popped;
   }
 
   template <class T>
   void pointer_list_root<T>::push_front(pointer_list_node<T>& node) {
-    auto* pusher = &node;
-    if (auto* pushed = _head) {
-      pusher->insert_before(*pushed);
-    } else {
-      pusher->detach();
+    auto* pushed = &node.detach();
+    if (_head) {
+      pushed->splice_before(*_head);
     }
-    _head = pusher;
+    _head = pushed;
   }
 
   template <class T>
   void pointer_list_root<T>::push_front(pointer_list_root<T>& root) {
-    if (auto* pusher = root._head) {
-      if (auto* pushed = _head) {
-        pusher->splice_before(*pushed);
+    auto* pushed = root._head;
+    if (pushed) {
+      if (_head) {
+        pushed->splice_before(*_head);
       }
-      _head = pusher;
+      _head = pushed;
     }
     root._head = nullptr;
   }
 
+
   template <class T>
-  void pointer_list_root<T>::push_front(pointer_list_iterator<T>& iterator) {
-    if (auto* root = iterator._root) {
-      if (auto* pusher = iterator._head) {
-        if (auto* pushed = _head) {
-          pusher->insert_before(*pushed);
-        } else {
-          pusher->detach();
-        }
-        _head = pusher;
-      }
-    }
-    iterator._head = nullptr;
-    iterator._root = nullptr;
+  T* pointer_list_root<T>::back() {
+    return _head ? static_cast<T*>(_head->_prev) : nullptr;
   }
 
   template <class T>
-  void pointer_list_root<T>::push_front(pointer_list_iterator<T>& start, pointer_list_iterator<T>& after) {
-    if (auto* root = start._root) {
-      if (auto* first = start._head) {
-        auto* last = root->_prev;
-        if (after._head) {
-          if (after._root == start._root) {
-            while (last->_next != after._head && last->_next != back) {
-              last = last->_next;
-            }
-          }
-        }
-        //TODO finish implementation
-      }
-    }
-    start._head = nullptr;
-    start._root = nullptr;
+  const T* pointer_list_root<T>::back() const {
+    return _head ? static_cast<const T*>(_head->_prev) : nullptr;
   }
 
   template <class T>
-  T* pointer_list_root<T>::replace_front(pointer_list_node<T>& node) {
-    auto* replaced = get_front();
-    if (replaced) {
-      node.insert_replacing(*replaced);
-    } else {
-      node.detach();
-    }
-    _head = &node;
-    return replaced;
+  pointer_list_iterator<T> pointer_list_root<T>::end() {
+    return {this, nullptr};
   }
 
-  template <class T>
-  T* pointer_list_root<T>::replace_front(pointer_list_root<T>& root) {
-    auto* replaced = get_front();
-    if (replaced) {
-      auto* head = root._head;
-      if (head) {
-
-      }
-      node.insert_replacing(*replaced);
-    } else {
-      node.detach();
-    }
-    _head = &node;
-    return replaced;
-  }
-
-  template <class T>
-  T* pointer_list_root<T>::replace_front(pointer_list_iterator<T>& iterator) {
-    if (iterator._root) {
-      if (auto *node = iterator._head) {
-        ++iterator;
-        return replace_front(*node);
-      }
-    }
-    return nullptr;
-  }
-
-  template <class T>
-  T* pointer_list_root<T>::replace_front(pointer_list_iterator<T>& start, pointer_list_iterator<T>& after) {
-    auto* replaced = get_front();
-    if (replaced) {
-
-    }
-    return replaced;
-  }
-
-
-
-  template <class T>
-  T* pointer_list_root<T>::get_back() const {
-    if (_head) {
-      return static_cast<T*>(_head->_prev);
-    }
-    return nullptr;
-  }
 
   template <class T>
   T* pointer_list_root<T>::pop_back() {
-    if (auto* node = _head) {
-      if (node->_prev) {
-        node = node->_prev;
-      } else {
+    auto* popped = back();
+    if (popped) {
+      if (popped->detached()) {
         _head = nullptr;
-      }
-      node->detach();
-      return static_cast<T*>(node);
-    }
-    return nullptr;
-  }
-
-  template <class T>
-  T* pointer_list_root<T>::replace_back(pointer_list_node<T>& node) {
-    auto* replaced = back();
-    if (_head) {
-      if (_head->_prev) {
-        node.insert_replacing(*_head->_prev);
       } else {
-        node.insert_replacing(*_head);
-        _head = &node;
-      }
-    } else {
-      node.detach();
-      _head = &node;
-    }
-    return replaced;
-  }
-
-  template <class T>
-  T* pointer_list_root<T>::replace_back(pointer_list_iterator<T>& iterator) {
-    if (auto* root = iterator._root) {
-      if (root != this) {
-        if (auto *node = iterator._head) {
-          ++iterator;
-          return replace_back(*node);
-        }
+        popped->detach();
       }
     }
-    return nullptr;
+    return popped;
   }
 
   template <class T>
   void pointer_list_root<T>::push_back(pointer_list_node<T>& node) {
+    auto* pushed = &node.detach();
     if (_head) {
-      if (_head->_prev) {
-        node.insert_after(*_head->_prev);
-      } else {
-        node.insert_after(*_head);
-      }
+      pushed->splice_before(*_head);
     } else {
-      node.detach();
-      _head = &node;
+      _head = pushed;
     }
   }
 
   template <class T>
-  void pointer_list_root<T>::push_back(pointer_list_iterator<T>& iterator) {
-    if (auto* root = iterator._root) {
-      if (root != this) {
-        if (auto *node = iterator._head) {
-          ++iterator;
-          push_back(*node);
-        }
-      }
-    }
-  }
-
-  template <class T>
-  void pointer_list_root<T>::splice_back(pointer_list_node<T>& node) {
-    if (!empty()) {
-      if (_head->_prev) {
-        node.splice_after(*_head->_prev);
+  void pointer_list_root<T>::push_back(pointer_list_root<T>& root) {
+    auto* pushed = root._head;
+    if (pushed) {
+      if (_head) {
+        pushed->splice_before(*_head);
       } else {
-        node.splice_after(*_head);
+        _head = pushed;
       }
-    } else {
-      _head = &node;
     }
-  }
-
-  template <class T>
-  void pointer_list_root<T>::splice_back(pointer_list_root<T>& root) {
-    if (auto* node = root._head) {
-      root._head = nullptr;
-      splice_back(*node);
-    }
+    root._head = nullptr;
   }
 
 } // namespace hatch

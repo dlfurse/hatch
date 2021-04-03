@@ -30,32 +30,20 @@ namespace hatch {
         test_data{numerator, denominator, precise} {
       }
 
-      void detach() {
+      pointer_list_node<test_node>& detach() {
         return node::detach();
       }
 
-      void insert_before(test_node& item) {
-        return node::insert_before(item);
+      void splice_before(test_node& node) {
+        return node::splice_before(node);
       }
 
-      void splice_before(test_node& list) {
-        return node::splice_before(list);
-      }
-
-      void insert_replacing(test_node& item) {
-        return node::insert_replacing(item);
-      }
-
-      void splice_replacing(test_node& list) {
-        return node::splice_replacing(list);
-      }
-
-      void insert_after(test_node& item) {
-        return node::insert_after(item);
+      void splice_replacing(test_node& node) {
+        return node::splice_replacing(node);
       }
       
-      void splice_after(test_node& list) {
-        return node::splice_after(list);
+      void splice_after(test_node& node) {
+        return node::splice_after(node);
       }
     };
 
@@ -100,12 +88,12 @@ namespace hatch {
     EXPECT_EQ(dump(one), 0);
   }
 
-  TEST_F(PointerListTest, SimpleInsertBeforeTest) {
+  TEST_F(PointerListTest, SingleSpliceBeforeTest) {
     EXPECT_TRUE(first.detached());
     EXPECT_TRUE(second.detached());
     EXPECT_TRUE(third.detached());
 
-    second.insert_before(third);
+    second.splice_before(third);
 
     EXPECT_EQ(second.next(), &third);
     EXPECT_EQ(third.prev(), &second);
@@ -116,7 +104,7 @@ namespace hatch {
     EXPECT_FALSE(second.detached());
     EXPECT_FALSE(third.detached());
 
-    first.insert_before(second);
+    first.splice_before(second);
 
     EXPECT_EQ(first.next(), &second);
     EXPECT_EQ(second.prev(), &first);
@@ -139,7 +127,7 @@ namespace hatch {
     EXPECT_FALSE(third.detached());
   }
 
-  TEST_F(PointerListTest, SimpleSpliceBeforeTest) {
+  TEST_F(PointerListTest, MultipleSpliceBeforeTest) {
     EXPECT_TRUE(first.detached());
     EXPECT_TRUE(second.detached());
     EXPECT_TRUE(third.detached());
@@ -148,11 +136,11 @@ namespace hatch {
     EXPECT_TRUE(fifth.detached());
     EXPECT_TRUE(sixth.detached());
 
-    second.insert_before(third);
-    first.insert_before(second);
+    second.splice_before(third);
+    first.splice_before(second);
 
-    fifth.insert_before(sixth);
-    fourth.insert_before(fifth);
+    fifth.splice_before(sixth);
+    fourth.splice_before(fifth);
 
     EXPECT_FALSE(first.detached());
     EXPECT_FALSE(second.detached());
@@ -178,14 +166,14 @@ namespace hatch {
     EXPECT_EQ(sixth.prev(), &fifth);
   }
 
-  TEST_F(PointerListTest, SimpleInsertReplacingTest) {
+  TEST_F(PointerListTest, SingleSpliceReplacingTest) {
     EXPECT_TRUE(first.detached());
     EXPECT_TRUE(second.detached());
     EXPECT_TRUE(third.detached());
     EXPECT_TRUE(fourth.detached());
 
-    second.insert_after(first);
-    third.insert_before(first);
+    second.splice_after(first);
+    third.splice_before(first);
 
     EXPECT_EQ(first.next(), &second);
     EXPECT_EQ(second.next(), &third);
@@ -194,7 +182,7 @@ namespace hatch {
     EXPECT_EQ(second.prev(), &first);
     EXPECT_EQ(first.prev(), &third);
 
-    fourth.insert_replacing(first);
+    fourth.splice_replacing(first);
 
     EXPECT_EQ(fourth.next(), &second);
     EXPECT_EQ(second.next(), &third);
@@ -204,7 +192,7 @@ namespace hatch {
     EXPECT_EQ(fourth.prev(), &third);
   }
 
-  TEST_F(PointerListTest, SimpleSpliceReplacingTest) {
+  TEST_F(PointerListTest, MultipleSpliceReplacingTest) {
     EXPECT_TRUE(first.detached());
     EXPECT_TRUE(second.detached());
     EXPECT_TRUE(third.detached());
@@ -213,11 +201,11 @@ namespace hatch {
     EXPECT_TRUE(fifth.detached());
     EXPECT_TRUE(sixth.detached());
 
-    second.insert_before(third);
-    first.insert_after(third);
+    second.splice_before(third);
+    first.splice_after(third);
 
-    fifth.insert_before(sixth);
-    fourth.insert_after(sixth);
+    fifth.splice_before(sixth);
+    fourth.splice_after(sixth);
 
     EXPECT_FALSE(first.detached());
     EXPECT_FALSE(second.detached());
@@ -241,12 +229,12 @@ namespace hatch {
     EXPECT_EQ(first.prev(), &third);
   }
 
-  TEST_F(PointerListTest, SimpleInsertAfterTest) {
+  TEST_F(PointerListTest, SingleInsertAfterTest) {
     EXPECT_TRUE(first.detached());
     EXPECT_TRUE(second.detached());
     EXPECT_TRUE(third.detached());
 
-    second.insert_after(first);
+    second.splice_after(first);
 
     EXPECT_EQ(first.next(), &second);
     EXPECT_EQ(second.prev(), &first);
@@ -257,7 +245,7 @@ namespace hatch {
     EXPECT_FALSE(second.detached());
     EXPECT_TRUE(third.detached());
 
-    third.insert_after(second);
+    third.splice_after(second);
 
     EXPECT_EQ(third.next(), &first);
     EXPECT_EQ(first.prev(), &third);
@@ -280,7 +268,7 @@ namespace hatch {
     EXPECT_FALSE(third.detached());
   }
 
-  TEST_F(PointerListTest, SimpleSpliceAfterTest) {
+  TEST_F(PointerListTest, MultipleSpliceAfterTest) {
     EXPECT_TRUE(first.detached());
     EXPECT_TRUE(second.detached());
     EXPECT_TRUE(third.detached());
@@ -289,11 +277,11 @@ namespace hatch {
     EXPECT_TRUE(fifth.detached());
     EXPECT_TRUE(sixth.detached());
 
-    second.insert_after(first);
-    third.insert_after(second);
+    second.splice_after(first);
+    third.splice_after(second);
 
-    fifth.insert_after(fourth);
-    sixth.insert_after(fifth);
+    fifth.splice_after(fourth);
+    sixth.splice_after(fifth);
 
     EXPECT_FALSE(first.detached());
     EXPECT_FALSE(second.detached());
@@ -319,312 +307,316 @@ namespace hatch {
     EXPECT_EQ(sixth.prev(), &fifth);
   }
 
-//  TEST_F(PointerListTest, SimpleOneElementPushReplacePopFrontTest) {
-//    one.push_front(first);
-//
-//    EXPECT_TRUE(first.detached());
-//    EXPECT_FALSE(one.empty());
-//    EXPECT_EQ(one.front(), &first);
-//    EXPECT_EQ(dump(one), 1);
-//    EXPECT_EQ(scratch[0].numerator, 1);
-//    EXPECT_EQ(scratch[0].denominator, 10);
-//    EXPECT_EQ(scratch[0].precise, 1.1);
-//
-//    item = one.replace_front(second);
-//
-//    EXPECT_EQ(item, &first);
-//    EXPECT_TRUE(first.detached());
-//    EXPECT_TRUE(second.detached());
-//    EXPECT_FALSE(one.empty());
-//    EXPECT_EQ(one.front(), &second);
-//    EXPECT_EQ(dump(one), 1);
-//    EXPECT_EQ(scratch[0].numerator, 2);
-//    EXPECT_EQ(scratch[0].denominator, 20);
-//    EXPECT_EQ(scratch[0].precise, 2.2);
-//
-//    item = one.pop_front();
-//
-//    EXPECT_EQ(item, &second);
-//    EXPECT_TRUE(second.detached());
-//    EXPECT_TRUE(one.empty());
-//    EXPECT_EQ(one.front(), nullptr);
-//    EXPECT_EQ(dump(one), 0);
-//
-//    item = one.pop_front();
-//
-//    EXPECT_EQ(item, nullptr);
-//    EXPECT_TRUE(one.empty());
-//    EXPECT_EQ(one.front(), nullptr);
-//    EXPECT_EQ(dump(one), 0);
-//  }
-//
-//  TEST_F(PointerListTest, SimpleOneElementPushReplacePopBackTest) {
-//    one.push_back(first);
-//
-//    EXPECT_TRUE(first.detached());
-//    EXPECT_FALSE(one.empty());
-//    EXPECT_EQ(one.back(), &first);
-//    EXPECT_EQ(dump(one), 1);
-//    EXPECT_EQ(scratch[0].numerator, 1);
-//    EXPECT_EQ(scratch[0].denominator, 10);
-//    EXPECT_EQ(scratch[0].precise, 1.1);
-//
-//    item = one.replace_back(second);
-//
-//    EXPECT_EQ(item, &first);
-//    EXPECT_TRUE(first.detached());
-//    EXPECT_TRUE(second.detached());
-//    EXPECT_FALSE(one.empty());
-//    EXPECT_EQ(one.back(), &second);
-//    EXPECT_EQ(dump(one), 1);
-//    EXPECT_EQ(scratch[0].numerator, 2);
-//    EXPECT_EQ(scratch[0].denominator, 20);
-//    EXPECT_EQ(scratch[0].precise, 2.2);
-//
-//    item = one.pop_back();
-//
-//    EXPECT_EQ(item, &second);
-//    EXPECT_TRUE(second.detached());
-//    EXPECT_TRUE(one.empty());
-//    EXPECT_EQ(one.back(), nullptr);
-//    EXPECT_EQ(dump(one), 0);
-//
-//    item = one.pop_back();
-//
-//    EXPECT_EQ(item, nullptr);
-//    EXPECT_TRUE(one.empty());
-//    EXPECT_EQ(one.back(), nullptr);
-//    EXPECT_EQ(dump(one), 0);
-//  }
-//
-//  TEST_F(PointerListTest, SimpleTwoElementFrontTest) {
-//    one.push_front(second);
-//    one.push_front(first);
-//
-//    EXPECT_FALSE(first.detached());
-//    EXPECT_FALSE(second.detached());
-//    EXPECT_FALSE(one.empty());
-//    EXPECT_EQ(one.front(), &first);
-//    EXPECT_EQ(dump(one), 2);
-//    EXPECT_EQ(scratch[0].numerator, 1);
-//    EXPECT_EQ(scratch[0].denominator, 10);
-//    EXPECT_EQ(scratch[0].precise, 1.1);
-//    EXPECT_EQ(scratch[1].numerator, 2);
-//    EXPECT_EQ(scratch[1].denominator, 20);
-//    EXPECT_EQ(scratch[1].precise, 2.2);
-//
-//    item = one.replace_front(third);
-//
-//    EXPECT_EQ(item, &first);
-//    EXPECT_TRUE(first.detached());
-//    EXPECT_FALSE(second.detached());
-//    EXPECT_FALSE(third.detached());
-//    EXPECT_FALSE(one.empty());
-//    EXPECT_EQ(one.front(), &third);
-//    EXPECT_EQ(dump(one), 2);
-//    EXPECT_EQ(scratch[0].numerator, 3);
-//    EXPECT_EQ(scratch[0].denominator, 30);
-//    EXPECT_EQ(scratch[0].precise, 3.3);
-//    EXPECT_EQ(scratch[1].numerator, 2);
-//    EXPECT_EQ(scratch[1].denominator, 20);
-//    EXPECT_EQ(scratch[1].precise, 2.2);
-//
-//    item = one.pop_front();
-//
-//    EXPECT_EQ(item, &third);
-//    EXPECT_TRUE(third.detached());
-//    EXPECT_TRUE(second.detached());
-//    EXPECT_FALSE(one.empty());
-//    EXPECT_EQ(dump(one), 1);
-//
-//    item = one.pop_front();
-//
-//    EXPECT_EQ(item, &second);
-//    EXPECT_TRUE(second.detached());
-//    EXPECT_TRUE(one.empty());
-//    EXPECT_EQ(dump(one), 0);
-//  }
-//
-//  TEST_F(PointerListTest, SimpleDoublePushReplacePopBackRootTest) {
-//    one.push_back(first);
-//    one.push_back(second);
-//
-//    EXPECT_FALSE(first.detached());
-//    EXPECT_FALSE(second.detached());
-//    EXPECT_FALSE(one.empty());
-//    EXPECT_EQ(dump(one), 2);
-//    EXPECT_EQ(scratch[0].numerator, 1);
-//    EXPECT_EQ(scratch[0].denominator, 10);
-//    EXPECT_EQ(scratch[0].precise, 1.1);
-//    EXPECT_EQ(scratch[1].numerator, 2);
-//    EXPECT_EQ(scratch[1].denominator, 20);
-//    EXPECT_EQ(scratch[1].precise, 2.2);
-//
-//    item = one.replace_back(third);
-//
-//    EXPECT_EQ(item, &second);
-//    EXPECT_TRUE(second.detached());
-//    EXPECT_FALSE(first.detached());
-//    EXPECT_FALSE(third.detached());
-//    EXPECT_FALSE(one.empty());
-//    EXPECT_EQ(dump(one), 2);
-//    EXPECT_EQ(scratch[0].numerator, 1);
-//    EXPECT_EQ(scratch[0].denominator, 10);
-//    EXPECT_EQ(scratch[0].precise, 1.1);
-//    EXPECT_EQ(scratch[1].numerator, 3);
-//    EXPECT_EQ(scratch[1].denominator, 30);
-//    EXPECT_EQ(scratch[1].precise, 3.3);
-//
-//    item = one.pop_back();
-//
-//    EXPECT_EQ(item, &third);
-//    EXPECT_TRUE(third.detached());
-//    EXPECT_TRUE(first.detached());
-//    EXPECT_FALSE(one.empty());
-//    EXPECT_EQ(dump(one), 1);
-//
-//    item = one.pop_front();
-//
-//    EXPECT_EQ(item, &first);
-//    EXPECT_TRUE(first.detached());
-//    EXPECT_TRUE(one.empty());
-//    EXPECT_EQ(dump(one), 0);
-//  }
-//
-//
-//  TEST_F(PointerListTest, SimpleQuadruplePushReplacePopBothTest) {
-//    one.push_front(second);
-//    one.push_back(third);
-//    one.push_front(first);
-//    one.push_back(fourth);
-//
-//    EXPECT_FALSE(first.detached());
-//    EXPECT_FALSE(second.detached());
-//    EXPECT_FALSE(third.detached());
-//    EXPECT_FALSE(fourth.detached());
-//    EXPECT_FALSE(one.empty());
-//    EXPECT_EQ(dump(one), 4);
-//    EXPECT_EQ(scratch[0].numerator, 1);
-//    EXPECT_EQ(scratch[0].denominator, 10);
-//    EXPECT_EQ(scratch[0].precise, 1.1);
-//    EXPECT_EQ(scratch[1].numerator, 2);
-//    EXPECT_EQ(scratch[1].denominator, 20);
-//    EXPECT_EQ(scratch[1].precise, 2.2);
-//    EXPECT_EQ(scratch[2].numerator, 3);
-//    EXPECT_EQ(scratch[2].denominator, 30);
-//    EXPECT_EQ(scratch[2].precise, 3.3);
-//    EXPECT_EQ(scratch[3].numerator, 4);
-//    EXPECT_EQ(scratch[3].denominator, 40);
-//    EXPECT_EQ(scratch[3].precise, 4.4);
-//
-//    item = one.pop_front();
-//
-//    EXPECT_EQ(item, &first);
-//    EXPECT_TRUE(first.detached());
-//    EXPECT_FALSE(second.detached());
-//    EXPECT_FALSE(third.detached());
-//    EXPECT_FALSE(fourth.detached());
-//    EXPECT_FALSE(one.empty());
-//    EXPECT_EQ(dump(one), 3);
-//
-//    item = one.pop_back();
-//
-//    EXPECT_EQ(item, &fourth);
-//    EXPECT_TRUE(first.detached());
-//    EXPECT_FALSE(second.detached());
-//    EXPECT_FALSE(third.detached());
-//    EXPECT_TRUE(fourth.detached());
-//    EXPECT_FALSE(one.empty());
-//    EXPECT_EQ(dump(one), 2);
-//
-//    item = one.pop_front();
-//
-//    EXPECT_EQ(item, &second);
-//    EXPECT_TRUE(first.detached());
-//    EXPECT_TRUE(second.detached());
-//    EXPECT_TRUE(third.detached());
-//    EXPECT_TRUE(fourth.detached());
-//    EXPECT_FALSE(one.empty());
-//    EXPECT_EQ(dump(one), 1);
-//
-//    item = one.pop_back();
-//
-//    EXPECT_EQ(item, &third);
-//    EXPECT_TRUE(third.detached());
-//    EXPECT_TRUE(one.empty());
-//    EXPECT_EQ(dump(one), 0);
-//  }
-//
-//  TEST_F(PointerListTest, SimpleOneTwoElementSpliceFrontTest) {
-//    two.push_front(third);
-//
-//    EXPECT_TRUE(third.detached());
-//    EXPECT_FALSE(two.empty());
-//    EXPECT_EQ(two.front(), &third);
-//    EXPECT_EQ(dump(two), 1);
-//    EXPECT_EQ(scratch[0].numerator, 3);
-//    EXPECT_EQ(scratch[0].denominator, 30);
-//    EXPECT_EQ(scratch[0].precise, 3.3);
-//
-//    one.splice_front(two);
-//
-//    EXPECT_TRUE(third.detached());
-//    EXPECT_TRUE(two.empty());
-//    EXPECT_EQ(two.front(), nullptr);
-//    EXPECT_EQ(dump(two), 0);
-//    EXPECT_FALSE(one.empty());
-//    EXPECT_EQ(one.front(), &third);
-//    EXPECT_EQ(dump(one), 1);
-//    EXPECT_EQ(scratch[0].numerator, 3);
-//    EXPECT_EQ(scratch[0].denominator, 30);
-//    EXPECT_EQ(scratch[0].precise, 3.3);
-//
-//    item = one.pop_front();
-//
-//    EXPECT_EQ(item, &third);
-//    EXPECT_TRUE(third.detached());
-//    EXPECT_TRUE(one.empty());
-//    EXPECT_EQ(one.front(), nullptr);
-//    EXPECT_EQ(dump(one), 0);
-//  }
-//
-//  TEST_F(PointerListTest, SimpleOneTwoElementSpliceBackTest) {
-//    two.push_back(third);
-//
-//    EXPECT_TRUE(third.detached());
-//    EXPECT_FALSE(two.empty());
-//    EXPECT_EQ(two.back(), &third);
-//    EXPECT_EQ(dump(two), 1);
-//    EXPECT_EQ(scratch[0].numerator, 3);
-//    EXPECT_EQ(scratch[0].denominator, 30);
-//    EXPECT_EQ(scratch[0].precise, 3.3);
-//
-//    one.splice_back(two);
-//
-//    EXPECT_TRUE(third.detached());
-//    EXPECT_TRUE(two.empty());
-//    EXPECT_EQ(two.back(), nullptr);
-//    EXPECT_EQ(dump(two), 0);
-//    EXPECT_FALSE(one.empty());
-//    EXPECT_EQ(one.back(), &third);
-//    EXPECT_EQ(dump(one), 1);
-//    EXPECT_EQ(scratch[0].numerator, 3);
-//    EXPECT_EQ(scratch[0].denominator, 30);
-//    EXPECT_EQ(scratch[0].precise, 3.3);
-//
-//    item = one.pop_back();
-//
-//    EXPECT_EQ(item, &third);
-//    EXPECT_TRUE(third.detached());
-//    EXPECT_TRUE(one.empty());
-//    EXPECT_EQ(one.back(), nullptr);
-//    EXPECT_EQ(dump(one), 0);
-//  }
-//
-//
+  TEST_F(PointerListTest, OneElementFrontTest) {
+    one.push_front(first);
+
+    EXPECT_TRUE(first.detached());
+    EXPECT_FALSE(one.empty());
+    EXPECT_EQ(one.front(), &first);
+    EXPECT_EQ(dump(one), 1);
+    EXPECT_EQ(data[0].numerator, 1);
+    EXPECT_EQ(data[0].denominator, 10);
+    EXPECT_EQ(data[0].precise, 1.1);
+
+    node = one.pop_front();
+    one.push_front(second);
+
+    EXPECT_EQ(node, &first);
+    EXPECT_TRUE(first.detached());
+    EXPECT_TRUE(second.detached());
+    EXPECT_FALSE(one.empty());
+    EXPECT_EQ(one.front(), &second);
+    EXPECT_EQ(dump(one), 1);
+    EXPECT_EQ(data[0].numerator, 2);
+    EXPECT_EQ(data[0].denominator, 20);
+    EXPECT_EQ(data[0].precise, 2.2);
+
+    node = one.pop_front();
+
+    EXPECT_EQ(node, &second);
+    EXPECT_TRUE(second.detached());
+    EXPECT_TRUE(one.empty());
+    EXPECT_EQ(one.front(), nullptr);
+    EXPECT_EQ(dump(one), 0);
+
+    node = one.pop_front();
+
+    EXPECT_EQ(node, nullptr);
+    EXPECT_TRUE(one.empty());
+    EXPECT_EQ(one.front(), nullptr);
+    EXPECT_EQ(dump(one), 0);
+  }
+
+  TEST_F(PointerListTest, OneElementBackTest) {
+    one.push_back(first);
+
+    EXPECT_TRUE(first.detached());
+    EXPECT_FALSE(one.empty());
+    EXPECT_EQ(one.back(), &first);
+    EXPECT_EQ(dump(one), 1);
+    EXPECT_EQ(data[0].numerator, 1);
+    EXPECT_EQ(data[0].denominator, 10);
+    EXPECT_EQ(data[0].precise, 1.1);
+
+    node = one.pop_back();
+    one.push_back(second);
+
+    EXPECT_EQ(node, &first);
+    EXPECT_TRUE(first.detached());
+    EXPECT_TRUE(second.detached());
+    EXPECT_FALSE(one.empty());
+    EXPECT_EQ(one.back(), &second);
+    EXPECT_EQ(dump(one), 1);
+    EXPECT_EQ(data[0].numerator, 2);
+    EXPECT_EQ(data[0].denominator, 20);
+    EXPECT_EQ(data[0].precise, 2.2);
+
+    node = one.pop_back();
+
+    EXPECT_EQ(node, &second);
+    EXPECT_TRUE(second.detached());
+    EXPECT_TRUE(one.empty());
+    EXPECT_EQ(one.back(), nullptr);
+    EXPECT_EQ(dump(one), 0);
+
+    node = one.pop_back();
+
+    EXPECT_EQ(node, nullptr);
+    EXPECT_TRUE(one.empty());
+    EXPECT_EQ(one.back(), nullptr);
+    EXPECT_EQ(dump(one), 0);
+  }
+
+  TEST_F(PointerListTest, TwoElementFrontTest) {
+    one.push_front(second);
+    one.push_front(first);
+
+    EXPECT_FALSE(first.detached());
+    EXPECT_FALSE(second.detached());
+    EXPECT_FALSE(one.empty());
+    EXPECT_EQ(one.front(), &first);
+    EXPECT_EQ(dump(one), 2);
+    EXPECT_EQ(data[0].numerator, 1);
+    EXPECT_EQ(data[0].denominator, 10);
+    EXPECT_EQ(data[0].precise, 1.1);
+    EXPECT_EQ(data[1].numerator, 2);
+    EXPECT_EQ(data[1].denominator, 20);
+    EXPECT_EQ(data[1].precise, 2.2);
+
+    node = one.pop_front();
+    one.push_front(third);
+
+    EXPECT_EQ(node, &first);
+    EXPECT_TRUE(first.detached());
+    EXPECT_FALSE(second.detached());
+    EXPECT_FALSE(third.detached());
+    EXPECT_FALSE(one.empty());
+    EXPECT_EQ(one.front(), &third);
+    EXPECT_EQ(dump(one), 2);
+    EXPECT_EQ(data[0].numerator, 3);
+    EXPECT_EQ(data[0].denominator, 30);
+    EXPECT_EQ(data[0].precise, 3.3);
+    EXPECT_EQ(data[1].numerator, 2);
+    EXPECT_EQ(data[1].denominator, 20);
+    EXPECT_EQ(data[1].precise, 2.2);
+
+    node = one.pop_front();
+
+    EXPECT_EQ(node, &third);
+    EXPECT_TRUE(third.detached());
+    EXPECT_TRUE(second.detached());
+    EXPECT_FALSE(one.empty());
+    EXPECT_EQ(dump(one), 1);
+
+    node = one.pop_front();
+
+    EXPECT_EQ(node, &second);
+    EXPECT_TRUE(second.detached());
+    EXPECT_TRUE(one.empty());
+    EXPECT_EQ(dump(one), 0);
+  }
+
+  TEST_F(PointerListTest, TwoElementBackTest) {
+    one.push_back(first);
+    one.push_back(second);
+
+    EXPECT_FALSE(first.detached());
+    EXPECT_FALSE(second.detached());
+    EXPECT_FALSE(one.empty());
+    EXPECT_EQ(dump(one), 2);
+    EXPECT_EQ(data[0].numerator, 1);
+    EXPECT_EQ(data[0].denominator, 10);
+    EXPECT_EQ(data[0].precise, 1.1);
+    EXPECT_EQ(data[1].numerator, 2);
+    EXPECT_EQ(data[1].denominator, 20);
+    EXPECT_EQ(data[1].precise, 2.2);
+
+    node = one.pop_back();
+    one.push_back(third);
+
+    EXPECT_EQ(node, &second);
+    EXPECT_TRUE(second.detached());
+    EXPECT_FALSE(first.detached());
+    EXPECT_FALSE(third.detached());
+    EXPECT_FALSE(one.empty());
+    EXPECT_EQ(dump(one), 2);
+    EXPECT_EQ(data[0].numerator, 1);
+    EXPECT_EQ(data[0].denominator, 10);
+    EXPECT_EQ(data[0].precise, 1.1);
+    EXPECT_EQ(data[1].numerator, 3);
+    EXPECT_EQ(data[1].denominator, 30);
+    EXPECT_EQ(data[1].precise, 3.3);
+
+    node = one.pop_back();
+
+    EXPECT_EQ(node, &third);
+    EXPECT_TRUE(third.detached());
+    EXPECT_TRUE(first.detached());
+    EXPECT_FALSE(one.empty());
+    EXPECT_EQ(dump(one), 1);
+
+    node = one.pop_back();
+
+    EXPECT_EQ(node, &first);
+    EXPECT_TRUE(first.detached());
+    EXPECT_TRUE(one.empty());
+    EXPECT_EQ(dump(one), 0);
+  }
+
+
+  TEST_F(PointerListTest, FourElementFrontBackTest) {
+    one.push_front(second);
+    one.push_back(third);
+    one.push_front(first);
+    one.push_back(fourth);
+
+    EXPECT_FALSE(first.detached());
+    EXPECT_FALSE(second.detached());
+    EXPECT_FALSE(third.detached());
+    EXPECT_FALSE(fourth.detached());
+    EXPECT_FALSE(one.empty());
+    EXPECT_EQ(dump(one), 4);
+    EXPECT_EQ(data[0].numerator, 1);
+    EXPECT_EQ(data[0].denominator, 10);
+    EXPECT_EQ(data[0].precise, 1.1);
+    EXPECT_EQ(data[1].numerator, 2);
+    EXPECT_EQ(data[1].denominator, 20);
+    EXPECT_EQ(data[1].precise, 2.2);
+    EXPECT_EQ(data[2].numerator, 3);
+    EXPECT_EQ(data[2].denominator, 30);
+    EXPECT_EQ(data[2].precise, 3.3);
+    EXPECT_EQ(data[3].numerator, 4);
+    EXPECT_EQ(data[3].denominator, 40);
+    EXPECT_EQ(data[3].precise, 4.4);
+
+    node = one.pop_front();
+
+    EXPECT_EQ(node, &first);
+    EXPECT_TRUE(first.detached());
+    EXPECT_FALSE(second.detached());
+    EXPECT_FALSE(third.detached());
+    EXPECT_FALSE(fourth.detached());
+    EXPECT_FALSE(one.empty());
+    EXPECT_EQ(dump(one), 3);
+
+    node = one.pop_back();
+
+    EXPECT_EQ(node, &fourth);
+    EXPECT_TRUE(first.detached());
+    EXPECT_FALSE(second.detached());
+    EXPECT_FALSE(third.detached());
+    EXPECT_TRUE(fourth.detached());
+    EXPECT_FALSE(one.empty());
+    EXPECT_EQ(dump(one), 2);
+
+    node = one.pop_front();
+
+    EXPECT_EQ(node, &second);
+    EXPECT_TRUE(first.detached());
+    EXPECT_TRUE(second.detached());
+    EXPECT_TRUE(third.detached());
+    EXPECT_TRUE(fourth.detached());
+    EXPECT_FALSE(one.empty());
+    EXPECT_EQ(dump(one), 1);
+
+    node = one.pop_back();
+
+    EXPECT_EQ(node, &third);
+    EXPECT_TRUE(third.detached());
+    EXPECT_TRUE(one.empty());
+    EXPECT_EQ(dump(one), 0);
+  }
+
+  TEST_F(PointerListTest, OneListFrontTest) {
+    two.push_front(third);
+
+    EXPECT_TRUE(third.detached());
+    EXPECT_FALSE(two.empty());
+    EXPECT_EQ(two.front(), &third);
+    EXPECT_EQ(dump(two), 1);
+    EXPECT_EQ(data[0].numerator, 3);
+    EXPECT_EQ(data[0].denominator, 30);
+    EXPECT_EQ(data[0].precise, 3.3);
+
+    one.push_front(two);
+
+    EXPECT_TRUE(third.detached());
+    EXPECT_TRUE(two.empty());
+    EXPECT_EQ(two.front(), nullptr);
+    EXPECT_EQ(dump(two), 0);
+    EXPECT_FALSE(one.empty());
+    EXPECT_EQ(one.front(), &third);
+    EXPECT_EQ(dump(one), 1);
+    EXPECT_EQ(data[0].numerator, 3);
+    EXPECT_EQ(data[0].denominator, 30);
+    EXPECT_EQ(data[0].precise, 3.3);
+
+    node = one.pop_front();
+
+    EXPECT_EQ(node, &third);
+    EXPECT_TRUE(third.detached());
+    EXPECT_TRUE(one.empty());
+    EXPECT_EQ(one.front(), nullptr);
+    EXPECT_EQ(dump(one), 0);
+  }
+
+  TEST_F(PointerListTest, OneListBackTest) {
+    two.push_back(third);
+
+    EXPECT_TRUE(third.detached());
+    EXPECT_FALSE(two.empty());
+    EXPECT_EQ(two.back(), &third);
+    EXPECT_EQ(dump(two), 1);
+    EXPECT_EQ(data[0].numerator, 3);
+    EXPECT_EQ(data[0].denominator, 30);
+    EXPECT_EQ(data[0].precise, 3.3);
+
+    one.push_back(two);
+
+    EXPECT_TRUE(third.detached());
+    EXPECT_TRUE(two.empty());
+    EXPECT_EQ(two.back(), nullptr);
+    EXPECT_EQ(dump(two), 0);
+    EXPECT_FALSE(one.empty());
+    EXPECT_EQ(one.back(), &third);
+    EXPECT_EQ(dump(one), 1);
+    EXPECT_EQ(data[0].numerator, 3);
+    EXPECT_EQ(data[0].denominator, 30);
+    EXPECT_EQ(data[0].precise, 3.3);
+
+    node = one.pop_back();
+
+    EXPECT_EQ(node, &third);
+    EXPECT_TRUE(third.detached());
+    EXPECT_TRUE(one.empty());
+    EXPECT_EQ(one.back(), nullptr);
+    EXPECT_EQ(dump(one), 0);
+  }
+
+
 //  TEST_F(PointerListTest, SimpleInsertReplacingTest) {
-//    second.insert_after(first);
-//    third.insert_after(second);
+//    second.splice_after(first);
+//    third.splice_after(second);
 //
 //    {
 //      int count = 0;

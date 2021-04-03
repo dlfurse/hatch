@@ -93,12 +93,12 @@ set(hatch_utility_sources.hh
 ########
 
 set(hatch_core_sources
-  hatch/core/memory.hh
-  hatch/core/memory_fwd.hh
-  hatch/core/pointer.hh
-  hatch/core/pointer_impl.hh
-  hatch/core/allocator.hh
-  hatch/core/allocator_impl.hh
+#  hatch/core/memory.hh
+#  hatch/core/memory_fwd.hh
+#  hatch/core/pointer.hh
+#  hatch/core/pointer_impl.hh
+#  hatch/core/allocator.hh
+#  hatch/core/allocator_impl.hh
 
   hatch/core/async.hh
   hatch/core/async_fwd.hh
@@ -109,13 +109,13 @@ set(hatch_core_sources
 
 #  hatch/core/streamer.hh
 #  hatch/core/streamer.cc
-  hatch/core/socket.hh
-  hatch/core/reactor.hh
-  hatch/core/reactor.cc
+#  hatch/core/socket.hh
+#  hatch/core/reactor.hh
+#  hatch/core/reactor.cc
 )
 
-add_library(hatch_core STATIC ${hatch_core_sources})
-set_property(TARGET hatch_core PROPERTY CXX_STANDARD 17)
+#add_library(hatch_core STATIC ${hatch_core_sources})
+#set_property(TARGET hatch_core PROPERTY CXX_STANDARD 17)
 
 ########
 # test #
@@ -131,15 +131,15 @@ target_link_libraries(hatch_utility_test gtest_main)
 
 add_test(NAME hatch_utility_test COMMAND hatch_utility_test)
 
-#set(hatch_core_test_sources
+set(hatch_core_test_sources
 #  test/core/memory.cc
-#  test/core/async.cc
+  test/core/async.cc
 #  test/core/buffer.cc
 #  test/core/socket.cc
-#)
-#
-#add_executable(hatch_core_test ${hatch_core_test_sources})
-#set_property(TARGET hatch_core_test PROPERTY CXX_STANDARD 17)
-#target_link_libraries(hatch_core_test gtest_main)
-#
-#add_test(NAME hatch_core_test COMMAND hatch_core_test)
+)
+
+add_executable(hatch_core_test ${hatch_core_test_sources})
+set_property(TARGET hatch_core_test PROPERTY CXX_STANDARD 17)
+target_link_libraries(hatch_core_test gtest_main)
+
+add_test(NAME hatch_core_test COMMAND hatch_core_test)

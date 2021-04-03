@@ -34,16 +34,6 @@ namespace hatch {
 
     pointer_list_iterator& operator--();
     const pointer_list_iterator& operator--() const;
-
-  public:
-    pointer_list_iterator& insert_replacing(pointer_list_iterator& other);
-    pointer_list_iterator& splice_replacing(pointer_list_iterator& other);
-
-    pointer_list_iterator& insert_before(pointer_list_iterator& other);
-    pointer_list_iterator& splice_before(pointer_list_iterator& other);
-
-    pointer_list_iterator& insert_after(pointer_list_iterator& other);
-    pointer_list_iterator& splice_after(pointer_list_iterator& other);
   };
 
 } // namespace hatch
