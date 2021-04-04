@@ -13,33 +13,37 @@ namespace hatch {
     friend class pointer_list_iterator<T>;
 
   private:
-    pointer_list_node<T>* _head;
+    explicit pointer_list_root(pointer_list_node<T>* head);
 
   public:
     pointer_list_root();
     ~pointer_list_root();
 
-    pointer_list_root(pointer_list_root&& moved);
-    pointer_list_root& operator=(pointer_list_root&& moved);
+    pointer_list_root(pointer_list_root&& moved) noexcept;
+    pointer_list_root& operator=(pointer_list_root&& moved) noexcept;
 
     pointer_list_root(const pointer_list_root&) = delete;
     pointer_list_root& operator=(const pointer_list_root&) = delete;
 
-    bool empty() const;
+  private:
+    pointer_list_node<T>* _head;
 
   public:
-    T* front();
-    const T* front() const;
     pointer_list_iterator<T> begin();
+    const pointer_list_iterator<T> begin() const;
 
+    pointer_list_iterator<T> end();
+    const pointer_list_iterator<T> end() const;
+
+  public:
+    T* front() const;
+    T* back() const;
+    [[nodiscard]] bool empty() const;
+
+  public:
     T* pop_front();
     void push_front(pointer_list_node<T>& node);
     void push_front(pointer_list_root<T>& root);
-
-  public:
-    T* back();
-    const T* back() const;
-    pointer_list_iterator<T> end();
 
     T* pop_back();
     void push_back(pointer_list_node<T>& node);

@@ -13,32 +13,33 @@ namespace hatch {
     friend class pointer_list_iterator<T>;
     friend class pointer_list_root<T>;
 
-  private:
-    pointer_list_node* _prev;
-    pointer_list_node* _next;
-
   protected:
     pointer_list_node();
     ~pointer_list_node();
 
   public:
-    T& data();
-    const T& data() const;
+    pointer_list_node(pointer_list_node&&) = delete;
+    pointer_list_node& operator=(pointer_list_node&&) = delete;
 
-    bool detached() const;
+    pointer_list_node(const pointer_list_node&) = delete;
+    pointer_list_node& operator=(const pointer_list_node&) = delete;
 
-    pointer_list_node* prev();
-    const pointer_list_node* prev() const;
-
-    pointer_list_node* next();
-    const pointer_list_node* next() const;
+  private:
+    pointer_list_node* _prev;
+    pointer_list_node* _next;
 
   protected:
-    pointer_list_node<T>& detach();
+    void splice(pointer_list_node& node);
 
-    void splice_before(pointer_list_node& node);
-    void splice_replacing(pointer_list_node& node);
-    void splice_after(pointer_list_node& node);
+  public:
+    T& get() const;
+    [[nodiscard]] bool alone() const;
+
+    pointer_list_node& prev();
+    const pointer_list_node& prev() const;
+
+    pointer_list_node& next();
+    const pointer_list_node& next() const;
   };
 
 } // namespace hatch

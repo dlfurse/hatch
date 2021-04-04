@@ -8,6 +8,11 @@
 namespace hatch {
 
   template <class T>
+  pointer_list_root<T>::pointer_list_root(pointer_list_node<T>* head) :
+      _head{head} {
+  }
+
+  template <class T>
   pointer_list_root<T>::pointer_list_root() :
       _head{nullptr} {
   }
@@ -18,31 +23,15 @@ namespace hatch {
   }
 
   template <class T>
-  pointer_list_root<T>::pointer_list_root(pointer_list_root&& moved) :
+  pointer_list_root<T>::pointer_list_root(pointer_list_root&& moved) noexcept :
       _head{moved._head} {
     moved._head = nullptr;
   }
 
   template <class T>
-  pointer_list_root<T>& pointer_list_root<T>::operator=(pointer_list_root&& moved) {
+  pointer_list_root<T>& pointer_list_root<T>::operator=(pointer_list_root&& moved) noexcept {
     _head = moved._head;
     moved._head = nullptr;
-  }
-
-  template <class T>
-  bool pointer_list_root<T>::empty() const {
-    return _head == nullptr;
-  }
-
-
-  template <class T>
-  T* pointer_list_root<T>::front() {
-    return _head ? static_cast<T*>(_head) : nullptr;
-  }
-
-  template <class T>
-  const T* pointer_list_root<T>::front() const {
-    return _head ? static_cast<const T*>(_head) : nullptr;
   }
 
   template <class T>
@@ -50,16 +39,45 @@ namespace hatch {
     return {this, _head};
   }
 
+  template <class T>
+  const pointer_list_iterator<T> pointer_list_root<T>::begin() const {
+    return {this, _head};
+  }
+
+  template <class T>
+  pointer_list_iterator<T> pointer_list_root<T>::end() {
+    return {this, nullptr};
+  }
+
+  template <class T>
+  const pointer_list_iterator<T> pointer_list_root<T>::end() const {
+    return {this, nullptr};
+  }
+
+  template <class T>
+  T* pointer_list_root<T>::front() const {
+    return _head ? &_head->get() : nullptr;
+  }
+
+  template <class T>
+  T* pointer_list_root<T>::back() const {
+    return _head ? &_head->_prev->get() : nullptr;
+  }
+
+  template <class T>
+  bool pointer_list_root<T>::empty() const {
+    return _head == nullptr;
+  }
 
   template <class T>
   T* pointer_list_root<T>::pop_front() {
     auto* popped = front();
     if (popped) {
-      if (popped->detached()) {
+      if (popped->alone()) {
         _head = nullptr;
       } else {
-        _head = popped->next();
-        popped->detach();
+        _head = popped->_next;
+        popped->splice(*_head);
       }
     }
     return popped;
@@ -67,9 +85,10 @@ namespace hatch {
 
   template <class T>
   void pointer_list_root<T>::push_front(pointer_list_node<T>& node) {
-    auto* pushed = &node.detach();
+    auto* pushed = &node;
+    pushed->splice(pushed->next());
     if (_head) {
-      pushed->splice_before(*_head);
+      pushed->splice(*_head);
     }
     _head = pushed;
   }
@@ -79,38 +98,21 @@ namespace hatch {
     auto* pushed = root._head;
     if (pushed) {
       if (_head) {
-        pushed->splice_before(*_head);
+        pushed->splice(*_head);
       }
       _head = pushed;
     }
     root._head = nullptr;
   }
 
-
-  template <class T>
-  T* pointer_list_root<T>::back() {
-    return _head ? static_cast<T*>(_head->_prev) : nullptr;
-  }
-
-  template <class T>
-  const T* pointer_list_root<T>::back() const {
-    return _head ? static_cast<const T*>(_head->_prev) : nullptr;
-  }
-
-  template <class T>
-  pointer_list_iterator<T> pointer_list_root<T>::end() {
-    return {this, nullptr};
-  }
-
-
   template <class T>
   T* pointer_list_root<T>::pop_back() {
     auto* popped = back();
     if (popped) {
-      if (popped->detached()) {
+      if (popped->alone()) {
         _head = nullptr;
       } else {
-        popped->detach();
+        popped->splice(*_head);
       }
     }
     return popped;
@@ -118,9 +120,10 @@ namespace hatch {
 
   template <class T>
   void pointer_list_root<T>::push_back(pointer_list_node<T>& node) {
-    auto* pushed = &node.detach();
+    auto* pushed = &node;
+    pushed->splice(pushed->next());
     if (_head) {
-      pushed->splice_before(*_head);
+      pushed->splice(*_head);
     } else {
       _head = pushed;
     }
@@ -131,7 +134,7 @@ namespace hatch {
     auto* pushed = root._head;
     if (pushed) {
       if (_head) {
-        pushed->splice_before(*_head);
+        pushed->splice(*_head);
       } else {
         _head = pushed;
       }
