@@ -15,7 +15,7 @@ namespace hatch {
     friend class pointer_list_root<T>;
 
   private:
-    explicit pointer_list_iterator(pointer_list_root<T>* root, pointer_list_node<T>* node);
+    pointer_list_iterator(pointer_list_root<T>* root, pointer_list_node<T>* node);
 
   public:
     pointer_list_iterator() = delete;
@@ -30,25 +30,28 @@ namespace hatch {
   private:
     pointer_list_root<T>* _root;
     mutable pointer_list_node<T>* _node;
+//    static pointer_list_node<T> _before;
+//    static pointer_list_node<T> _after;
 
   public:
     pointer_list_iterator insert(pointer_list_root<T>& list);
-    pointer_list_root<T> slice(pointer_list_iterator& end);
+    pointer_list_root<T> remove(pointer_list_iterator& end);
 
   public:
+    [[nodiscard]] bool operator==(const pointer_list_iterator& compared) const;
     [[nodiscard]] bool operator!=(const pointer_list_iterator& compared) const;
 
     T& operator*() const;
     T* operator->() const;
 
     pointer_list_iterator& operator++();
-    pointer_list_iterator& operator--();
+//    pointer_list_iterator& operator--();
 
     const pointer_list_iterator& operator++() const;
-    const pointer_list_iterator& operator--() const;
+//    const pointer_list_iterator& operator--() const;
 
     const pointer_list_iterator operator++(int) const;
-    const pointer_list_iterator operator--(int) const;
+//    const pointer_list_iterator operator--(int) const;
   };
 
 } // namespace hatch

@@ -13,7 +13,7 @@ namespace hatch {
     friend class pointer_list_iterator<T>;
 
   private:
-    explicit pointer_list_root(pointer_list_node<T>* head);
+    pointer_list_root(pointer_list_node<T>* head);
 
   public:
     pointer_list_root();

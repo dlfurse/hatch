@@ -7,6 +7,12 @@
 
 namespace hatch {
 
+//  template <class T>
+//  pointer_list_node<T> pointer_list_iterator<T>::_before{};
+//
+//  template <class T>
+//  pointer_list_node<T> pointer_list_iterator<T>::_after{};
+
   template <class T>
   pointer_list_iterator<T>::pointer_list_iterator(pointer_list_root<T>* root, pointer_list_node<T>* node) :
       _root{root},
@@ -27,66 +33,73 @@ namespace hatch {
   }
 
   template <class T>
+  bool pointer_list_iterator<T>::operator==(const pointer_list_iterator& compared) const {
+    return _node == compared._node;
+  }
+
+  template <class T>
   bool pointer_list_iterator<T>::operator!=(const pointer_list_iterator& compared) const {
     return _node != compared._node;
   }
 
-
   template <class T>
   pointer_list_iterator<T> pointer_list_iterator<T>::insert(pointer_list_root<T>& list) {
-    auto* target = list._head;
-    if (target) {
-      if (_node) {
-        _node->splice(*target);
-      } else {
-        _root->_head->splice(*target);
+    if (_root != &list) {
+
+      auto* const first_inserted = list._head;
+      auto* const end_inserted = _node;
+
+      if (first_inserted) {
+        if (end_inserted) {
+          end_inserted->splice(*first_inserted);
+        } else {
+          _root->_head->splice(*first_inserted);
+        }
+
+        if (end_inserted == _root->_head) {
+          _root->_head = first_inserted;
+        }
+
+        pointer_list_iterator<T> result{_root, first_inserted};
+        list._head = nullptr;
+        return result;
       }
-      list._head = nullptr;
     }
-    return {_root, target};
+    return {*this};
   }
 
   template <class T>
-  pointer_list_root<T> pointer_list_iterator<T>::slice(pointer_list_iterator<T>& other) {
+  pointer_list_root<T> pointer_list_iterator<T>::remove(pointer_list_iterator<T>& other) {
     if (_root == other._root) {
-      // this iterator and the other point to the same list.
 
-      if (_node != other._node) {
-        // this iterator and the other do not point to the same place in this list.
+      auto* const first_removed = _node;
+      auto* const end_removed = other._node;
 
-        if (_node) {
-          // this iterator does not point past the end of this list.
-          pointer_list_root<T> list{_node};
-          pointer_list_node<T>* target;
-
-          if (other._node) {
-            // the other iterator points does not point past the end of this list.
-            target = other._node;
-            if (_node == _root->_head) {
-              _root->_head = target;
+      if (first_removed && first_removed != end_removed) {
+        if (end_removed) {
+          auto* node = end_removed;
+          do {
+            if (node == first_removed) {
+              return {};
             }
+            node = node->_next;
+          } while (node != _root->_head);
 
-            // this iterator may lie between the other and the end of the list. if so, return an empty list.
-            for (auto* node = target; node != _root->_head; node = node->_next) {
-              if (node = _node) {
-                return {};
-              }
-            }
-          } else {
-            // the other iterator points to the end of this list, so point the target at the head.
-            target = _root->_head;
-            if (_node == _root->_head) {
-              _root->_head = nullptr;
-            }
-          }
-
-          _node->splice(*target);
-          _root = &list;
-          return list;
+          first_removed->splice(*end_removed);
+        } else {
+          first_removed->splice(*_root->_head);
         }
+
+        if (first_removed == _root->_head) {
+          _root->_head = end_removed;
+        }
+
+        pointer_list_root<T> result{first_removed};
+        _root = &result;
+        return result;
       }
     }
-    return {};
+    return {nullptr};
   }
 
   template <class T>
@@ -110,16 +123,16 @@ namespace hatch {
     return *this;
   }
 
-  template <class T>
-  pointer_list_iterator<T>& pointer_list_iterator<T>::operator--() {
-    if (_node) {
-      _node = _node->_prev;
-      if (_node == _root->_head) {
-        _node = nullptr;
-      }
-    }
-    return *this;
-  }
+//  template <class T>
+//  pointer_list_iterator<T>& pointer_list_iterator<T>::operator--() {
+//    if (_node) {
+//      _node = _node->_prev;
+//      if (_node == _root->_head) {
+//        _node = nullptr;
+//      }
+//    }
+//    return *this;
+//  }
 
   template <class T>
   const pointer_list_iterator<T>& pointer_list_iterator<T>::operator++() const {
@@ -132,30 +145,30 @@ namespace hatch {
     return *this;
   }
 
-  template <class T>
-  const pointer_list_iterator<T>& pointer_list_iterator<T>::operator--() const {
-    if (_node) {
-      _node = _node->_prev;
-      if (_node == _root->_head) {
-        _node = nullptr;
-      }
-    }
-    return *this;
-  }
+//  template <class T>
+//  const pointer_list_iterator<T>& pointer_list_iterator<T>::operator--() const {
+//    if (_node) {
+//      _node = _node->_prev;
+//      if (_node == _root->_head) {
+//        _node = nullptr;
+//      }
+//    }
+//    return *this;
+//  }
 
   template <class T>
   const pointer_list_iterator<T> pointer_list_iterator<T>::operator++(int) const {
-    const auto* node = _node;
+    auto* const node = _node;
     operator++();
     return {_root, node};
   }
 
-  template <class T>
-  const pointer_list_iterator<T> pointer_list_iterator<T>::operator--(int) const {
-    const auto* node = _node;
-    operator--();
-    return {_root, node};
-  }
+//  template <class T>
+//  const pointer_list_iterator<T> pointer_list_iterator<T>::operator--(int) const {
+//    auto* const node = _node;
+//    operator--();
+//    return {_root, node};
+//  }
 
 } // namespace hatch
 
