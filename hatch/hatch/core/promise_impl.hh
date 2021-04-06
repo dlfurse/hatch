@@ -48,92 +48,6 @@ namespace hatch {
   }
 
   template <class ...T>
-  bool promise<T...>::is_moved() const {
-    return _state == state::moved;
-  }
-
-  template <class ...T>
-  bool promise<T...>::is_pending() const {
-    return _state == state::pending;
-  }
-
-  template <class ...T>
-  bool promise<T...>::is_finished() const {
-    return (_state == state::completed || _state == state::failed);
-  }
-
-  template <class ...T>
-  bool promise<T...>::is_completed() const {
-    return _state == state::completed;
-  }
-
-  template <class ...T>
-  bool promise<T...>::is_failed() const {
-    return _state == state::failed;
-  }
-
-  template <class ...T>
-  void promise<T...>::repossess_futures() {
-    for (auto& f : _futures) {
-      f._promise = this;
-      assert(f._state == future<T...>::state::pending);
-    }
-  }
-
-  template <class ...T>
-  void promise<T...>::dispossess_futures() {
-    for (auto& f : _futures) {
-      f._promise = nullptr;
-      f._state = future<T...>::state::detached;
-    }
-  }
-
-  template <class ...T>
-  void promise<T...>::discard_futures() {
-    while (_futures.pop_front());
-  }
-
-
-  template <class ...T>
-  template <class F, class P>
-  promise<T...>::continued<F, P>::continued(F&& function, P&& promise) :
-      _function{std::move(function)},
-      _promise{std::move(promise)} {}
-
-  template <class ...T>
-  template <class F, class P>
-  void promise<T...>::continued<F, P>::complete(const T&... data) {
-    try {
-      _promise.complete(_function(data...));
-    } catch (...) {
-      _promise.fail(std::move(std::current_exception()));
-    }
-  }
-
-  template <class ...T>
-  template <class F, class P>
-  void promise<T...>::continued<F, P>::fail(const std::exception_ptr& excp) {
-    _promise.fail(excp);
-  }
-
-
-  template <class ...T>
-  template <class F>
-  promise<T...>::recovered<F>::recovered(F&& function) :
-      _function{std::move(function)} {}
-
-  template <class ...T>
-  template <class F>
-  void promise<T...>::recovered<F>::handle(const std::exception_ptr& excp, promise& promise) {
-    try {
-      promise.complete(_function(excp));
-    } catch (...) {
-      promise.fail(std::move(std::current_exception()));
-    }
-  }
-
-
-  template <class ...T>
   template <class S, class>
   void promise<T...>::complete(const S& data) {
     assert(is_pending());
@@ -198,11 +112,7 @@ namespace hatch {
 
   template <class ...T>
   future<T...> promise<T...>::awaited() {
-    future<T...> future(this);
-
-    _futures.push_back(future);
-
-    return future;
+    return {this};
   }
 
   template <class ...T>
@@ -226,6 +136,107 @@ namespace hatch {
     _recovery.reset(recovery);
 
     return awaited();
+  }
+
+  template <class ...T>
+  bool promise<T...>::is_moved() const {
+    return _state == state::moved;
+  }
+
+  template <class ...T>
+  bool promise<T...>::is_pending() const {
+    return _state == state::pending;
+  }
+
+  template <class ...T>
+  bool promise<T...>::is_finished() const {
+    return (_state == state::completed || _state == state::failed);
+  }
+
+  template <class ...T>
+  bool promise<T...>::is_completed() const {
+    return _state == state::completed;
+  }
+
+  template <class ...T>
+  bool promise<T...>::is_failed() const {
+    return _state == state::failed;
+  }
+
+  template <class ...T>
+  void promise<T...>::attach_future(future<T...>& f) {
+    _futures.push_back(f);
+  }
+
+  template <class ...T>
+  void promise<T...>::detach_future(future<T...>& f) {
+    if (f._promise == this) {
+      if (_futures.front() == &f) {
+        _futures.pop_front();
+      } else {
+        f.splice(f.next());
+      }
+    }
+  }
+
+  template <class ...T>
+  void promise<T...>::repossess_futures() {
+    for (auto& f : _futures) {
+      f._promise = this;
+      assert(f._state == future<T...>::state::pending);
+    }
+  }
+
+  template <class ...T>
+  void promise<T...>::dispossess_futures() {
+    for (auto& f : _futures) {
+      f._promise = nullptr;
+      f._state = future<T...>::state::detached;
+    }
+  }
+
+  template <class ...T>
+  void promise<T...>::discard_futures() {
+    while (_futures.pop_front());
+  }
+
+
+  template <class ...T>
+  template <class F, class P>
+  promise<T...>::continued<F, P>::continued(F&& function, P&& promise) :
+      _function{std::move(function)},
+      _promise{std::move(promise)} {}
+
+  template <class ...T>
+  template <class F, class P>
+  void promise<T...>::continued<F, P>::complete(const T&... data) {
+    try {
+      _promise.complete(_function(data...));
+    } catch (...) {
+      _promise.fail(std::move(std::current_exception()));
+    }
+  }
+
+  template <class ...T>
+  template <class F, class P>
+  void promise<T...>::continued<F, P>::fail(const std::exception_ptr& excp) {
+    _promise.fail(excp);
+  }
+
+
+  template <class ...T>
+  template <class F>
+  promise<T...>::recovered<F>::recovered(F&& function) :
+      _function{std::move(function)} {}
+
+  template <class ...T>
+  template <class F>
+  void promise<T...>::recovered<F>::handle(const std::exception_ptr& excp, promise& promise) {
+    try {
+      promise.complete(_function(excp));
+    } catch (...) {
+      promise.fail(std::move(std::current_exception()));
+    }
   }
 
 } // namespace hatch

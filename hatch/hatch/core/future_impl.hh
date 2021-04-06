@@ -7,66 +7,11 @@
 
 namespace hatch {
 
-//  template <class ...T>
-//  void future<T...>::detach() {
-//    if (_prev) {
-//      _prev->_next = _next;
-//      if (_next) {
-//        _next->_prev = _prev;
-//      }
-//    } else {
-//      if (_next) {
-//        _promise->_future = _next;
-//        _next->_prev = _prev;
-//      } else {
-//        _promise->_future = nullptr;
-//      }
-//    }
-//  }
-//
-//  template <class ...T>
-//  void future<T...>::before(future& future) {
-//    _prev = future._prev;
-//    if (_prev) {
-//      _prev->_next = this;
-//    }
-//    _next = &future;
-//    future._prev = this;
-//  }
-//
-//  template <class ...T>
-//  void future<T...>::after(future& future) {
-//    _next = future._next;
-//    if (_next) {
-//      _next->_prev = this;
-//    }
-//    _prev = &future;
-//    future._next = this;
-//  }
-//
-//  template <class ...T>
-//  void future<T...>::replace(future& future) {
-//    _promise = future._promise;
-//    if (_promise) {
-//      _state = future._state;
-//      _next = future._next;
-//      if (_next) {
-//        _next->_prev = this;
-//      }
-//      _prev = future._prev;
-//      if (_prev) {
-//        _prev->_next = this;
-//      } else {
-//        _promise->_future = this;
-//      }
-//    }
-//    future._promise = nullptr;
-//  }
-
   template <class ...T>
   future<T...>::future(promise<T...>* promise) :
       _promise{promise},
       _state{state::pending} {
+    promise->attach_future(*this);
   }
 
   template <class ...T>
@@ -78,11 +23,7 @@ namespace hatch {
   template <class ...T>
   future<T...>::~future() {
     if (_state == state::pending) {
-      if (_promise->_futures.front() == this) {
-        _promise->_futures.pop_front();
-      } else {
-        pointer_list_node<future<T...>>::detach();
-      }
+      _promise->detach_future(*this);
     } else if (_state == state::completed) {
       _storage._value.~stored();
     } else if (_state == state::failed) {
@@ -94,14 +35,8 @@ namespace hatch {
   future<T...>::future(future&& moved) noexcept :
       _promise{moved._promise},
       _state{moved._state} {
-
     if (_state == state::pending) {
-      if (_promise->_futures.front() == &moved) {
-        _promise->_futures.pop_front();
-        _promise->_futures.push_front(*this);
-      } else {
-        pointer_list_node<future<T...>>::splice_replacing(moved);
-      }
+      _promise->attach_future(*this);
     } else if (_state == state::completed) {
       new (&_storage._value) stored(std::move(moved._storage._value));
       moved._storage._value.~stored();
@@ -110,6 +45,7 @@ namespace hatch {
       moved._storage._exception.~exception_ptr();
     }
 
+    _promise->detach_future(moved);
     moved._promise = nullptr;
     moved._state = state::detached;
   }
@@ -117,23 +53,14 @@ namespace hatch {
   template <class ...T>
   future<T...>& future<T...>::operator=(future&& moved) noexcept {
     if (_state == state::pending) {
-      if (_promise->_futures.front() == this) {
-        _promise->_futures.pop_front();
-      } else {
-        pointer_list_node<future<T...>>::detach();
-      }
+      _promise->detach_future(*this);
     }
 
     _promise = moved._promise;
     _state = moved._state;
 
     if (_state == state::pending) {
-      if (_promise->_futures.front() == &moved) {
-        _promise->_futures.pop_front();
-        _promise->_futures.push_front(*this);
-      } else {
-        pointer_list_node<future<T...>>::splice_replacing(moved);
-      }
+      _promise->attach_future(*this);
     } else if (_state == state::completed) {
       new (&_storage._value) stored(std::move(moved._storage._value));
       moved._storage._value.~stored();
@@ -142,6 +69,7 @@ namespace hatch {
       moved._storage._exception.~exception_ptr();
     }
 
+    _promise->detach_future(moved);
     moved._promise = nullptr;
     moved._state = state::detached;
 
@@ -153,7 +81,7 @@ namespace hatch {
       _promise{copied._promise},
       _state{copied._state} {
     if (_state == state::pending) {
-      pointer_list_node<future<T...>>::splice_after(const_cast<future<T...>&>(copied));
+      _promise->attach_future(*this);
     } else if (_state == state::completed) {
       new (&_storage._value) stored(copied._storage._value);
     } else if (_state == state::failed) {
@@ -164,18 +92,14 @@ namespace hatch {
   template <class ...T>
   future<T...>& future<T...>::operator=(const future& copied) {
     if (_state == state::pending) {
-      if (_promise->_futures.front() == this) {
-        _promise->_futures.pop_front();
-      } else {
-        pointer_list_node<future<T...>>::detach();
-      }
+      _promise->detach_future(*this);
     }
 
     _promise = copied._promise;
     _state = copied._state;
 
     if (_state == state::pending) {
-      pointer_list_node<future<T...>>::splice_after(const_cast<future<T...>&>(copied));
+      _promise->attach_future(*this);
     } else if (_state == state::completed) {
       new (&_storage._value) stored(copied._storage._value);
     } else if (_state == state::failed) {

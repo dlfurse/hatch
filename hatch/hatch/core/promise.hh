@@ -52,6 +52,28 @@ namespace hatch {
     promise& operator=(promise&& moved) noexcept;
 
     /**
+     * Write and Transform.
+     *
+     * Some of these methods allow calling code to write to a promise, completing or explicitly failing it.  Additional
+     * methods allow for the construction of futures linked to this promise, or linked to functions transforming this
+     * promise's value.
+     */
+
+  public:
+    template <class S, class = std::enable_if_t<complex && std::is_same_v<S, stored>>>
+    void complete(const S& value);
+    void complete(const T&... values);
+    void fail(const std::exception_ptr& exception);
+
+    future<T...> awaited();
+
+    template <class F>
+    mapped_future<F, T...> then(F&& function);
+
+    template <class F>
+    future<T...> recover(F&& function);
+
+    /**
      * State.
      *
      * Upon construction, a promise is in the pending state.  If a promise is moved to another
@@ -76,18 +98,32 @@ namespace hatch {
     bool is_failed() const;
 
     /**
-     * Continuations and Recoveries.
+     * Futures.
      *
-     * Promises can be linked to other, dependent values by functions.
+     * Promises are only the writable interface of a value that takes time to compute.  The readable interfaces are
+     * Futures, and many of these can point back to the same promise.  The futures are stored in the promises
      */
 
   private:
+    void attach_future(future<T...>& f);
+    void detach_future(future<T...>& f);
     void repossess_futures();
     void dispossess_futures();
     void discard_futures();
 
     pointer_list_root<future<T...>> _futures;
 
+    /**
+     * Continuations.
+     *
+     * Promises may be mapped to other futures by calling the 'then' method.  When this occurs, the backing promises
+     * needed to store the results and and the functions performing the actual mapping are stored in objects called
+     * continuations.  When this promise is completed, the continuations' functions will be evaluated, and, if they
+     * do not throw, the results will be stored in the backing promise.  If the function throws and a recovery method
+     * for the mapping has been defined, the recovery will be used as described below.
+     */
+
+  private:
     class continuation {
     public:
       virtual ~continuation() = default;
@@ -111,6 +147,16 @@ namespace hatch {
 
     std::list<std::unique_ptr<continuation>> _continuations;
 
+    /**
+     * Recoveries.
+     *
+     * Recoveries store methods used to transform exceptions thrown during evaluation of mapping functions stored in
+     * continuations as described above.  If the mapping function throws, the method stored within the recovery itself
+     * is used to give a promise some kind of value of its expected type.  If the recovery method itself throws, the
+     * promise will fail.
+     */
+
+  private:
     class recovery {
     public:
       virtual ~recovery() = default;
@@ -130,20 +176,6 @@ namespace hatch {
     };
 
     std::unique_ptr<recovery> _recovery;
-
-  public:
-    template <class S, class = std::enable_if_t<complex && std::is_same_v<S, stored>>>
-    void complete(const S& value);
-    void complete(const T&... values);
-    void fail(const std::exception_ptr& exception);
-
-    future<T...> awaited();
-
-    template <class F>
-    mapped_future<F, T...> then(F&& function);
-
-    template <class F>
-    future<T...> recover(F&& function);
   };
 
 } // namespace hatch

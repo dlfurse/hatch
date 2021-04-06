@@ -71,13 +71,13 @@ namespace hatch {
     }
   };
 
-  TEST_F(AsyncTest, SimplestSetupTest) {
+  TEST_F(AsyncTest, SimpleSetupTest) {
     EXPECT_TRUE(_simple_promise->is_pending());
     EXPECT_TRUE(_simple_future_zero.is_pending());
     EXPECT_TRUE(_simple_future_one.is_pending());
   }
 
-  TEST_F(AsyncTest, SimplestCompletionTestValues) {
+  TEST_F(AsyncTest, SimpleCompletionTestValues) {
     _simple_promise->complete(true, 2, 22.2);
     EXPECT_TRUE(_simple_promise->is_completed());
     EXPECT_TRUE(_simple_future_zero.is_completed());
@@ -86,7 +86,7 @@ namespace hatch {
     EXPECT_EQ(_simple_future_one.get(), 44.4);
   }
 
-  TEST_F(AsyncTest, SimplestCompletionTestTuple) {
+  TEST_F(AsyncTest, SimpleCompletionTestTuple) {
     _simple_promise->complete(std::make_tuple(true, 2, 22.2));
     EXPECT_TRUE(_simple_promise->is_completed());
     EXPECT_TRUE(_simple_future_zero.is_completed());
@@ -95,7 +95,7 @@ namespace hatch {
     EXPECT_EQ(_simple_future_one.get(), 44.4);
   }
 
-  TEST_F(AsyncTest, SimplestFailureTest) {
+  TEST_F(AsyncTest, SimpleFailureTest) {
     _simple_promise->complete(false, 6, 10.2);
     EXPECT_TRUE(_simple_promise->is_completed());
     EXPECT_TRUE(_simple_future_zero.is_completed());
@@ -106,11 +106,11 @@ namespace hatch {
     } catch (std::runtime_error& e) {
       EXPECT_STREQ(e.what(), "simple");
     } catch (...) {
-      FAIL() << "simplest failure test threw wrong type";
+      FAIL() << "Simple failure test threw wrong type";
     }
   }
 
-  TEST_F(AsyncTest, SimplestMovePromiseTest) {
+  TEST_F(AsyncTest, SimpleMovePromiseTest) {
     promise<bool, int, double> p = std::move(*_simple_promise);
     EXPECT_TRUE(_simple_promise->is_moved());
     EXPECT_TRUE(p.is_pending());
@@ -123,7 +123,7 @@ namespace hatch {
     EXPECT_EQ(_simple_future_one.get(), 44.4);
   }
 
-  TEST_F(AsyncTest, SimplestMoveFutureTest) {
+  TEST_F(AsyncTest, SimpleMoveFutureTest) {
     future<double> f = std::move(_simple_future_one);
     EXPECT_TRUE(_simple_future_one.is_detached());
     EXPECT_TRUE(f.is_pending());
@@ -136,7 +136,7 @@ namespace hatch {
     EXPECT_EQ(f.get(), 44.4);
   }
 
-  TEST_F(AsyncTest, SimplestCopyFutureTest) {
+  TEST_F(AsyncTest, SimpleCopyFutureTest) {
     future<double> f = _simple_future_one;
     EXPECT_TRUE(_simple_future_one.is_pending());
     EXPECT_TRUE(f.is_pending());
