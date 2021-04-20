@@ -5,6 +5,8 @@
 #error "do not include pointer.hh directly. include memory.hh instead."
 #endif
 
+#include <hatch/utility/pointer_list.hh>
+
 #include <memory> // std::aligned_storage
 
 #include <cstddef> // std::max_align_t, size_t
@@ -50,8 +52,8 @@ namespace hatch {
 
     public:
       union {
-        tree thetree;
-        list thelist;
+        tree free;
+        pointer_list_root<pointer<T>> used;
       } header;
       typename std::aligned_storage<sizeof(T), alignof(T)>::type data;
     };

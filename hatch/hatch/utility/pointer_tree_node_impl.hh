@@ -1,405 +1,546 @@
-#ifndef HATCH_POINTER_TREE_IMPL_HH
-#define HATCH_POINTER_TREE_IMPL_HH
+#ifndef HATCH_POINTER_TREE_NODE_IMPL_HH
+#define HATCH_POINTER_TREE_NODE_IMPL_HH
 
-#ifndef HATCH_STRUCTURES_HH
-#error "do not include pointer_tree_impl.hh directly. include structures.hh instead."
+#ifndef HATCH_POINTER_TREE_HH
+#error "do not include pointer_tree_node.hh directly. include pointer_tree.hh instead."
 #endif
+
+#include <algorithm>
 
 namespace hatch {
 
-  template <class T>
-  pointer_tree<T>::pointer_tree() :
+  template<class T>
+  pointer_tree_node<T>::pointer_tree_node() :
       _head{nullptr},
       _prev{nullptr},
-      _next{nullptr} {
+      _next{nullptr},
+      _color{pointer_tree::colors::black} {
   }
 
-  template <class T>
-  pointer_tree<T>::~pointer_tree() {
+  template<class T>
+  pointer_tree_node<T>::~pointer_tree_node() {
     detach();
   }
 
+  template<class T>
+  std::optional<pointer_tree::sides> pointer_tree_node<T>::side() const {
+    if (_head) {
+      if (this == _head->_prev) {
+        return pointer_tree::sides::prev;
+      }
+      if (this == _head->_next) {
+        return pointer_tree::sides::next;
+      }
+    }
+    return {};
+  }
+
+  template<class T>
+  bool pointer_tree_node<T>::is_root() const {
+    return !_head;
+  }
+
+  template<class T>
+  bool pointer_tree_node<T>::is_prev() const {
+    return _head && this == _head->_prev;
+  }
+
+  template<class T>
+  bool pointer_tree_node<T>::is_next() const {
+    return _head && this == _head->_next;
+  }
+
+  template<class T>
+  pointer_tree_node<T>* pointer_tree_node<T>::head() {
+    return _head;
+  }
+
   template <class T>
-  void pointer_tree<T>::rotate_prev() {
-    if (auto* next = this->_next) {
-      this->_head = next;
-      next->_prev = this;
+  void pointer_tree_node<T>::make_head(pointer_tree_node* new_head, std::optional<pointer_tree::sides> new_side) {
+    if (auto* old_head = head()) {
+      switch (*side()) {
+        case pointer_tree::sides::prev:
+          old_head->_prev = nullptr;
+          break;
+        case pointer_tree::sides::next:
+          old_head->_next = nullptr;
+          break;
+      }
+    }
 
-      auto* hook = next->_prev;
-      this->_next = hook;
-			if (hook) {
-				hook->_head = this;
-			}
+    _head = new_head;
 
-      auto* head = this->_head;
-      next->_head = head;
-			if (head) {
-				if (head->_prev == this) {
-					head->_prev = next;
-				}
-				if (head->_next == this) {
-					head->_next = next;
-				}
-			}
+    if (new_head) {
+      switch (*new_side) {
+        case pointer_tree::sides::prev:
+          new_head->_prev = this;
+          break;
+        case pointer_tree::sides::next:
+          new_head->_next = this;
+          break;
+      }
+    }
+  }
+
+  template<class T>
+  pointer_tree_node<T>* pointer_tree_node<T>::child(pointer_tree::sides type) {
+    switch (type) {
+      case pointer_tree::sides::prev:
+        return _prev;
+      case pointer_tree::sides::next:
+        return _next;
     }
   }
 
   template <class T>
-  void pointer_tree<T>::rotate_next() {
-    if (auto* prev = this->_prev) {
-      this->_head = prev;
-      prev->_next = this;
+  void pointer_tree_node<T>::make_child(pointer_tree_node* new_child, pointer_tree::sides side) {
+    if (auto* old_child = child(side)) {
+      old_child->_head = nullptr;
+    }
 
-      auto* hook = prev->_next;
-      this->_prev = hook;
-      if (hook) {
-        hook->_head = this;
-      }
+    switch (side) {
+      case pointer_tree::sides::prev:
+        _prev = new_child;
+        break;
+      case pointer_tree::sides::next:
+        _next = new_child;
+        break;
+    }
 
-      auto* head = this->_head;
-      prev->_head = head;
-      if (head) {
-        if (head->_prev == this) {
-          head->_prev = prev;
-        }
-        if (head->_next == this) {
-          head->_next = prev;
-        }
-      }
+    if (new_child) {
+      new_child->_head = this;
     }
   }
 
+  template<class T>
+  pointer_tree_node<T>* pointer_tree_node<T>::prev() {
+    return _prev;
+  }
+
   template <class T>
-  int pointer_tree<T>::black_depth() {
-    int depth = _color == color::black ? 1 : 0;
-    if (_prev && _next) {
-      int prev = _prev->black_depth();
-      int next = _next->black_depth();
-      if (prev > 0 && next > 0 && prev == next) {
-        depth += (prev + next) / 2;
+  void pointer_tree_node<T>::make_prev(pointer_tree_node* new_prev) {
+    if (auto* old_prev = prev()) {
+      old_prev->_head = nullptr;
+    }
+
+    _prev = new_prev;
+
+    if (new_prev) {
+      new_prev->_head = this;
+    }
+  }
+
+  template<class T>
+  pointer_tree_node<T>* pointer_tree_node<T>::next() {
+    return _next;
+  }
+
+  template <class T>
+  void pointer_tree_node<T>::make_next(pointer_tree_node* new_next) {
+    if (auto* old_next = next()) {
+      old_next->_head = nullptr;
+    }
+
+    _next = new_next;
+
+    if (new_next) {
+      new_next->_head = this;
+    }
+  }
+
+  template<class T>
+  void pointer_tree_node<T>::detach() {
+    make_head(nullptr);
+    make_black();
+  }
+
+  template<class T>
+  void pointer_tree_node<T>::rotate(pointer_tree::sides direction) {
+    if (auto* rotated = child(~direction)) {
+      auto* pivoted = rotated->child(direction);
+
+      auto* new_head = head();
+      auto new_side = side();
+      rotated->make_head(new_head, new_side);
+      
+      rotated->make_child(this, direction);
+      this->make_child(pivoted, ~direction);
+    }
+  }
+
+  template<class T>
+  void pointer_tree_node<T>::exchange(pointer_tree_node* that) {
+
+    if (that) {
+
+      auto this_color = this->color();
+      auto that_color = that->color();
+
+      this->make_color(that_color);
+      that->make_color(this_color);
+
+      static constexpr pointer_tree_node* null = nullptr;
+      
+      auto [parent, child] = this == that->head() ? std::make_tuple(this, that) :
+                             that == this->head() ? std::make_tuple(that, this) :
+                             std::make_tuple(null, null);
+      
+      if (parent && child) {
+        auto parent_side = parent->side();
+        auto child_side = *child->side();
+        
+        auto head = parent->head();
+        auto other = parent->child(~child_side);
+        auto prev = child->prev();
+        auto next = child->next();
+        
+        parent->make_head(child, child_side);
+        parent->make_prev(prev);
+        parent->make_next(next);
+        
+        child->make_head(head, parent_side);
+        child->make_child(other, ~child_side);
       } else {
-        depth = -1;
+        auto this_side = this->side();
+        auto this_head = this->head();
+        auto this_prev = this->prev();
+        auto this_next = this->next();
+
+        auto that_side = that->side();
+        auto that_head = that->head();
+        auto that_prev = that->prev();
+        auto that_next = that->next();
+
+        this->make_head(that_head, that_side);
+        this->make_prev(that_prev);
+        this->make_next(that_next);
+
+        that->make_head(this_head, this_side);
+        that->make_prev(this_prev);
+        that->make_next(this_next);
       }
-    } else if (_prev) {
-      depth += _prev->black_depth();
-    } else if (_next) {
-      depth += _next->black_depth();
     }
-    return depth;
   }
 
-  template <class T>
-  T& pointer_tree<T>::operator*() {
-    return static_cast<T&>(*this);
+  template<class T>
+  pointer_tree::colors pointer_tree_node<T>::color() const {
+    return _color;
   }
 
-  template <class T>
-  const T& pointer_tree<T>::operator*() const {
-    return static_cast<const T&>(*this);
+  template<class T>
+  void pointer_tree_node<T>::make_color(pointer_tree::colors color) {
+    _color = color;
   }
 
-  template <class T>
-  bool pointer_tree<T>::detached() {
+  template<class T>
+  bool pointer_tree_node<T>::is_red() const {
+    return _color == pointer_tree::colors::red;
+  }
+
+  template<class T>
+  void pointer_tree_node<T>::make_red() {
+    _color = pointer_tree::colors::red;
+  }
+
+  template<class T>
+  bool pointer_tree_node<T>::is_black() const {
+    return _color == pointer_tree::colors::black;
+  }
+
+  template<class T>
+  void pointer_tree_node<T>::make_black() {
+    _color = pointer_tree::colors::black;
+  }
+
+  template<class T>
+  T& pointer_tree_node<T>::get() const {
+    return const_cast<T&>(static_cast<const T&>(*this));
+  }
+
+  template<class T>
+  bool pointer_tree_node<T>::alone() {
     return !_head && !_prev && !_next;
   }
 
-  template <class T>
-  void pointer_tree<T>::insert(pointer_tree& node) {
-    // this will make node's _head, _prev, and _next all null.
-    node.detach();
-
-    // here we simply go through the normal binary search tree insertion procedure.
-    auto* parent = this;
-    while (true) {
-      if (**parent > *node) {
-        if (_prev) {
-          parent = _prev;
-          continue;
-        } else {
-          parent->_prev = &node;
-          node._head = parent;
-          break;
-        }
-      } else {
-        if (_next) {
-          parent = _next;
-          continue;
-        } else {
-          parent->_next = &node;
-          node._head = parent;
-          break;
-        }
-      }
+  template<class T>
+  pointer_tree_node<T>* pointer_tree_node<T>::root() {
+    auto* current = this;
+    while (current->head()) {
+      current = current->head();
     }
+    return current;
+  }
 
-    // here we fix up the tree so that the rb properties remain satisfied.
-    auto* current = &node;
-    while (current->_head && current->_head->_color == color::red) {
-      auto* head = current->_head;
-      auto* gran = head->_head;
-      if (head == gran->_prev) {
-        auto* aunt = gran->_next;
-        if (aunt && aunt->_color == color::red) {
-          gran->_color = color::red;
-          head->_color = color::black;
-          aunt->_color = color::black;
-          current = gran;
-          continue;
-        } else {
-          if (current == head->_next) {
-            head->rotate_prev();
-            std::swap(current, head);
-          }
-          gran->rotate_next();
-          gran->_color = color::red;
-          head->_color = color::black;
-          return;
-        }
-      } else {
-        auto* aunt = gran->_prev;
-        if (aunt && aunt->color == color::red) {
-          gran->color = color::red;
-          head->color = color::black;
-          aunt->color = color::black;
-          current = gran;
-          continue;
-        } else {
-          if (current == head->_prev) {
-            head->rotate_next();
-            std::swap(current, head);
-          }
-          gran->rotate_prev();
-          gran->_color = color::red;
-          head->_color = color::black;
-          return;
-        }
+  template<class T>
+  pointer_tree_node<T>* pointer_tree_node<T>::predecessor() {
+    if (_prev) {
+      return _prev->maximum();
+    } else {
+      auto* current = this;
+      while (current->is_prev()) {
+        current = current->head();
       }
-    }
-    if (!current->_head) {
-      current->_color = color::black;
+      return current->head() ? current->head() : nullptr;
     }
   }
 
-  template <class T>
-  void pointer_tree<T>::detach() {
-    if (!detached()) {
-      auto const* pred = predecessor();
-      auto const* succ = successor();
-      auto* target = !pred ? this : !succ ? this : pred;
+  template<class T>
+  pointer_tree_node<T>* pointer_tree_node<T>::minimum() {
+    auto* current = this;
+    while (current->prev()) {
+      current = current->prev();
+    }
+    return current;
+  }
 
-      if (target->_color == color::red) {
-        // the target node is red, so it can't have any children.
+  template<class T>
+  pointer_tree_node<T>* pointer_tree_node<T>::successor() {
+    if (_next) {
+      return _next->minimum();
+    } else {
+      auto* current = this;
+      while (current->is_next()) {
+        current = current->head();
+      }
+      return current->head() ? current->head() : nullptr;
+    }
+  }
+
+  template<class T>
+  pointer_tree_node<T>* pointer_tree_node<T>::maximum() {
+    auto* current = this;
+    while (current->next()) {
+      current = current->next();
+    }
+    return current;
+  }
+
+  template<class T>
+  void pointer_tree_node<T>::insert(pointer_tree_node& node) {
+    auto* current = &node;
+    auto* parent = this;
+
+    node.remove();
+    node.make_red();
+
+    // here we simply go through the normal binary search tree insertion
+    // procedure.
+    while (true) {
+      if (current->get() < parent->get()) {
+        if (parent->prev()) {
+          parent = parent->prev();
+          continue;
+        } else {
+          parent->make_child(current, pointer_tree::sides::prev);
+          break;
+        }
+      } else {
+        if (parent->next()) {
+          parent = parent->next();
+          continue;
+        } else {
+          parent->make_child(current, pointer_tree::sides::next);
+          break;
+        }
+      }
+    }
+
+    while (parent && parent->is_red()) {
+      // node has a red parent, which means it must have a grandparent as well.
+      auto parent_self_side = *parent->side();
+      auto parent_away_side = ~parent_self_side;
+
+      auto* grandma = parent->head();
+      auto* aunt = grandma->child(parent_away_side);
+
+      if (aunt && aunt->is_red()) {
+        // this node's parent has a red sibling.
         //
-        // -> disconnect the target from its parent.
+        // -> swap the colors of the parent + parent's sibling with the color of the grandparent,
+        //    then recurse on the grandparent.
 
-        auto* parent = target->_head;
-        if (parent) {
-          if (parent->_prev == target) {
-            parent->_prev = nullptr;
-          }
-          if (parent->_next == target) {
-            parent->_next = nullptr;
-          }
+        grandma->make_red();
+        parent->make_black();
+        aunt->make_black();
+
+        current = grandma;
+        parent = current->head();
+
+        continue;
+      } else {
+        // this node's parent has either a black sibling or no sibling.
+        //
+        // -> rotate the grandparent away putting the parent in its place, then swap the the colors
+        //    of the grandparent and the parent.
+
+        if (current->side() == parent_away_side) {
+          // this node is on a different side of its parent than its parent is with respect to the
+          // parent's parent.
+          //
+          // -> rotate the parent away from this node so it descends from this node but is on the
+          //    same side of it as the parent is to the grandparent, then swap the current and
+          //    parent pointers so the relationships are correctly labeled.
+
+          parent->rotate(parent_self_side);
+          std::swap(current, parent);
         }
 
-        target->_head = nullptr;
-        target->_color = color::black;
+        grandma->rotate(parent_away_side);
+        grandma->make_red();
+        parent->make_black();
 
-      } else {
-        // in the two cases below, the target node is black and has a child, which must be red,
-        // because the target node, being a successor, can have only one child and the black heights
-        // on both sides of the target node must be equal.
+        return;
+      }
+    }
+
+    if (current->is_root()) {
+      // this node is the root.
+      //
+      // -> color it black.
+
+      current->make_black();
+    }
+  }
+
+  template<class T>
+  void pointer_tree_node<T>::remove() {
+    if (!alone()) {
+
+      auto is_null_or_black = [](pointer_tree_node* node) {
+        return !node || node->is_black();
+      };
+
+      auto is_real_and_red = [](pointer_tree_node* node) {
+        return node && node->is_red();
+      };
+
+      if (prev() && next()) {
+        // this node has both children, so we swap it with either the
+        // predecessor or successor, because either of these is guaranteed to
+        // have at most one child.  this may leave the BST ordering condition
+        // violated as we adjust the tree to maintain RB conditions; ordering
+        // conditions will be restored when we finally remove this node at the
+        // end.
         //
-        // -> replace the target node with the red child and color the red child black.
+        exchange(std::max(predecessor(), successor()));
+      }
 
-        if (auto const* prev = target->_prev) {
-
-          auto* parent = target->_head;
-          prev->_head = parent;
-          if (parent) {
-            if (parent->_prev == target) {
-              parent->_prev = prev;
-            }
-            if (parent->_next == target) {
-              parent->_next = prev;
-            }
-          }
-
-          target->_head = nullptr;
-          target->_prev = nullptr;
-
-          prev->_color = color::black;
-          target->_color = color::black;
-
-        } else if (auto const* next = target->_next) {
-
-          auto* parent = target->_head;
-          next->_head = parent;
-          if (parent) {
-            if (parent->_prev == target) {
-              parent->_prev = next;
-            }
-            if (parent->_next == target) {
-              parent->_next = next;
-            }
-          }
-
-          target->_head = nullptr;
-          target->_next = nullptr;
-
-          next->_color = color::black;
-          target->_color = color::black;
-
+      if (is_black()) {
+        // otherwise this node is red, so it can't have any children.
+        //
+        // -> if red, no action needed, just fall through to disconnecting this
+        //    node from its parent.
+        //
+        if (auto* child = prev() ? prev() : next() ? next() : nullptr) {
+          // this node is black and has a child, which must be red, because this
+          // node was chosen by construction to have only one child and the black
+          // heights on both sides of it must be equal.
+          //
+          // -> replace this node with the red child and color the red child
+          //    black.
+          //
+          exchange(child);
+          child->make_black();
         } else {
-          // the target node is black and has no children, which is the difficult case because
-          // simply deleting it will mess up the black height of the tree.  so we have to look at
-          // the environment of the node and figure out how to compensate.
+          // the target node is black and has no children, which is the difficult
+          // case because simply deleting it will mess up the black height of the
+          // tree.  so we have to look at the environment of the node and figure
+          // out how to compensate.
+          //
+          auto* target = this;
+          while (target->head()) {
+            auto target_self_side = *target->side();
+            auto target_away_side = ~target_self_side;
 
-          auto color = [](pointer_tree* node) {
-            return node ? node->_color : color::black;
-          };
+            auto* parent = target->head();
+            auto* sibling = parent->child(target_away_side);
+            auto* inside = sibling->child(target_self_side);
+            auto* outside = sibling->child(target_away_side);
 
-          pointer_tree* parent = target->_head;
-          pointer_tree* pointer_tree::*child_away = nullptr;
-          pointer_tree* pointer_tree::*child_self = nullptr;
-          void (pointer_tree::* rotate_away)(void) = nullptr;
-          void (pointer_tree::* rotate_self)(void) = nullptr;
-
-          if (parent) {
-            if (parent->_prev == target) {
-              parent->_prev = nullptr;
-              child_away = &pointer_tree::_next;
-              child_self = &pointer_tree::_prev;
-              rotate_away = &pointer_tree::rotate_next;
-              rotate_self = &pointer_tree::rotate_prev;
-            }
-            if (parent->_next == target) {
-              parent->_next = nullptr;
-              child_away = &pointer_tree::_prev;
-              child_self = &pointer_tree::_next;
-              rotate_away = &pointer_tree::rotate_prev;
-              rotate_self = &pointer_tree::rotate_next;
-            }
-          }
-
-          target->_head = nullptr;
-          target->_color = color::black;
-
-          while (parent) {
-            auto* sibling = parent->*child_away;
-
-            if (color(sibling) == color::red) {
-              // sibling is red, which implies that the parent is black. this further implies that
-              // the sibling has two subtrees that are one greater in black height than the subtree
-              // rooted at the current target pointer.
+            // sibling may be red or black.
+            if (is_real_and_red(sibling)) {
+              // sibling is red, which implies that the parent is black. this
+              // further implies that the sibling has two subtrees that are one
+              // greater in black height than the subtree rooted at the current
+              // target pointer.
               //
-              // -> color the black parent red and the red sibling black, and rotate the parent in
-              // the back direction.
+              // -> color the black parent red and the red sibling black, and
+              // rotate the parent in the back direction.
+              //
+              parent->make_red();
+              sibling->make_black();
 
-              parent->_color = color::red;
-              sibling->_color = color::black;
-              (parent->*rotate_self)();
-              sibling = parent->*child_away;
+              parent->rotate(target_self_side);
+
+              sibling = parent->child(target_away_side);
+              inside = sibling->child(target_self_side);
+              outside = sibling->child(target_away_side);
             }
 
             // sibling must be black now.
-            if (color(sibling->*child_away) == color::black &&
-                color(sibling->*child_self) == color::black) {
-              // sibling's children are also black.  we will reduce the black-height of the sibling
-              // subtree by making the sibling red.  we can either restore the black height of the
-              // parent subtree by making it black if it's red, or recursing to address it higher
-              // up in the tree.
-              sibling->_color = color::red;
-
-              if (color(parent) == color::black) {
+            if (is_null_or_black(inside) && is_null_or_black(outside)) {
+              // Sibling and its children are also black. We will reduce the black
+              // height of the sibling subtree by making the sibling red, leaving
+              // both the current and sibling subtrees with the same height, but
+              // that height is one less than they were before the deletion. This
+              // may cause problems above the parent since the parent subtree's
+              // black height is now lessened. We can either restore the black
+              // height of the parent subtree by making it black if it's red, or
+              // recursing to address it higher up in the tree.
+              //
+              sibling->make_red();
+              if (parent->is_black()) {
                 // parent is black.
                 //
                 // -> recurse on parent.
-                parent = parent->_head;
-                if (parent) {
-                  if (parent->_prev == target) {
-                    child_away = &pointer_tree::_next;
-                    child_self = &pointer_tree::_prev;
-                    rotate_away = &pointer_tree::rotate_next;
-                    rotate_self = &pointer_tree::rotate_prev;
-                  }
-                  if (parent->_next == target) {
-                    child_away = &pointer_tree::_prev;
-                    child_self = &pointer_tree::_next;
-                    rotate_away = &pointer_tree::rotate_prev;
-                    rotate_self = &pointer_tree::rotate_next;
-                  }
-                }
+                //
+                target = parent;
                 continue;
               } else {
                 // parent is red.
                 //
-                // -> make parent black, restoring the black height of the parent subtree.
-                parent->_color = color::black;
+                // -> make parent black, restoring the black height of the parent
+                //    subtree.
+                //
+                parent->make_black();
                 break;
               }
             } else {
-              if (color(sibling->*child_self) == color::red &&
-                  color(sibling->*child_away) == color::black) {
+              if (is_real_and_red(inside) && is_null_or_black(outside)) {
                 // sibling has a red inside child and a black outside child.
                 //
-                // -> switch sibling and inside child colors, rotate the sibling forward
+                // -> switch sibling and inside child colors, rotate the sibling
+                //    forward.
+                //
+                sibling->make_red();
+                inside->make_black();
 
-                sibling->_color = color::red;
-                sibling->*child_self->_color = color::black;
-                (sibling->*rotate_away)();
-                sibling = parent->*child_away;
+                sibling->rotate(target_away_side);
+
+                sibling = parent->child(target_away_side);
+                outside = sibling->child(target_away_side);
               }
-              // sibling must have a red outside child now, the inside child color is arbitrary.
+              // sibling must have a red outside child now, the inside child color
+              // is arbitrary.
               //
-              // -> switch sibling and inside child colors, rotate the sibling forward
+              // -> switch sibling and parent child colors, rotate the parent
+              //    backward
+              //
+              sibling->make_color(parent->color());
+              parent->make_black();
+              outside->make_black();
 
-              sibling->_color = parent->_color;
-              parent->_color = color::black;
-              sibling->*child_away->_color = color::black;
-              (parent->*rotate_self)();
+              parent->rotate(target_self_side);
+
               break;
             }
           }
         }
-      }
-
-      if (target != this) {
-        // the target node is now detached and we need to swap it with this, which becomes black.
-
-        auto* head = _head;
-        target->_head = head;
-        if (head) {
-          if (head->_prev == this) {
-            head->_prev = target;
-          }
-          if (head->_next == this) {
-            head->_next = target;
-          }
-        }
-
-        auto* prev = _prev;
-        target->_prev = prev;
-        if (prev) {
-          prev->_head = target;
-        }
-
-        auto* next = _next;
-        target->_next = next;
-        if (next) {
-          target->_next = next;
-        }
-
-        this->_nead = nullptr;
-        this->_prev = nullptr;
-        this->_next = nullptr;
-
-        target->_color = this->_color;
-        this->_color = color::black;
+        detach();
       }
     }
   }
 
-} // namespace hatch
+}
 
-#endif // HATCH_POINTER_TREE_IMPL_HH
+#endif

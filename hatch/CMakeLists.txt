@@ -77,15 +77,21 @@ set(hatch_utility_sources.hh
   hatch/core/pointer_list_root.hh
   hatch/core/pointer_list_root_impl.hh
 
+  hatch/core/pointer_tree.hh
+  hatch/core/pointer_tree_fwd.hh
+  hatch/core/pointer_tree_node.hh
+  hatch/core/pointer_tree_node_impl.hh
+#  hatch/core/pointer_tree_iterator.hh
+#  hatch/core/pointer_tree_iterator_impl.hh
+#  hatch/core/pointer_tree_root.hh
+#  hatch/core/pointer_tree_root_impl.hh
+
   hatch/core/indexed_list.hh
   hatch/core/indexed_list_fwd.hh
   hatch/core/indexed_list_node.hh
   hatch/core/indexed_list_node_impl.hh
   hatch/core/indexed_list_iterator.hh
   hatch/core/indexed_list_iterator_impl.hh
-
-  hatch/core/pointer_tree.hh
-  hatch/core/pointer_tree_impl.hh
 )
 
 ########
@@ -123,6 +129,7 @@ set(hatch_core_sources
 
 set(hatch_utility_test_sources
   test/utility/pointer_list.cc
+  test/utility/pointer_tree.cc
 )
 
 add_executable(hatch_utility_test ${hatch_utility_test_sources})

@@ -30,3 +30,11 @@
 *.exe
 *.out
 *.app
+
+# CMake Directories
+hatch/cmake-build-*
+
+# Tool Directories
+.idea
+.vagrant
+

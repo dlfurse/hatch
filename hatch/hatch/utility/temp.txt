@@ -1,0 +1,760 @@
+#ifndef HATCH_POINTER_TREE_NODE_IMPL_HH
+#define HATCH_POINTER_TREE_NODE_IMPL_HH
+
+#ifndef HATCH_POINTER_TREE_HH
+#error "do not include pointer_tree_node.hh directly. include pointer_tree.hh instead."
+#endif
+
+#include <algorithm>
+
+//DELETE ME
+#include <iostream>
+
+namespace hatch {
+
+  template<class T>
+  pointer_tree_node<T>::pointer_tree_node() :
+      _head{nullptr},
+      _prev{nullptr},
+      _next{nullptr},
+      _color{pointer_tree::colors::black} {
+  }
+
+  template<class T>
+  pointer_tree_node<T>::~pointer_tree_node() {
+    detach();
+  }
+
+  template<class T>
+  std::optional<pointer_tree::sides> pointer_tree_node<T>::side() const {
+    if (_head) {
+      if (this == _head->_prev) {
+        return pointer_tree::sides::prev;
+      }
+      if (this == _head->_next) {
+        return pointer_tree::sides::next;
+      }
+    }
+    return {};
+  }
+
+  template<class T>
+  bool pointer_tree_node<T>::is_root() const {
+    return !_head;
+  }
+
+  template<class T>
+  bool pointer_tree_node<T>::is_prev() const {
+    return _head && this == _head->_prev;
+  }
+
+  template<class T>
+  bool pointer_tree_node<T>::is_next() const {
+    return _head && this == _head->_next;
+  }
+
+
+  template<class T>
+  pointer_tree_node<T>* pointer_tree_node<T>::head() {
+    return _head;
+  }
+
+  template <class T>
+  void pointer_tree_node<T>::make_head(pointer_tree_node* node, std::optional<pointer_tree::sides> side) {
+    if (node) {
+
+    }
+    switch (side) {
+      case pointer_tree::sides::prev:
+        if (node) {
+          node->_prev = this;
+        }
+        break;
+      case pointer_tree::sides::next:
+        if (node) {
+          node->_next = this;
+        }
+        break;
+    }
+    this->_head = node;
+  }
+
+
+  template<class T>
+  pointer_tree_node<T>* pointer_tree_node<T>::child(pointer_tree::sides type) {
+    switch (type) {
+      case pointer_tree::sides::prev:
+        return _prev;
+      case pointer_tree::sides::next:
+        return _next;
+    }
+  }
+
+  template <class T>
+  void pointer_tree_node<T>::make_child(pointer_tree_node* node, pointer_tree::sides side) {
+    switch (side) {
+      case pointer_tree::sides::prev:
+        this->_prev = node;
+        break;
+      case pointer_tree::sides::next:
+        this->_next = node;
+        break;
+    }
+    if (node) {
+      node->_head = this;
+    }
+  }
+
+  template<class T>
+  pointer_tree_node<T>* pointer_tree_node<T>::prev() {
+    return _prev;
+  }
+
+  template <class T>
+  void pointer_tree_node<T>::make_prev(pointer_tree_node* node) {
+    this->_prev = node;
+    node->_head = this;
+  }
+
+  template<class T>
+  pointer_tree_node<T>* pointer_tree_node<T>::next() {
+    return _next;
+  }
+
+  template <class T>
+  void pointer_tree_node<T>::make_next(pointer_tree_node* node) {
+    this->_next = node;
+    node->_head = this;
+  }
+
+  template<class T>
+  void pointer_tree_node<T>::detach() {
+    this->make_head()
+    _color = pointer_tree::colors::black;
+  }
+
+  template<class T>
+  void pointer_tree_node<T>::rotate(pointer_tree::sides direction) {
+    if (auto* node = this->child(~direction)) {
+      auto side = this->side();
+      auto* head = this->head();
+      auto* hook = node->child(direction);
+
+      node->make_head(head, side);
+      node->make_child(this, direction);
+      this->make_child(hook, ~direction);
+    }
+  }
+
+  template<class T>
+  void pointer_tree_node<T>::exchange(pointer_tree_node* that) {
+
+//    std::cout << "exchanging [" << node_to_string(this) << "] with [" << node_to_string(that) << "]" << std::endl;
+//
+//    if (that) {
+//      std::cout << "  pre-this: [" << node_to_string(this) << "]" << std::endl;
+//      std::cout << "    type: [" << type_to_string(this->type()) << "]" << std::endl;
+//      std::cout << "    head: [" << node_to_string(this->head()) << "]" << std::endl;
+//      std::cout << "    prev: [" << node_to_string(this->prev()) << "]" << std::endl;
+//      std::cout << "    next: [" << node_to_string(this->next()) << "]" << std::endl;
+//
+//      std::cout << "  pre-that: [" << node_to_string(that) << "]" << std::endl;
+//      std::cout << "    type: [" << type_to_string(that->type()) << "]" << std::endl;
+//      std::cout << "    head: [" << node_to_string(that->head()) << "]" << std::endl;
+//      std::cout << "    prev: [" << node_to_string(that->prev()) << "]" << std::endl;
+//      std::cout << "    next: [" << node_to_string(that->next()) << "]" << std::endl;
+//
+//      static constexpr pointer_tree_node* null = nullptr;
+//
+//      auto this_color = this->color();
+//      auto this_type = this->type();
+//
+//
+//      auto that_color = that->color();
+//      auto that_type = that->type();
+//
+//
+//      auto [parent, child, type] =
+//          this == that_head ? std::make_tuple(this, that, that_type) :
+//          that == this_head ? std::make_tuple(that, this, this_type) :
+//          std::make_tuple(null, null, pointer_tree::types::root);
+//
+//      if (parent && child) {
+//        parent->_head == child;
+//      } else {
+//        auto this_head = this->head();
+//        auto this_prev = this->prev();
+//        auto this_next = this->next();
+//
+//        auto that_head = that->head();
+//        auto that_prev = that->prev();
+//        auto that_next = that->next();
+//      }
+//
+////      if (parent && child) {
+////        parent->_head = child;
+////        if (parent->_prev == child) {
+////          child->_prev = parent;
+////          child->_next = parent->_next;
+////          if (parent->_next) {
+////            parent->_next->_head = child;
+////          }
+////        }
+////      }
+//
+//      if (this_head == that) {
+//
+//        that->_head = this;
+//        switch(this_type) {
+//          case pointer_tree::types::prev:
+//            this->_prev = that;
+//            this->_next = that_next;
+//            if (that_next) {
+//              that_next->_head = this;
+//            }
+//            break;
+//          case pointer_tree::types::next:
+//            this->_next = that;
+//            this->_prev = that_prev;
+//            if (that_prev) {
+//              that_prev->_head = this;
+//            }
+//            break;
+//        }
+//
+//        this->_head = that_head;
+//        switch (that_type) {
+//          case pointer_tree::types::prev:
+//            that_head->_prev = this;
+//          case pointer_tree::types::next:
+//            that_head->_next = this;
+//        }
+//
+//        that->_prev = this_prev;
+//        if (this_prev) {
+//          this_prev->_head = that;
+//        }
+//
+//        that->_next = this_next;
+//        if (this_next) {
+//          this_next->_head = that;
+//        }
+//
+//      } else if (that_head == this) {
+//
+//        this->_head = that;
+//
+//        if (this_prev == that) {
+//
+//          that->_prev = this;
+//
+//          that->_next = this_next;
+//          if (this_next) {
+//            this_next->_head = that;
+//          }
+//
+//          std::cout << "node [" << node_to_string(that) << "] is previous child of [" << node_to_string(this) << "]" << std::endl;
+//          that->_prev = this;
+//          this->_head = that;
+//
+//        } else if (this_next == that) {
+//
+//          std::cout << "node [" << node_to_string(that) << "] is next child of [" << node_to_string(this) << "]" << std::endl;
+//          that->_next = this;
+//
+//          that->_prev = this_prev;
+//          if (this_prev) {
+//            this_prev->_head = that;
+//          }
+//
+//        } else {
+//          std::cout << "head of [" << node_to_string(that) << "is [" << node_to_string(this) << "] but no child pointer found" << std::endl;
+//        }
+//
+//        that->_head = this_head;
+//        if (this_head) {
+//          switch (this_type) {
+//            case pointer_tree::types::prev:
+//              this_head->_prev = that;
+//              break;
+//            case pointer_tree::types::next:
+//              this_head->_next = that;
+//              break;
+//          }
+//        }
+//
+//        this->_prev = that_prev;
+//        if (that_prev) {
+//          that_prev->_head = this;
+//        }
+//
+//        this->_next = that_next;
+//        if (that_next) {
+//          that_next->_head = this;
+//        }
+//
+//      } else {
+//
+//        this->_head = that_head;
+//        if (that_head) {
+//          switch (that_type) {
+//            case pointer_tree::types::prev:
+//              that_head->_prev = this;
+//              break;
+//            case pointer_tree::types::next:
+//              that_head->_next = this;
+//              break;
+//            default:
+//              break;
+//          }
+//        }
+//
+//        this->_prev = that_prev;
+//        if (that_prev) {
+//          that_prev->_head = this;
+//        }
+//
+//        this->_next = that_next;
+//        if (that_next) {
+//          that_next->_head = this;
+//        }
+//
+//        that->_head = this_head;
+//        if (this_head) {
+//          switch (this_type) {
+//            case pointer_tree::types::prev:
+//              this_head->_prev = that;
+//              break;
+//            case pointer_tree::types::next:
+//              this_head->_next = that;
+//              break;
+//            default:
+//              break;
+//          }
+//        }
+//
+//        that->_prev = this_prev;
+//        if (this_prev) {
+//          this_prev->_head = that;
+//        }
+//
+//        that->_next = this_next;
+//        if (this_next) {
+//          this_next->_head = that;
+//        }
+//      }
+//
+//      this->_color = that_color;
+//      that->_color = this_color;
+//
+//      std::cout << "  post-this: [" << node_to_string(this) << "]" << std::endl;
+//      std::cout << "    type: [" << type_to_string(this->type()) << "]" << std::endl;
+//      std::cout << "    head: [" << node_to_string(this->head()) << "]" << std::endl;
+//      std::cout << "    prev: [" << node_to_string(this->prev()) << "]" << std::endl;
+//      std::cout << "    next: [" << node_to_string(this->next()) << "]" << std::endl;
+//
+//      std::cout << "  post-that: [" << node_to_string(that) << "]" << std::endl;
+//      std::cout << "    type: [" << type_to_string(that->type()) << "]" << std::endl;
+//      std::cout << "    head: [" << node_to_string(that->head()) << "]" << std::endl;
+//      std::cout << "    prev: [" << node_to_string(that->prev()) << "]" << std::endl;
+//      std::cout << "    next: [" << node_to_string(that->next()) << "]" << std::endl;
+//    }
+
+    std::cout << "...exchanged" << std::endl;
+  }
+
+  template<class T>
+  pointer_tree::colors pointer_tree_node<T>::color() const {
+    return _color;
+  }
+
+  template<class T>
+  void pointer_tree_node<T>::make_color(pointer_tree::colors color) {
+    _color = color;
+  }
+
+  template<class T>
+  bool pointer_tree_node<T>::is_red() const {
+    return _color == pointer_tree::colors::red;
+  }
+
+  template<class T>
+  void pointer_tree_node<T>::make_red() {
+    _color = pointer_tree::colors::red;
+  }
+
+  template<class T>
+  bool pointer_tree_node<T>::is_black() const {
+    return _color == pointer_tree::colors::black;
+  }
+
+  template<class T>
+  void pointer_tree_node<T>::make_black() {
+    _color = pointer_tree::colors::black;
+  }
+
+  template<class T>
+  T& pointer_tree_node<T>::get() const {
+    return const_cast<T&>(static_cast<const T&>(*this));
+  }
+
+  template<class T>
+  bool pointer_tree_node<T>::alone() {
+    return !_head && !_prev && !_next;
+  }
+
+  template<class T>
+  pointer_tree_node<T>* pointer_tree_node<T>::root() {
+    auto* current = this;
+    while (current->head()) {
+      current = current->head();
+    }
+    return current;
+  }
+
+  template<class T>
+  pointer_tree_node<T>* pointer_tree_node<T>::predecessor() {
+    if (_prev) {
+      return _prev->maximum();
+    } else {
+      auto* current = this;
+      while (current->is_prev()) {
+        current = current->head();
+      }
+      return current->head() ? current->head() : nullptr;
+    }
+  }
+
+  template<class T>
+  pointer_tree_node<T>* pointer_tree_node<T>::minimum() {
+    auto* current = this;
+    while (current->prev()) {
+      current = current->prev();
+    }
+    return current;
+  }
+
+  template<class T>
+  pointer_tree_node<T>* pointer_tree_node<T>::successor() {
+    if (_next) {
+      return _next->minimum();
+    } else {
+      auto* current = this;
+      while (current->is_next()) {
+        current = current->head();
+      }
+      return current->head() ? current->head() : nullptr;
+    }
+  }
+
+  template<class T>
+  pointer_tree_node<T>* pointer_tree_node<T>::maximum() {
+    auto* current = this;
+    while (current->next()) {
+      current = current->next();
+    }
+    return current;
+  }
+
+  template<class T>
+  void pointer_tree_node<T>::insert(pointer_tree_node& node) {
+    auto* current = &node;
+    auto* parent = this;
+
+    //std::cout << "adding node [" << current->get() << "] to [" << parent->get() << "]" << std::endl;
+
+    // this will make node's _head, _prev, and _next all null.
+    node.detach();
+    node.make_red();
+
+    // here we simply go through the normal binary search tree insertion
+    // procedure.
+    while (true) {
+      if (current->get() < parent->get()) {
+        //std::cout << "  [" << current->get() << "] less than [" << parent->get() << "]" << std::endl;
+        if (parent->_prev) {
+          parent = parent->_prev;
+          //std::cout << "  recursing to [" << parent->get() << "]" << std::endl;
+          continue;
+        } else {
+          parent->_prev = current;
+          current->_head = parent;
+          //std::cout << "  stopping at [" << parent->get() << "]" << std::endl;
+          break;
+        }
+      } else {
+        //std::cout << "  [" << current->get() << "] greater than or equal to [" << parent->get() << "]" << std::endl;
+        if (parent->_next) {
+          parent = parent->_next;
+          //std::cout << "  recursing to [" << parent->get() << "]" << std::endl;
+          continue;
+        } else {
+          parent->_next = current;
+          current->_head = parent;
+          //std::cout << "  stopping at [" << parent->get() << "]" << std::endl;
+          break;
+        }
+      }
+    }
+
+    while (parent && parent->is_red()) {
+      // node has a red parent, which means it must have a grandparent as well.
+      auto parent_self_type = parent->type();
+      auto parent_away_type = ~parent->type();
+
+      auto* grandma = parent->head();
+      auto* aunt = grandma->child(parent_away_type);
+
+      //std::cout << "  fixing up at [" << current->get() << "] with red parent [" << parent->get() << "], grandma [" << grandma->get() << "], and aunt [";
+      if (aunt) {
+        //std::cout << aunt->get();
+      } else {
+        //std::cout << "-";
+      }
+      //std::cout << "]" << std::endl;
+
+      if (aunt && aunt->is_red()) {
+        //std::cout << "    aunt is red: making parent and aunt black, grandma red, and recursing at grandma" << std::endl;
+        // this node's parent has a red sibling.
+        //
+        // -> swap the colors of the parent + parent's sibling with the color of the grandparent,
+        //    then recurse on the grandparent.
+
+        grandma->make_red();
+        parent->make_black();
+        aunt->make_black();
+
+        current = grandma;
+        parent = current->head();
+
+        continue;
+      } else {
+        //std::cout << "    aunt is black or gone: making parent black and grandma red, and rotating at grandma so i become her sibling" << std::endl;
+        // this node's parent has either a black sibling or no sibling.
+        //
+        // -> rotate the grandparent away putting the parent in its place, then swap the the colors
+        //    of the grandparent and the parent.
+
+        if (current->type() == parent_away_type) {
+          //std::cout << "      aligning with parent-grandma axis first" << std::endl;
+          // this node is on a different side of its parent than its parent is with respect to the
+          // parent's parent.
+          //
+          // -> rotate the parent away from this node so it descends from this node but is on the
+          //    same side of it as the parent is to the grandparent, then swap the current and
+          //    parent pointers so the relationships are correctly labeled.
+          parent->rotate(parent_self_type);
+          std::swap(current, parent);
+        }
+
+        grandma->rotate(parent_away_type);
+        grandma->make_red();
+        parent->make_black();
+
+        return;
+      }
+    }
+
+    if (current->is_root()) {
+      // this node is the root.
+      //
+      // -> color it black.
+
+      //std::cout << "  ensuring root is black at [" << current->get() << "]" << std::endl;
+      current->make_black();
+    }
+  }
+
+  template<class T>
+  void pointer_tree_node<T>::remove() {
+    if (!alone()) {
+
+      auto is_null_or_black = [](pointer_tree_node* node) {
+        return !node || node->is_black();
+      };
+
+      auto is_real_and_red = [](pointer_tree_node* node) {
+        return node && node->is_red();
+      };
+
+      std::cout << "detaching node [" << node_to_string(this) << "]" << std::endl;
+
+      if (prev() && next()) {
+        // this node has both children, so we swap it with either the
+        // predecessor or successor, because either of these is guaranteed to
+        // have at most one child.  this may leave the BST ordering condition
+        // violated as we adjust the tree to maintain RB conditions; ordering
+        // conditions will be restored when we finally remove this node at the
+        // end.
+
+        std::cout << "  exchanging with [" << node_to_string(std::max(predecessor(), successor())) << "]" << std::endl;
+        exchange(std::max(predecessor(), successor()));
+      }
+
+
+      if (is_black()) {
+        // this node is red, so it can't have any children.
+        //
+        // -> disconnect this node from its parent.
+
+        std::cout << "  node is red, simply dropping it" << std::endl;
+
+      if (auto* child = prev() ? prev() : next() ? next() : nullptr) {
+        // this node is black and has a child, which must be red, because this
+        // node was chosen by construction to have only one child and the black
+        // heights on both sides of it must be equal.
+        //
+        // -> replace this node with the red child and color the red child
+        //    black.
+
+        std::cout << "  node is black with one child, exchanging with the child and dropping the node" << std::endl;
+
+        std::cout << "    child is [" << node_to_string(child) << "]" << std::endl;
+        exchange(child);
+        std::cout << "    exchanged with child" << std::endl;
+        child->make_black();
+        std::cout << "    colored child black" << std::endl;
+
+      } else {
+        // the target node is black and has no children, which is the difficult
+        // case because simply deleting it will mess up the black height of the
+        // tree.  so we have to look at the environment of the node and figure
+        // out how to compensate.
+
+        std::cout << "  node is black with no child, rebalancing the tree" << std::endl;
+
+        auto* target = this;
+
+        while (target->head()) {
+
+          std::cout << "    analyzing [" << node_to_string(target) << "]" << std::endl;
+
+          auto target_self_type = target->type();
+          auto target_other_type = ~target->type();
+
+          auto* parent = target->head();
+          auto* sibling = parent->child(target_other_type);
+          auto* inside = sibling->child(target_self_type);
+          auto* outside = sibling->child(target_other_type);
+
+          std::cout << "      * node type is [" << type_to_string(target_self_type) << "]" << std::endl;
+          std::cout << "      * parent is [" << node_to_string(parent) << "]" << std::endl;
+          std::cout << "      * sibling is [" << node_to_string(sibling) << "]" << std::endl;
+          std::cout << "      * inside is [" << node_to_string(inside) << "]" << std::endl;
+          std::cout << "      * outside is [" << node_to_string(outside) << "]" << std::endl;
+
+          // sibling may be red or black.
+          if (is_real_and_red(sibling)) {
+            // sibling is red, which implies that the parent is black. this
+            // further implies that the sibling has two subtrees that are one
+            // greater in black height than the subtree rooted at the current
+            // target pointer.
+            //
+            // -> color the black parent red and the red sibling black, and
+            // rotate the parent in the back direction.
+
+            std::cout << "    sibling is red, rotating parent inside and recoloring parent and sibling" << std::endl;
+
+            parent->make_red();
+            sibling->make_black();
+
+            parent->rotate(target_self_type);
+
+            sibling = parent->child(target_other_type);
+            inside = sibling->child(target_self_type);
+            outside = sibling->child(target_other_type);
+
+            std::cout << "      * sibling now [" << node_to_string(sibling) << "]" << std::endl;
+            std::cout << "      * inside now [" << node_to_string(inside) << "]" << std::endl;
+            std::cout << "      * outside now [" << node_to_string(outside) << "]" << std::endl;
+
+          }
+
+          // sibling must be black now.
+          if (is_null_or_black(inside) && is_null_or_black(outside)) {
+            // Sibling and its children are also black. We will reduce the black
+            // height of the sibling subtree by making the sibling red, leaving
+            // both the current and sibling subtrees with the same height, but
+            // that height is one less than they were before the deletion. This
+            // may cause problems above the parent since the parent subtree's
+            // black height is now lessened. We can either restore the black
+            // height of the parent subtree by making it black if it's red, or
+            // recursing to address it higher up in the tree.
+
+            std::cout << "    sibling is black with black or null children, making sibling red" << std::endl;
+
+            sibling->make_red();
+
+            if (parent->is_black()) {
+              // parent is black.
+              //
+              // -> recurse on parent.
+
+              std::cout << "    parent is black, recursing on parent" << std::endl;
+
+              target = parent;
+
+              continue;
+            } else {
+              // parent is red.
+              //
+              // -> make parent black, restoring the black height of the parent
+              //    subtree.
+
+              std::cout << "    parent is red, making parent black and stopping" << std::endl;
+
+              parent->make_black();
+
+              break;
+            }
+          } else {
+            if (is_real_and_red(inside) && is_null_or_black(outside)) {
+              // sibling has a red inside child and a black outside child.
+              //
+              // -> switch sibling and inside child colors, rotate the sibling
+              //    forward.
+
+              std::cout << "    sibling is black with red inside child, rotating sibling outside and making sibling black and inside child red" << std::endl;
+
+              sibling->make_red();
+              inside->make_black();
+
+              sibling->rotate(target_other_type);
+
+              sibling = parent->child(target_other_type);
+              outside = sibling->child(target_other_type);
+
+              std::cout << "      * sibling now [" << node_to_string(sibling) << "]" << std::endl;
+              std::cout << "      * outside now [" << node_to_string(outside) << "]" << std::endl;
+            }
+            // sibling must have a red outside child now, the inside child color
+            // is arbitrary.
+            //
+            // -> switch sibling and parent child colors, rotate the parent
+            //    backward
+
+            std::cout << "    sibling is black with red outside child, rotating parent inside and switching parent and sibling colors and stopping" << std::endl;
+
+            sibling->make_color(parent->color());
+            parent->make_black();
+            outside->make_black();
+
+            parent->rotate(target_self_type);
+
+            break;
+          }
+        }
+
+        std::cout << "  dropping the node after rebalancing" << std::endl;
+
+      }
+
+      detach();
+
+      std::cout << "detached node [" << node_to_string(this) << "]" << std::endl;
+    }
+  }
+
+} // namespace hatch
+
+#endif // HATCH_POINTER_TREE_IMPL_HH

@@ -1,8 +1,6 @@
 #include <hatch/utility/pointer_list.hh>
 #include <gtest/gtest.h>
 
-#include <iostream>
-
 namespace hatch {
 
   class PointerListTest : public ::testing::Test {

@@ -23,7 +23,7 @@ namespace hatch {
       _min_capacity{min_capacity},
       _lin_boundary{min_capacity * (2 << max_doublings)}
   {
-    _data = static_cast<node *>(std::aligned_alloc(align, _capacity * size));
+    _data = static_cast<node *>(aligned_alloc(align, _capacity * size));
     assert(_data);
 
     _free = 0;
@@ -58,7 +58,7 @@ namespace hatch {
         _shrink_threshold *= 2;
       }
 
-      _data = static_cast<node*>(std::aligned_alloc(align, _capacity * size));
+      _data = static_cast<node*>(aligned_alloc(align, _capacity * size));
       assert(_data);
 
       memcpy(_data, old_data, old_capacity * size);
@@ -117,7 +117,7 @@ namespace hatch {
         }
 
         if (_capacity < old_capacity) {
-          _data = static_cast<node *>(std::aligned_alloc(align, _capacity * size));
+          _data = static_cast<node *>(aligned_alloc(align, _capacity * size));
           assert(_data);
 
           uint64_t new_index = 0;
