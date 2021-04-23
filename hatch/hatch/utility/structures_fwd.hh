@@ -4,10 +4,10 @@
 namespace hatch {
 
   template <class T>
-  class pointer_list;
+  class list;
 
   template <class T>
-  class pointer_list_iterator;
+  class list_iterator;
 
   template <class T>
   class indexed_list;
@@ -16,10 +16,10 @@ namespace hatch {
   class indexed_list_iterator;
 
   template <class T>
-  class pointer_tree;
+  class tree;
 
   template <class T>
-  class pointer_tree_iterator;
+  class tree_iterator;
 
   template <class T>
   class indexed_tree;

@@ -7,15 +7,14 @@
 
 #include <cstdint> // uint64_t
 
+#include <hatch/utility/list.hh>
+
 namespace hatch {
 
   template <class T>
-  class pointer {
+  class pointer : public list_node<pointer<T>> {
   public:
     friend class allocator<T>;
-
-  private:
-    pointer(allocator<T>* allocator, uint64_t index);
 
   public:
     pointer();
@@ -27,17 +26,14 @@ namespace hatch {
     pointer(pointer&& ptr) noexcept;
     pointer& operator=(pointer&& ptr) noexcept;
 
+  private:
+    pointer(allocator<T>* allocator, uint64_t index);
+
   public:
     T* operator->();
-    bool null();
+    explicit operator bool();
 
   private:
-    void detach();
-    void after(const pointer& ptr);
-    void replace(pointer& ptr);
-
-    mutable const pointer<T>* _next{nullptr};
-    mutable const pointer<T>* _prev{nullptr};
     mutable allocator<T>* _allocator{nullptr};
     mutable uint64_t _index{0};
   };

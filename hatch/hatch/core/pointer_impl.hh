@@ -10,14 +10,6 @@
 namespace hatch {
 
   template <class T>
-  pointer<T>::pointer(allocator<T>* allocator, uint64_t index) :
-      _allocator{allocator},
-      _index{index} {
-    _allocator->_data[index].created = this;
-  }
-
-
-  template <class T>
   pointer<T>::pointer() :
       _allocator{nullptr},
       _index{0} {
@@ -25,35 +17,56 @@ namespace hatch {
 
   template <class T>
   pointer<T>::~pointer() {
-    detach();
+    _allocator->detach_pointer(*this);
   }
 
   template <class T>
-  pointer<T>::pointer(const pointer& ptr) {
-    after(ptr);
+  pointer<T>::pointer(const pointer& ptr) :
+    _allocator{ptr._allocator},
+    _index{ptr._index} {
+    _allocator->attach_pointer(*this);
   }
 
   template <class T>
   pointer<T>& pointer<T>::operator=(const pointer& ptr) {
+    assert(_allocator == ptr._allocator);
     if (this != &ptr) {
-      detach();
-      after(ptr);
+      _allocator->detach_pointer(*this);
+      _index = ptr._index;
+      _allocator->attach_pointer(*this);
     }
     return *this;
   }
 
   template <class T>
-  pointer<T>::pointer(pointer&& ptr) noexcept {
-    replace(ptr);
+  pointer<T>::pointer(pointer&& ptr) noexcept :
+    _allocator{ptr._allocator},
+    _index{ptr._index} {
+    _allocator->attach_pointer(this);
+    _allocator->detach_pointer(ptr);
+    ptr._allocator = nullptr;
+    ptr._index = 0;
   }
 
   template <class T>
   pointer<T>& pointer<T>::operator=(pointer<T> &&ptr) noexcept {
+    assert(_allocator == ptr._allocator);
     if (this != &ptr) {
-      detach();
-      replace(ptr);
+      _allocator->detach_pointer(*this);
+      _index = ptr._index;
+      _allocator->attach_pointer(*this);
+      _allocator->detach_pointer(ptr);
+      ptr._allocator = nullptr;
+      ptr._index = 0;
     }
     return *this;
+  }
+
+  template <class T>
+  pointer<T>::pointer(allocator<T>* allocator, uint64_t index) :
+      _allocator{allocator},
+      _index{index} {
+    _allocator->attach_pointer(*this);
   }
 
   template <class T>
@@ -63,61 +76,8 @@ namespace hatch {
   }
 
   template <class T>
-  bool pointer<T>::null() {
-    return _allocator == nullptr;
-  }
-
-  template <class T>
-  void pointer<T>::detach() {
-    if (_allocator) {
-      if (_prev) {
-        _prev->_next = _next;
-        if (_next) {
-          _next->_prev = _prev;
-        }
-      } else {
-        if (_next) {
-          _allocator->_data[_index].created = _next;
-          _next->_prev = _prev;
-        } else {
-          _allocator->destroy(*this);
-        }
-      }
-    }
-    _allocator = nullptr;
-  }
-
-  template <class T>
-  void pointer<T>::after(const pointer& ptr) {
-    _allocator = ptr._allocator;
-    if (_allocator) {
-      _index = ptr._index;
-      _next = ptr._next;
-      if (_next) {
-        _next->_prev = this;
-      }
-      _prev = &ptr;
-      ptr._next = this;
-    }
-  }
-
-  template <class T>
-  void pointer<T>::replace(pointer& ptr) {
-    _allocator = ptr._allocator;
-    if (_allocator) {
-      _index = ptr._index;
-      _next = ptr._next;
-      if (_next) {
-        _next->_prev = this;
-      }
-      _prev = ptr._prev;
-      if (_prev) {
-        _prev->_next = this;
-      } else {
-        _allocator->_data[_index].created = this;
-      }
-    }
-    ptr._allocator = nullptr;
+  pointer<T>::operator bool() {
+    return _allocator;
   }
 
 } // end namespace hatch

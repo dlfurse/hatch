@@ -2,6 +2,31 @@
 #define HATCH_REWRAPPER_HH
 
 namespace hatch {
+
+  /**
+   * Converters
+   */
+
+  template <class ...T>
+  using voided = void;
+
+  template <int I>
+  struct typed {};
+
+  /**
+   * Complete
+   */
+
+  template<class, class = void>
+  constexpr bool complete = false;
+
+  template<class T>
+  constexpr bool complete<T, voided<decltype(sizeof(T))>> = true;
+
+  /**
+   * Wrappers
+   */
+
   template <class Out, class In>
   class rewrapper;
 

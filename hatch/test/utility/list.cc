@@ -1,7 +1,25 @@
-#include <hatch/utility/pointer_list.hh>
+#include <hatch/utility/list.hh>
 #include <gtest/gtest.h>
 
 namespace hatch {
+
+//  class ListTest : public ::testing::Test {
+//  protected:
+//    class inheriting_node : public list_node<inheriting_node> {
+//    public:
+//      inheriting_node() : value{0} {
+//      }
+//
+//      inheriting_node(const int& value) : value{value} {
+//      }
+//
+//      int value;
+//    };
+//
+//    list_root<inheriting_node> inheriting_list;
+//    list_root<int> aggregating_list;
+//  };
+
 
   class PointerListTest : public ::testing::Test {
   protected:
@@ -19,24 +37,19 @@ namespace hatch {
       double precise;
     };
 
-    class test_node : public test_data, public pointer_list_node<test_node> {
-    private:
-        using node = pointer_list_node<test_node>;
-
+    class test_node : public test_data, public list_node<test_node> {
     public:
       test_node(unsigned int numerator, unsigned int denominator, double precise) :
-        test_data{numerator, denominator, precise} {
+          test_data{numerator, denominator, precise} {
       }
 
-      void splice(pointer_list_node<test_node>& node) {
-        return node::splice(node);
+      void splice(list_node<test_node>& object) {
+        return list_node<test_node>::splice(object);
       }
     };
 
-    using test_root = pointer_list_root<test_node>;
-
     test_data data[6];
-    test_node* node;
+    test_data* object;
 
     test_node first{1, 10, 1.1};
     test_node second{2, 20, 2.2};
@@ -45,13 +58,13 @@ namespace hatch {
     test_node fifth{5, 50, 5.5};
     test_node sixth{6, 60, 6.6};
 
-    test_root one;
-    test_root two;
+    list<test_node> one;
+    list<test_node> two;
 
   protected:
-    int dump(test_root& root) {
+    int dump(list<test_node>& list) {
       int count = 0;
-      for (const auto& item : root) {
+      for (const auto& item : list) {
         data[count].numerator = item.numerator;
         data[count].denominator = item.denominator;
         data[count].precise = item.precise;
@@ -170,36 +183,36 @@ namespace hatch {
 
     EXPECT_TRUE(first.alone());
     EXPECT_FALSE(one.empty());
-    EXPECT_EQ(one.front(), &first);
+    //EXPECT_EQ(one.front(), &first);
     EXPECT_EQ(dump(one), 1);
     EXPECT_EQ(data[0].numerator, 1);
     EXPECT_EQ(data[0].denominator, 10);
     EXPECT_EQ(data[0].precise, 1.1);
 
-    node = one.pop_front();
+    object = one.pop_front();
     one.push_front(second);
 
-    EXPECT_EQ(node, &first);
+    //EXPECT_EQ(object, &first);
     EXPECT_TRUE(first.alone());
     EXPECT_TRUE(second.alone());
     EXPECT_FALSE(one.empty());
-    EXPECT_EQ(one.front(), &second);
+    //EXPECT_EQ(one.front(), &second);
     EXPECT_EQ(dump(one), 1);
     EXPECT_EQ(data[0].numerator, 2);
     EXPECT_EQ(data[0].denominator, 20);
     EXPECT_EQ(data[0].precise, 2.2);
 
-    node = one.pop_front();
+    object = one.pop_front();
 
-    EXPECT_EQ(node, &second);
+    //EXPECT_EQ(object, &second);
     EXPECT_TRUE(second.alone());
     EXPECT_TRUE(one.empty());
     EXPECT_EQ(one.front(), nullptr);
     EXPECT_EQ(dump(one), 0);
 
-    node = one.pop_front();
+    object = one.pop_front();
 
-    EXPECT_EQ(node, nullptr);
+    //EXPECT_EQ(object, nullptr);
     EXPECT_TRUE(one.empty());
     EXPECT_EQ(one.front(), nullptr);
     EXPECT_EQ(dump(one), 0);
@@ -216,10 +229,10 @@ namespace hatch {
     EXPECT_EQ(data[0].denominator, 10);
     EXPECT_EQ(data[0].precise, 1.1);
 
-    node = one.pop_back();
+    object = one.pop_back();
     one.push_back(second);
 
-    EXPECT_EQ(node, &first);
+    EXPECT_EQ(object, &first);
     EXPECT_TRUE(first.alone());
     EXPECT_TRUE(second.alone());
     EXPECT_FALSE(one.empty());
@@ -229,17 +242,17 @@ namespace hatch {
     EXPECT_EQ(data[0].denominator, 20);
     EXPECT_EQ(data[0].precise, 2.2);
 
-    node = one.pop_back();
+    object = one.pop_back();
 
-    EXPECT_EQ(node, &second);
+    EXPECT_EQ(object, &second);
     EXPECT_TRUE(second.alone());
     EXPECT_TRUE(one.empty());
     EXPECT_EQ(one.back(), nullptr);
     EXPECT_EQ(dump(one), 0);
 
-    node = one.pop_back();
+    object = one.pop_back();
 
-    EXPECT_EQ(node, nullptr);
+    EXPECT_EQ(object, nullptr);
     EXPECT_TRUE(one.empty());
     EXPECT_EQ(one.back(), nullptr);
     EXPECT_EQ(dump(one), 0);
@@ -261,10 +274,10 @@ namespace hatch {
     EXPECT_EQ(data[1].denominator, 20);
     EXPECT_EQ(data[1].precise, 2.2);
 
-    node = one.pop_front();
+    object = one.pop_front();
     one.push_front(third);
 
-    EXPECT_EQ(node, &first);
+    EXPECT_EQ(object, &first);
     EXPECT_TRUE(first.alone());
     EXPECT_FALSE(second.alone());
     EXPECT_FALSE(third.alone());
@@ -278,17 +291,17 @@ namespace hatch {
     EXPECT_EQ(data[1].denominator, 20);
     EXPECT_EQ(data[1].precise, 2.2);
 
-    node = one.pop_front();
+    object = one.pop_front();
 
-    EXPECT_EQ(node, &third);
+    EXPECT_EQ(object, &third);
     EXPECT_TRUE(third.alone());
     EXPECT_TRUE(second.alone());
     EXPECT_FALSE(one.empty());
     EXPECT_EQ(dump(one), 1);
 
-    node = one.pop_front();
+    object = one.pop_front();
 
-    EXPECT_EQ(node, &second);
+    EXPECT_EQ(object, &second);
     EXPECT_TRUE(second.alone());
     EXPECT_TRUE(one.empty());
     EXPECT_EQ(dump(one), 0);
@@ -309,10 +322,10 @@ namespace hatch {
     EXPECT_EQ(data[1].denominator, 20);
     EXPECT_EQ(data[1].precise, 2.2);
 
-    node = one.pop_back();
+    object = one.pop_back();
     one.push_back(third);
 
-    EXPECT_EQ(node, &second);
+    EXPECT_EQ(object, &second);
     EXPECT_TRUE(second.alone());
     EXPECT_FALSE(first.alone());
     EXPECT_FALSE(third.alone());
@@ -325,17 +338,17 @@ namespace hatch {
     EXPECT_EQ(data[1].denominator, 30);
     EXPECT_EQ(data[1].precise, 3.3);
 
-    node = one.pop_back();
+    object = one.pop_back();
 
-    EXPECT_EQ(node, &third);
+    EXPECT_EQ(object, &third);
     EXPECT_TRUE(third.alone());
     EXPECT_TRUE(first.alone());
     EXPECT_FALSE(one.empty());
     EXPECT_EQ(dump(one), 1);
 
-    node = one.pop_back();
+    object = one.pop_back();
 
-    EXPECT_EQ(node, &first);
+    EXPECT_EQ(object, &first);
     EXPECT_TRUE(first.alone());
     EXPECT_TRUE(one.empty());
     EXPECT_EQ(dump(one), 0);
@@ -367,9 +380,9 @@ namespace hatch {
     EXPECT_EQ(data[3].denominator, 40);
     EXPECT_EQ(data[3].precise, 4.4);
 
-    node = one.pop_front();
+    object = one.pop_front();
 
-    EXPECT_EQ(node, &first);
+    EXPECT_EQ(object, &first);
     EXPECT_TRUE(first.alone());
     EXPECT_FALSE(second.alone());
     EXPECT_FALSE(third.alone());
@@ -377,9 +390,9 @@ namespace hatch {
     EXPECT_FALSE(one.empty());
     EXPECT_EQ(dump(one), 3);
 
-    node = one.pop_back();
+    object = one.pop_back();
 
-    EXPECT_EQ(node, &fourth);
+    EXPECT_EQ(object, &fourth);
     EXPECT_TRUE(first.alone());
     EXPECT_FALSE(second.alone());
     EXPECT_FALSE(third.alone());
@@ -387,9 +400,9 @@ namespace hatch {
     EXPECT_FALSE(one.empty());
     EXPECT_EQ(dump(one), 2);
 
-    node = one.pop_front();
+    object = one.pop_front();
 
-    EXPECT_EQ(node, &second);
+    EXPECT_EQ(object, &second);
     EXPECT_TRUE(first.alone());
     EXPECT_TRUE(second.alone());
     EXPECT_TRUE(third.alone());
@@ -397,9 +410,9 @@ namespace hatch {
     EXPECT_FALSE(one.empty());
     EXPECT_EQ(dump(one), 1);
 
-    node = one.pop_back();
+    object = one.pop_back();
 
-    EXPECT_EQ(node, &third);
+    EXPECT_EQ(object, &third);
     EXPECT_TRUE(third.alone());
     EXPECT_TRUE(one.empty());
     EXPECT_EQ(dump(one), 0);
@@ -429,9 +442,9 @@ namespace hatch {
     EXPECT_EQ(data[0].denominator, 30);
     EXPECT_EQ(data[0].precise, 3.3);
 
-    node = one.pop_front();
+    object = one.pop_front();
 
-    EXPECT_EQ(node, &third);
+    EXPECT_EQ(object, &third);
     EXPECT_TRUE(third.alone());
     EXPECT_TRUE(one.empty());
     EXPECT_EQ(one.front(), nullptr);
@@ -462,9 +475,9 @@ namespace hatch {
     EXPECT_EQ(data[0].denominator, 30);
     EXPECT_EQ(data[0].precise, 3.3);
 
-    node = one.pop_back();
+    object = one.pop_back();
 
-    EXPECT_EQ(node, &third);
+    EXPECT_EQ(object, &third);
     EXPECT_TRUE(third.alone());
     EXPECT_TRUE(one.empty());
     EXPECT_EQ(one.back(), nullptr);

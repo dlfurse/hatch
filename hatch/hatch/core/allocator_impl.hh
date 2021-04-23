@@ -39,6 +39,26 @@ namespace hatch {
   }
 
   template <class T>
+  uint64_t allocator<T>::allocated() const {
+    return _allocated;
+  }
+
+  template <class T>
+  uint64_t allocator<T>::capacity() const {
+    return _capacity;
+  }
+
+  template <class T>
+  uint64_t allocator<T>::growth_increment() const {
+    return _growth_increment;
+  }
+
+  template <class T>
+  uint64_t allocator<T>::shrink_threshold() const {
+    return _shrink_threshold;
+  }
+
+  template <class T>
   allocator<T>::~allocator() {
     std::free(_data);
   }
@@ -174,25 +194,20 @@ namespace hatch {
   }
 
   template <class T>
-  uint64_t allocator<T>::allocated() const {
-    return _allocated;
+  void allocator<T>::attach_pointer(pointer <T>& p) {
+    auto& pointers = _data[p.index].pointers;
+    pointers.push_back(p);
   }
 
   template <class T>
-  uint64_t allocator<T>::capacity() const {
-    return _capacity;
+  void allocator<T>::detach_pointer(pointer <T>& p) {
+    auto& pointers = _data[p.index].pointers;
+    if (pointers.front() == &p) {
+      pointers.pop_front();
+    } else {
+      p.splice(p.next());
+    }
   }
-
-  template <class T>
-  uint64_t allocator<T>::growth_increment() const {
-    return _growth_increment;
-  }
-
-  template <class T>
-  uint64_t allocator<T>::shrink_threshold() const {
-    return _shrink_threshold;
-  }
-
 }
 
 #endif // HATCH_ALLOCATOR_IMPL_HH

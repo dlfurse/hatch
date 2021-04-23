@@ -4,7 +4,7 @@
 #include <tuple> // std::tuple
 #include <type_traits> // std::result_of_t
 
-#include <hatch/utility/rewrapper.hh>
+#include <hatch/utility/meta.hh>
 
 namespace hatch {
   template <class ...T>
