@@ -6,14 +6,15 @@
 #endif
 
 #include <hatch/utility/container.hh>
+#include <hatch/utility/keep.hh>
 
 namespace hatch {
 
   template <class T>
-  class list_node : public container<T> {
+  class list_node : public container<T>, public keeper<list_node<T>, list_iterator<T>> {
   public:
-    friend class list_iterator<T>;
     friend class list<T>;
+    friend class list_iterator<T>;
 
     ///////////////////////////////////////////
     // Constructors, destructor, assignment. //

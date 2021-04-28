@@ -12,28 +12,20 @@ namespace hatch {
   class container {
   private:
     class aggregates;
-
-    class inherits {
-    public:
-      inherits() = default;
-
-      T& get(const container* container) const {
-        return const_cast<T&>(static_cast<const T&>(*container));
-      }
-    };
+    class inherits;
 
     std::conditional_t<complete<T>, aggregates, inherits> _policy;
 
   public:
     template <class ...Args>
-    container(Args&&... args) : _policy{std::forward<Args>(args)...} {
-    }
+    container(Args&&... args);
 
-    T& get() const {
-      return _policy.get(this);
-    }
+  public:
+    T& get() const;
   };
 
-}
+} // namespace hatch
 
-#endif
+#include <hatch/utility/container_impl.hh>
+
+#endif // HATCH_CONTAINER_HH

@@ -33,31 +33,31 @@ namespace hatch {
           test_data{value} {
       }
 
-      bool operator<(const test_node& other) {
+      bool operator<(const test_node& other) const {
         return value < other.value;
       }
 
-      bool is_red() {
+      bool is_red() const {
         return tree_node<test_node>::is_red();
       }
 
-      bool is_black() {
+      bool is_black() const {
         return tree_node<test_node>::is_black();
       }
 
-      bool is_root() {
+      bool is_root() const {
         return tree_node<test_node>::is_root();
       }
 
-      bool is_prev() {
+      bool is_prev() const {
         return tree_node<test_node>::is_prev();
       }
 
-      bool is_next() {
+      bool is_next() const {
         return tree_node<test_node>::is_next();
       }
 
-      int black_depth() {
+      int black_depth() const {
         int depth = is_black() ? 1 : 0;
         if (_prev && _next) {
           int prev = _prev->get().black_depth();
@@ -91,8 +91,8 @@ namespace hatch {
     }
   };
 
-  std::ostream& operator<<(std::ostream& stream, const PointerTreeTest::test_data& data) {
-    stream << data.value;
+  std::ostream& operator<<(std::ostream& stream, const PointerTreeTest::test_node& node) {
+    stream << node.value << (node.is_red() ? ", r" : ", b");
     return stream;
   }
 
@@ -100,6 +100,7 @@ namespace hatch {
     stream << failure.self.value << " (" << failure.prev.value << ", " << failure.next.value << ")";
     return stream;
   }
+
 
   TEST_F(PointerTreeTest, EmptyTree) {
     EXPECT_TRUE(nodes[0].alone());
@@ -152,22 +153,22 @@ namespace hatch {
     EXPECT_TRUE(nodes[6].is_red());
     EXPECT_TRUE(nodes[6].is_next());
 
-//    EXPECT_EQ(nodes[3].minimum(), &nodes[0]);
-//    EXPECT_EQ(nodes[1].minimum(), &nodes[0]);
-//    EXPECT_EQ(nodes[5].minimum(), &nodes[4]);
+    EXPECT_EQ(nodes[3].minimum(), &nodes[0]);
+    EXPECT_EQ(nodes[1].minimum(), &nodes[0]);
+    EXPECT_EQ(nodes[5].minimum(), &nodes[4]);
 
     for (auto index = 0u; index < 6; index++) {
       EXPECT_EQ(nodes[index].successor(), &nodes[index + 1]);
-//      EXPECT_EQ(nodes[index].root(), &nodes[3]);
+      EXPECT_EQ(nodes[index].root(), &nodes[3]);
     }
 
-//    EXPECT_EQ(nodes[3].maximum(), &nodes[6]);
-//    EXPECT_EQ(nodes[1].maximum(), &nodes[2]);
-//    EXPECT_EQ(nodes[5].maximum(), &nodes[6]);
+    EXPECT_EQ(nodes[3].maximum(), &nodes[6]);
+    EXPECT_EQ(nodes[1].maximum(), &nodes[2]);
+    EXPECT_EQ(nodes[5].maximum(), &nodes[6]);
 
     for (auto index = 6u; index < 0; index++) {
       EXPECT_EQ(nodes[index].predecessor(), &nodes[index - 1]);
-//      EXPECT_EQ(nodes[index].root(), &nodes[3]);
+      EXPECT_EQ(nodes[index].root(), &nodes[3]);
     }
   }
 

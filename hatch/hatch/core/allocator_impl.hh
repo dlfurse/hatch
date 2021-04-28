@@ -23,18 +23,13 @@ namespace hatch {
       _min_capacity{min_capacity},
       _lin_boundary{min_capacity * (2 << max_doublings)}
   {
-    _data = static_cast<node *>(aligned_alloc(align, _capacity * size));
+    _data = static_cast<node*>(aligned_alloc(align, _capacity * size));
     assert(_data);
 
-    _free = 0;
+    _next = 0;
     for (uint64_t index = 0; index < _capacity; index++) {
-      if (index == _capacity - 1) {
-        _data[index] = {index - 1, 0, nullptr};
-      } else if (index == 0) {
-        _data[index] = {_capacity - 1, index + 1, nullptr};
-      } else {
-        _data[index] = {index - 1, index + 1, nullptr};
-      }
+      _data[index].free = freenode{index};
+      _free.insert(_data[index].free);
     }
   }
 

@@ -3,24 +3,6 @@
 
 namespace hatch {
 
-//  class ListTest : public ::testing::Test {
-//  protected:
-//    class inheriting_node : public list_node<inheriting_node> {
-//    public:
-//      inheriting_node() : value{0} {
-//      }
-//
-//      inheriting_node(const int& value) : value{value} {
-//      }
-//
-//      int value;
-//    };
-//
-//    list_root<inheriting_node> inheriting_list;
-//    list_root<int> aggregating_list;
-//  };
-
-
   class PointerListTest : public ::testing::Test {
   protected:
     class test_data {

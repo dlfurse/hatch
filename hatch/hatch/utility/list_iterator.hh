@@ -5,12 +5,12 @@
 #error "do not include list_iterator.hh directly. include list.hh instead."
 #endif
 
-#include <type_traits>
+#include <hatch/utility/keep.hh>
 
 namespace hatch {
 
   template <class T>
-  class list_iterator {
+  class list_iterator final : public kept<list_node<T>, list_iterator<T>> {
   public:
     friend class list<T>;
 
@@ -19,14 +19,14 @@ namespace hatch {
     ///////////////////////////////////////////
 
   private:
-    list_iterator(list<T>* list, list_node<T>* node);
+    list_iterator(list_node<T>* node, list<T>* list);
 
   public:
-    list_iterator() = delete;
-    ~list_iterator() = default;
+    list_iterator();
+    ~list_iterator();
 
-    list_iterator(list_iterator&& moved) = delete;
-    list_iterator& operator=(list_iterator&& moved) = delete;
+    list_iterator(list_iterator&& moved) noexcept;
+    list_iterator& operator=(list_iterator&& moved) noexcept;
 
     list_iterator(const list_iterator& copied);
     list_iterator& operator=(const list_iterator& copied);
@@ -44,9 +44,7 @@ namespace hatch {
     ////////////////
 
   private:
-    list<T>* _list;
-    mutable list_node<T>* _node;
-
+    mutable list<T>* _list;
     static list_node<T>* _before;
     static list_node<T>* _after;
 

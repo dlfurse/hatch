@@ -12,22 +12,39 @@
 
 namespace hatch {
 
+  enum class colors : uint64_t {
+    black = 0,
+    red = 1,
+  };
+
+  enum class sides : uint8_t {
+    prev = 0,
+    next = 1,
+  };
+
+  colors operator~(colors color) {
+    switch (color) {
+      case colors::red:
+        return colors::black;
+      case colors::black:
+        return colors::red;
+    }
+  }
+
+  sides operator~(sides side) {
+    switch (side) {
+      case sides::prev:
+        return sides::next;
+      case sides::next:
+        return sides::prev;
+    }
+  }
+
   template <class T>
   class tree_node : public container<T> {
   public:
     friend class tree<T>;
     friend class tree_iterator<T>;
-
-  private:
-    enum class colors : uint64_t {
-      black = 0,
-      red = 1,
-    };
-
-    enum class sides : uint8_t {
-      prev = 0,
-      next = 1,
-    };
 
     ///////////////////////////////
     // Constructors, destructor. //
@@ -123,6 +140,10 @@ namespace hatch {
     void detach();
     void rotate(sides side);
     void exchange(tree_node* node);
+
+  protected:
+    void insert(tree_node& node);
+    void remove();
   };
 
 } // namespace hatch

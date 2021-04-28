@@ -5,6 +5,8 @@
 #error "do not include tree_impl.hh directly. include tree.hh instead."
 #endif
 
+#include <algorithm>
+
 namespace hatch {
 
   ///////////////////////////////////////////
@@ -24,7 +26,15 @@ namespace hatch {
   template<class T>
   tree<T>::~tree() {
     while(_root) {
-      remove(*_root);
+      auto* min = _root->minimum();
+      auto* max = _root->maximum();
+      if (min != _root) {
+        min->remove();
+      } else if (max != _root) {
+        max->remove();
+      } else {
+        _root = nullptr;
+      }
     }
   }
 
@@ -106,104 +116,13 @@ namespace hatch {
 
   template<class T>
   tree_iterator<T> tree<T>::insert(tree_node<T>& node) {
-    auto* current = &node;
-
-    current->detach();
-    current->make_red();
-
-    if (auto* parent = _root) {
-      // this tree has a root already.
-      //
-      // -> go through the normal binary search tree insertion procedure. later
-      //    we will adjust the tree to correct red-black properties, if needed.
-      //
-      while (true) {
-        if (current->get() < parent->get()) {
-          if (parent->prev()) {
-            parent = parent->prev();
-            continue;
-          } else {
-            parent->make_child(current, tree_node<T>::sides::prev);
-            break;
-          }
-        } else {
-          if (parent->next()) {
-            parent = parent->next();
-            continue;
-          } else {
-            parent->make_child(current, tree_node<T>::sides::next);
-            break;
-          }
-        }
-      }
-
-      while (parent && parent->is_red()) {
-        // node has a red parent, which means it must have a grandparent as well.
-        auto parent_self_side = *parent->side();
-        auto parent_away_side = ~parent_self_side;
-
-        auto* grandma = parent->head();
-        auto* aunt = grandma->child(parent_away_side);
-
-        if (aunt && aunt->is_red()) {
-          // this node's parent has a red sibling.
-          //
-          // -> swap the colors of the parent + parent's sibling with the color of
-          //    the grandparent, then recurse on the grandparent.
-          //
-          grandma->make_red();
-          parent->make_black();
-          aunt->make_black();
-
-          current = grandma;
-          parent = current->head();
-
-          continue;
-        } else {
-          // this node's parent has either a black sibling or no sibling.
-          //
-          // -> rotate the grandparent away putting the parent in its place, then
-          //    swap the the colors of the grandparent and the parent.
-          //
-          if (current->side() == parent_away_side) {
-            // this node is on a different side of its parent than its parent is
-            // with respect to the parent's parent.
-            //
-            // -> rotate the parent away from this node so it descends from this
-            //    node but is on the same side of it as the parent is to the
-            //    grandparent, then swap the current and parent pointers so the
-            //    relationships are correctly labeled.
-            //
-            parent->rotate(parent_self_side);
-            std::swap(current, parent);
-          }
-
-          grandma->rotate(parent_away_side);
-          grandma->make_red();
-          parent->make_black();
-
-          break;
-        }
-      }
-    }
-
-    if (current->is_root()) {
-      // this node is the root.
-      //
-      // -> color it black.
-      //
-      current->make_black();
+    if (_root) {
+      _root->insert(node);
     } else {
-      // this node is not the root.
-      //
-      // -> move to the current root.
-      //
-      while (current->head()) {
-        current = current->head();
-      }
+      _root = &node;
     }
-
-    _root = current;
+    _root = _root->root();
+    return {this, &node};
   }
 }
 

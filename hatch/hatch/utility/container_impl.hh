@@ -7,43 +7,42 @@
 
 namespace hatch {
 
-//  template <class T>
-//  class container {
-//  private:
-    class aggregates {
+    template <class T>
+    class container<T>::aggregates {
     private:
       T _data;
 
     public:
       template <class ...Args>
-      aggregates(Args&&... args) : _data{std::forward<Args>(args)...} {
+      aggregates(Args&&... args) :
+        _data{std::forward<Args>(args)...} {
       }
 
       T& get(const container*) const {
         return const_cast<T&>(reinterpret_cast<const T&>(_data));
       }
     };
-//
-//    class inherits {
-//    public:
-//      inherits() = default;
-//
-//      T& get(const container* container) const {
-//        return const_cast<T&>(static_cast<const T&>(*container));
-//      }
-//    };
-//
-//    std::conditional_t<complete<T>, aggregates, inherits> _policy;
-//
-//  public:
-//    template <class ...Args>
-//    container(Args&&... args) : _policy{std::forward<Args>(args)...} {
-//    }
-//
-//    T& get() const {
-//      return _policy.get(this);
-//    }
-//  };
+
+    template <class T>
+    class container<T>::inherits {
+    public:
+      inherits() = default;
+
+      T& get(const container* container) const {
+        return const_cast<T&>(static_cast<const T&>(*container));
+      }
+    };
+
+    template <class T>
+    template <class ...Args>
+    container<T>::container(Args&&... args) :
+      _policy{std::forward<Args>(args)...} {
+    }
+
+    template <class T>
+    T& container<T>::get() const {
+      return _policy.get(this);
+    }
 
 } // namespace hatch
 

@@ -22,6 +22,7 @@ namespace hatch {
 
   template <class T>
   list_node<T>::list_node(list_node&& moved) noexcept :
+      keeper<list_node<T>, list_iterator<T>>{moved},
       _prev{moved._prev},
       _next{moved._next} {
     _prev->_next = this;
@@ -32,6 +33,7 @@ namespace hatch {
 
   template <class T>
   list_node<T>& list_node<T>::operator=(list_node&& moved) noexcept {
+    keeper<list_node<T>, list_iterator<T>>::operator=(moved);
     _prev = moved._prev;
     _next = moved._next;
     _prev->_next = this;

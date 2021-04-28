@@ -65,7 +65,7 @@ namespace hatch {
 
     T* pop_back();
     void push_back(list_node<T>& node);
-    void push_back(list<T>& root);
+    void push_back(list<T>& list);
   };
 
 } // namespace hatch
@@ -77,4 +77,4 @@ namespace hatch {
 #include <hatch/utility/list_node_impl.hh>
 #include <hatch/utility/list_iterator_impl.hh>
 
-#endif // HATCH_LIST_ROOT_HH
+#endif // HATCH_LIST_HH

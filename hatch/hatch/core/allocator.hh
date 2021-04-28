@@ -5,8 +5,8 @@
 #error "do not include pointer.hh directly. include memory.hh instead."
 #endif
 
-#include <hatch/utility/pointer_list.hh>
-#include <hatch/utility/pointer_tree.hh>
+#include <hatch/utility/list.hh>
+#include <hatch/utility/tree.hh>
 
 #include <memory> // std::aligned_storage
 
@@ -21,9 +21,12 @@ namespace hatch {
     friend class pointer<T>;
 
   private:
-    class freenode : public pointer_tree_node<freenode> {
+    class freenode : public tree_node<freenode> {
     public:
       uint64_t index;
+
+      freenode(uint64_t index) : index{index}{
+      }
 
       bool operator==(const freenode& other) {
         return index == other.index;
@@ -46,7 +49,7 @@ namespace hatch {
     public:
       union {
         freenode free;
-        pointer_list_root<pointer<T>> pointers;
+        list<pointer<T>> pointers;
       } header;
       typename std::aligned_storage<sizeof(T), alignof(T)>::type data;
     };
@@ -80,8 +83,7 @@ namespace hatch {
 
     node* _data;
 
-    pointer_tree_root<freenode> _tree;
-    uint64_t _root;
+    tree<freenode> _free;
     uint64_t _next;
 
   public:

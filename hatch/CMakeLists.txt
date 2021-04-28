@@ -68,25 +68,31 @@ add_subdirectory(${CMAKE_CURRENT_BINARY_DIR}/googletest/src
 set(hatch_utility_sources.hh
   hatch/utility/meta.hh
 
-  hatch/core/list_fwd.hh
-  hatch/core/list.hh
-  hatch/core/list_impl.hh
-  hatch/core/list_node.hh
-  hatch/core/list_node_impl.hh
-  hatch/core/list_iterator.hh
-  hatch/core/list_iterator_impl.hh
+  hatch/utility/container.hh
+  hatch/utility/container_impl.hh
 
-  hatch/core/tree_fwd.hh
-  hatch/core/tree.hh
-  hatch/core/tree_impl.hh
-  hatch/core/tree_node.hh
-  hatch/core/tree_node_impl.hh
-  hatch/core/tree_iterator.hh
-  hatch/core/tree_iterator_impl.hh
-#  hatch/core/pointer_tree_iterator.hh
-#  hatch/core/pointer_tree_iterator_impl.hh
-#  hatch/core/pointer_tree_root.hh
-#  hatch/core/pointer_tree_root_impl.hh
+  hatch/utility/keep.hh
+  hatch/utility/keep_fwd.hh
+  hatch/utility/keeper.hh
+  hatch/utility/keeper_impl.hh
+  hatch/utility/kept.hh
+  hatch/utility/kept_impl.hh
+
+  hatch/utility/list_fwd.hh
+  hatch/utility/list.hh
+  hatch/utility/list_impl.hh
+  hatch/utility/list_node.hh
+  hatch/utility/list_node_impl.hh
+  hatch/utility/list_iterator.hh
+  hatch/utility/list_iterator_impl.hh
+
+  hatch/utility/tree_fwd.hh
+  hatch/utility/tree.hh
+  hatch/utility/tree_impl.hh
+  hatch/utility/tree_node.hh
+  hatch/utility/tree_node_impl.hh
+  hatch/utility/tree_iterator.hh
+  hatch/utility/tree_iterator_impl.hh
 )
 
 ########
@@ -123,8 +129,9 @@ set(hatch_core_sources
 ########
 
 set(hatch_utility_test_sources
-  test/utility/list.cc
-  test/utility/tree.cc
+  test/utility/container.cc
+#  test/utility/list.cc
+#  test/utility/tree.cc
 )
 
 add_executable(hatch_utility_test ${hatch_utility_test_sources})
