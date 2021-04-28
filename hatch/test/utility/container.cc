@@ -1,10 +1,7 @@
 #include <hatch/utility/container.hh>
 #include <gtest/gtest.h>
 
-#include <iostream>
-
 #include <cstdint>
-#include <cstring>
 
 namespace hatch {
 

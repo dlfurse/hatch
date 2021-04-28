@@ -34,7 +34,7 @@ namespace hatch {
     U* _kept;
 
     template <class F>
-    void foreach(F function);
+    void foreach(F&& function);
 
     void acquire(keeper<T, U>& keeper);
     void release();

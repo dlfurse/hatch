@@ -14,8 +14,8 @@ namespace hatch {
   template <class T, class U>
   kept<T, U>::kept(T* keeper) :
       _keeper{nullptr},
-      _prev{this},
-      _next{this} {
+      _prev{static_cast<U*>(this)},
+      _next{static_cast<U*>(this)} {
     attach(keeper);
   }
 
@@ -27,8 +27,8 @@ namespace hatch {
   template <class T, class U>
   kept<T, U>::kept(kept<T, U>&& moved) noexcept :
       _keeper{nullptr},
-      _prev{this},
-      _next{this} {
+      _prev{static_cast<U*>(this)},
+      _next{static_cast<U*>(this)} {
     attach(moved._keeper);
     moved.detach();
   }
@@ -38,13 +38,14 @@ namespace hatch {
     detach();
     attach(moved._keeper);
     moved.detach();
+    return *this;
   }
 
   template <class T, class U>
   kept<T, U>::kept(const kept<T, U>& copied) :
       _keeper{nullptr},
-      _prev{this},
-      _next{this}  {
+      _prev{static_cast<U*>(this)},
+      _next{static_cast<U*>(this)}  {
     attach(copied._keeper);
   }
 
@@ -52,6 +53,7 @@ namespace hatch {
   kept<T, U>& kept<T, U>::operator=(const kept<T, U>& copied) {
     detach();
     attach(copied._keeper);
+    return *this;
   }
 
   ///////////

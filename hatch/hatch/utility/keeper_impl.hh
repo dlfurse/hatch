@@ -30,6 +30,7 @@ namespace hatch {
   keeper<T, U>& keeper<T, U>::operator=(keeper&& moved) noexcept {
     release();
     acquire(moved);
+    return *this;
   }
 
   ///////////
@@ -38,12 +39,12 @@ namespace hatch {
 
   template <class T, class U>
   template <class F>
-  void keeper<T, U>::foreach(F f) {
+  void keeper<T, U>::foreach(F&& function) {
     if (auto* node = _kept) {
       do {
         auto* next = static_cast<U*>(node->_next);
 
-        f(*node);
+        function(*node);
 
         node = next;
       } while (node != _kept);
@@ -54,7 +55,7 @@ namespace hatch {
   void keeper<T, U>::acquire(keeper<T, U>& keeper) {
     _kept = keeper._kept;
     foreach([&](U& node) {
-      node._keeper = this;
+      node._keeper = static_cast<T*>(this);
     });
     keeper._kept = nullptr;
   }

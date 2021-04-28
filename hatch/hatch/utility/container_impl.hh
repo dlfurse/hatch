@@ -33,11 +33,19 @@ namespace hatch {
       }
     };
 
+    //////////////////
+    // Constructor. //
+    //////////////////
+
     template <class T>
     template <class ...Args>
     container<T>::container(Args&&... args) :
       _policy{std::forward<Args>(args)...} {
     }
+
+    ////////////////
+    // Container. //
+    ////////////////
 
     template <class T>
     T& container<T>::get() const {

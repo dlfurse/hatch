@@ -14,11 +14,20 @@ namespace hatch {
     class aggregates;
     class inherits;
 
-    std::conditional_t<complete<T>, aggregates, inherits> _policy;
+    //////////////////
+    // Constructor. //
+    //////////////////
 
   public:
     template <class ...Args>
     container(Args&&... args);
+
+    ////////////////
+    // Container. //
+    ////////////////
+
+  private:
+    std::conditional_t<complete<T>, aggregates, inherits> _policy;
 
   public:
     T& get() const;
