@@ -20,14 +20,14 @@ namespace hatch {
   ///////////////////////////////////////////
 
   template <class T>
-  list_iterator<T>::list_iterator(list_node<T>* node, list<T>* list) :
-      kept<list_node<T>, list_iterator<T>>{node},
-      _list{list} {
+  list_iterator<T>::list_iterator(list<T>* owner, list_node<T>* node) :
+      kept<list<T>, list_iterator<T>>{owner},
+      _node{node} {
   }
 
   template <class T>
   list_iterator<T>::list_iterator() :
-    _list{nullptr} {
+    _node{nullptr} {
   }
 
   template <class T>
@@ -36,29 +36,29 @@ namespace hatch {
 
   template <class T>
   list_iterator<T>::list_iterator(list_iterator&& moved) noexcept :
-      kept<list_node<T>, list_iterator<T>>{moved},
-      _list{moved._list} {
-    moved._list = nullptr;
+      kept<list<T>, list_iterator<T>>{moved},
+      _node{moved._node} {
+    moved._node = nullptr;
   }
 
   template <class T>
   list_iterator<T>& list_iterator<T>::operator=(list_iterator&& moved) noexcept {
-    kept<list_node<T>, list_iterator<T>>::operator=(moved);
-    _list = moved._list;
+    kept<list<T>, list_iterator<T>>::operator=(moved);
+    _node = moved._node;
     moved._node = nullptr;
     return *this;
   }
 
   template <class T>
   list_iterator<T>::list_iterator(const list_iterator& copied) :
-      kept<list_node<T>, list_iterator<T>>{copied},
-      _list{copied._list} {
+      kept<list<T>, list_iterator<T>>{copied},
+      _node{copied._node} {
   }
 
   template <class T>
   list_iterator<T>& list_iterator<T>::operator=(const list_iterator& copied) {
-    kept<list_node<T>, list_iterator<T>>::operator=(copied);
-    _list = copied._list;
+    kept<list<T>, list_iterator<T>>::operator=(copied);
+    _node = copied._node;
     return *this;
   }
 
@@ -68,12 +68,12 @@ namespace hatch {
 
   template <class T>
   bool list_iterator<T>::operator==(const list_iterator& compared) const {
-    return this->_keeper == compared._keeper;
+    return this->_keeper == compared._keeper && this->_node == compared._node;
   }
 
   template <class T>
   bool list_iterator<T>::operator!=(const list_iterator& compared) const {
-    return this->_keeper != compared._keeper;
+    return this->_keeper != compared._keeper || this->_node != compared._node;
   }
 
   /////////////////////////////////////
@@ -82,12 +82,12 @@ namespace hatch {
 
   template <class T>
   T& list_iterator<T>::operator*() const {
-    return this->_keeper->get();
+    return _node->get();
   }
 
   template <class T>
   T* list_iterator<T>::operator->() const {
-    return &this->_keeper->get();
+    return &_node->get();
   }
 
   ///////////////////////////////
@@ -96,18 +96,19 @@ namespace hatch {
 
   template <class T>
   list_iterator<T>& list_iterator<T>::operator++() {
-    if (this->_keeper == _before) {
-      if (_list->_head == nullptr) {
-        this->_keeper = _after;
-      } else {
-        this->attach(_list->_head);
-      }
-    } else if (this->_keeper != _after) {
-      if (this->_keeper == _list->_head->_prev) {
-        this->detach();
-        this->_keeper = _after;
-      } else {
-        this->attach(this->_keeper->_next);
+    if (auto*& list = this->_keeper) {
+      if (_node == _before) {
+        if (list->_head == nullptr) {
+          _node = _after;
+        } else {
+          _node = list->_head;
+        }
+      } else if (_node != _after) {
+        if (_node == &list->_head->prev()) {
+          _node = _after;
+        } else {
+          _node = &_node->next();
+        }
       }
     }
     return *this;
@@ -120,25 +121,26 @@ namespace hatch {
 
   template <class T>
   const list_iterator<T> list_iterator<T>::operator++(int) const {
-    auto* const node = this->_keeper;
+    auto* const list = this->_keeper;
     this->operator++();
-    return {node, _list};
+    return {list, _node};
   }
 
   template <class T>
   list_iterator<T>& list_iterator<T>::operator--() {
-    if (this->_keeper == _after) {
-      if (_list->_head == nullptr) {
-        this->_keeper = _before;
-      } else {
-        this->attach(_list->_head->_prev);
-      }
-    } else if (this->_keeper != _before) {
-      if (this->_keeper == _list->_head) {
-        this->detach();
-        this->_keeper = _before;
-      } else {
-        this->attach(this->_keeper->_prev);
+    if (auto*& list = this->_keeper) {
+      if (_node == _after) {
+        if (list->_head == nullptr) {
+          _node = _before;
+        } else {
+          _node = &list->_head->prev();
+        }
+      } else if (_node != _before) {
+        if (_node == list->_head) {
+          _node = _before;
+        } else {
+          _node = &_node->prev();
+        }
       }
     }
     return *this;
@@ -151,9 +153,9 @@ namespace hatch {
 
   template <class T>
   const list_iterator<T> list_iterator<T>::operator--(int) const {
-    auto* const node = this->_keeper;
+    auto* const list = this->_keeper;
     this->operator--();
-    return {node, _list};
+    return {list, _node};
   }
 
   ////////////////////////////////////////
@@ -161,39 +163,31 @@ namespace hatch {
   ////////////////////////////////////////
 
   template <class T>
-  list_iterator<T> list_iterator<T>::insert(list<T>& list) {
-    if (_list != &list) {
+  list_iterator<T> list_iterator<T>::insert(list<T>& newlist) {
+    if (auto* oldlist = this->_keeper) {
+      if (oldlist != &newlist) {
 
-      auto* const first_inserted = list._head;
-      auto* const end_inserted = this->_keeper;
+        auto* const first_inserted = newlist._head;
+        auto* const end_inserted = _node;
 
-      if (first_inserted) {
-        if (end_inserted != _before) {
-          if (end_inserted != _after) {
-            end_inserted->splice(*first_inserted);
-          } else {
-            _list->_head->splice(*first_inserted);
-          }
-
-          if (end_inserted == this->_keeper->_head) {
-            _list->_head = first_inserted;
-          }
-
-          auto* node = list._head;
-          do {
-            auto* iter = node->_kept;
-            if (iter) {
-              do {
-                iter->_list = _list;
-                iter = iter->_next;
-              } while (iter != node->_kept);
+        if (first_inserted) {
+          if (end_inserted != _before) {
+            if (end_inserted != _after) {
+              end_inserted->splice(*first_inserted);
+            } else {
+              oldlist->_head->splice(*first_inserted);
             }
-            node = node->_next;
-          } while (node != list._head);
 
-          list._head = nullptr;
+            if (end_inserted == oldlist->_head) {
+              oldlist->_head = first_inserted;
+            }
 
-          return {_list, first_inserted};
+            newlist._head = nullptr;
+            newlist.release();
+
+            oldlist->release();
+            return {oldlist, first_inserted};
+          }
         }
       }
     }
@@ -202,36 +196,39 @@ namespace hatch {
 
   template <class T>
   list<T> list_iterator<T>::remove(list_iterator<T>& other) {
-    if (_list == other._keeper) {
+    if (auto* list = this->_keeper) {
+      if (list == other._keeper) {
+        auto* const first_removed = _node;
+        auto* const end_removed = other._node;
 
-      auto* const first_removed = this->_keeper;
-      auto* const end_removed = other._node;
+        if (first_removed != _before && first_removed != _after && first_removed != end_removed) {
+          if (end_removed != _before) {
+            if (end_removed != _after) {
 
-      if (first_removed != _before && first_removed != _after && first_removed != end_removed) {
-        if (end_removed != _before) {
-          if (end_removed != _after) {
-            auto* node = end_removed;
-            do {
-              if (node == first_removed) {
-                return {};
+              auto* node = end_removed;
+              do {
+                if (node == first_removed) {
+                  return {};
+                }
+                node = &node->next();
+              } while (node != list->_head);
+
+              first_removed->splice(*end_removed);
+
+              if (first_removed == list->_head) {
+                list->_head = end_removed;
               }
-              node = node->_next;
-            } while (node != _list->_head);
+            } else {
+              first_removed->splice(*list->_head);
 
-            first_removed->splice(*end_removed);
-
-            if (first_removed == _list->_head) {
-              _list->_head = end_removed;
+              if (first_removed == list->_head) {
+                list->_head = nullptr;
+              }
             }
-          } else {
-            first_removed->splice(*_list->_head);
 
-            if (first_removed == _list->_head) {
-              _list->_head = nullptr;
-            }
+            list->release();
+            return {first_removed};
           }
-
-          return {first_removed};
         }
       }
     }

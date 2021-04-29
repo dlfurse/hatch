@@ -10,7 +10,7 @@
 namespace hatch {
 
   template <class T>
-  class list_iterator final : public kept<list_node<T>, list_iterator<T>> {
+  class list_iterator final : public kept<list<T>, list_iterator<T>> {
   public:
     friend class list<T>;
 
@@ -19,7 +19,7 @@ namespace hatch {
     ///////////////////////////////////////////
 
   private:
-    list_iterator(list_node<T>* node, list<T>* list);
+    list_iterator(list<T>* list, list_node<T>* node);
 
   public:
     list_iterator();
@@ -44,7 +44,7 @@ namespace hatch {
     ////////////////
 
   private:
-    mutable list<T>* _list;
+    mutable list_node<T>* _node;
     static list_node<T>* _before;
     static list_node<T>* _after;
 

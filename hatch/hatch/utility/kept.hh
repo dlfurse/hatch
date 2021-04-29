@@ -5,10 +5,12 @@
 #error "do not include kept.hh directly. include keep.hh instead."
 #endif
 
+#include <hatch/utility/chain.hh>
+
 namespace hatch {
 
   template <class T, class U>
-  class kept {
+  class kept : public chain<U> {
   public:
     friend class keeper<T, U>;
 
@@ -32,8 +34,6 @@ namespace hatch {
 
   protected:
     T* _keeper;
-    U* _prev;
-    U* _next;
 
     void attach(T* keeper);
     void detach();

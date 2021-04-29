@@ -2,11 +2,12 @@
 #define HATCH_LIST_HH
 
 #include <hatch/utility/list_fwd.hh>
+#include <hatch/utility/keep.hh>
 
 namespace hatch {
 
   template <class T>
-  class list final {
+  class list final : public keeper<list<T>, list_iterator<T>> {
   public:
     friend class list_iterator<T>;
 

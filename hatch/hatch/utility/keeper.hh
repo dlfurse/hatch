@@ -33,8 +33,11 @@ namespace hatch {
   protected:
     U* _kept;
 
-    template <class F>
-    void foreach(F&& function);
+    template <class V>
+    void foreach(V&& callable);
+
+    template <class V>
+    void foreach(V&& callable) const;
 
     void acquire(keeper<T, U>& keeper);
     void release();

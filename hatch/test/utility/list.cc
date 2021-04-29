@@ -3,7 +3,7 @@
 
 namespace hatch {
 
-  class PointerListTest : public ::testing::Test {
+  class ListTest : public ::testing::Test {
   protected:
     class test_data {
     public:
@@ -56,111 +56,7 @@ namespace hatch {
     }
   };
 
-  TEST_F(PointerListTest, SimpleEmptyListTest) {
-    EXPECT_TRUE(first.alone());
-    EXPECT_TRUE(second.alone());
-    EXPECT_TRUE(third.alone());
-    EXPECT_TRUE(fourth.alone());
-    EXPECT_TRUE(fifth.alone());
-    EXPECT_TRUE(sixth.alone());
-
-    EXPECT_TRUE(one.empty());
-    EXPECT_TRUE(two.empty());
-    EXPECT_EQ(dump(one), 0);
-  }
-
-  TEST_F(PointerListTest, SimpleSpliceTest) {
-    EXPECT_TRUE(first.alone());
-    EXPECT_TRUE(second.alone());
-    EXPECT_TRUE(third.alone());
-
-    second.splice(third);
-
-    EXPECT_EQ(&second.next(), &third);
-    EXPECT_EQ(&third.next(), &second);
-    EXPECT_EQ(&second.prev(), &third);
-    EXPECT_EQ(&third.prev(), &second);
-
-    EXPECT_TRUE(first.alone());
-    EXPECT_FALSE(second.alone());
-    EXPECT_FALSE(third.alone());
-
-    first.splice(second);
-
-    EXPECT_EQ(&first.next(), &second);
-    EXPECT_EQ(&second.next(), &third);
-    EXPECT_EQ(&third.next(), &first);
-    EXPECT_EQ(&first.prev(), &third);
-    EXPECT_EQ(&second.prev(), &first);
-    EXPECT_EQ(&third.prev(), &second);
-
-    EXPECT_FALSE(first.alone());
-    EXPECT_FALSE(second.alone());
-    EXPECT_FALSE(third.alone());
-
-    second.splice(second.next());
-
-    EXPECT_EQ(&first.next(), &third);
-    EXPECT_EQ(&third.next(), &first);
-    EXPECT_EQ(&first.prev(), &third);
-    EXPECT_EQ(&third.prev(), &first);
-
-    EXPECT_FALSE(first.alone());
-    EXPECT_TRUE(second.alone());
-    EXPECT_FALSE(third.alone());
-
-    first.splice(first);
-
-    EXPECT_EQ(&first.next(), &third);
-    EXPECT_EQ(&third.next(), &first);
-    EXPECT_EQ(&first.prev(), &third);
-    EXPECT_EQ(&third.prev(), &first);
-
-    EXPECT_FALSE(first.alone());
-    EXPECT_TRUE(second.alone());
-    EXPECT_FALSE(third.alone());
-  }
-
-  TEST_F(PointerListTest, MultipleSpliceTest) {
-    EXPECT_TRUE(first.alone());
-    EXPECT_TRUE(second.alone());
-    EXPECT_TRUE(third.alone());
-
-    EXPECT_TRUE(fourth.alone());
-    EXPECT_TRUE(fifth.alone());
-    EXPECT_TRUE(sixth.alone());
-
-    second.splice(third);
-    first.splice(second);
-
-    fifth.splice(sixth);
-    fourth.splice(fifth);
-
-    EXPECT_FALSE(first.alone());
-    EXPECT_FALSE(second.alone());
-    EXPECT_FALSE(third.alone());
-
-    EXPECT_FALSE(fourth.alone());
-    EXPECT_FALSE(fifth.alone());
-    EXPECT_FALSE(sixth.alone());
-
-    second.splice(fifth);
-
-    EXPECT_EQ(&fourth.next(), &second);
-    EXPECT_EQ(&second.next(), &third);
-    EXPECT_EQ(&third.next(), &first);
-    EXPECT_EQ(&first.next(), &fifth);
-    EXPECT_EQ(&fifth.next(), &sixth);
-    EXPECT_EQ(&sixth.next(), &fourth);
-    EXPECT_EQ(&fourth.prev(), &sixth);
-    EXPECT_EQ(&second.prev(), &fourth);
-    EXPECT_EQ(&third.prev(), &second);
-    EXPECT_EQ(&first.prev(), &third);
-    EXPECT_EQ(&fifth.prev(), &first);
-    EXPECT_EQ(&sixth.prev(), &fifth);
-  }
-
-  TEST_F(PointerListTest, OneElementFrontTest) {
+  TEST_F(ListTest, OneElementFrontTest) {
     one.push_front(first);
 
     EXPECT_TRUE(first.alone());
@@ -200,7 +96,7 @@ namespace hatch {
     EXPECT_EQ(dump(one), 0);
   }
 
-  TEST_F(PointerListTest, OneElementBackTest) {
+  TEST_F(ListTest, OneElementBackTest) {
     one.push_back(first);
 
     EXPECT_TRUE(first.alone());
@@ -240,7 +136,7 @@ namespace hatch {
     EXPECT_EQ(dump(one), 0);
   }
 
-  TEST_F(PointerListTest, TwoElementFrontTest) {
+  TEST_F(ListTest, TwoElementFrontTest) {
     one.push_front(second);
     one.push_front(first);
 
@@ -289,7 +185,7 @@ namespace hatch {
     EXPECT_EQ(dump(one), 0);
   }
 
-  TEST_F(PointerListTest, TwoElementBackTest) {
+  TEST_F(ListTest, TwoElementBackTest) {
     one.push_back(first);
     one.push_back(second);
 
@@ -337,7 +233,7 @@ namespace hatch {
   }
 
 
-  TEST_F(PointerListTest, FourElementFrontBackTest) {
+  TEST_F(ListTest, FourElementFrontBackTest) {
     one.push_front(second);
     one.push_back(third);
     one.push_front(first);
@@ -400,7 +296,7 @@ namespace hatch {
     EXPECT_EQ(dump(one), 0);
   }
 
-  TEST_F(PointerListTest, OneListFrontTest) {
+  TEST_F(ListTest, OneListFrontTest) {
     two.push_front(third);
 
     EXPECT_TRUE(third.alone());
@@ -433,7 +329,7 @@ namespace hatch {
     EXPECT_EQ(dump(one), 0);
   }
 
-  TEST_F(PointerListTest, OneListBackTest) {
+  TEST_F(ListTest, OneListBackTest) {
     two.push_back(third);
 
     EXPECT_TRUE(third.alone());
@@ -466,7 +362,7 @@ namespace hatch {
     EXPECT_EQ(dump(one), 0);
   }
 
-  TEST_F(PointerListTest, IteratorLoopTest) {
+  TEST_F(ListTest, IteratorLoopTest) {
     one.push_front(second);
     one.push_back(third);
     one.push_front(first);
@@ -503,7 +399,7 @@ namespace hatch {
     }
   }
 
-  TEST_F(PointerListTest, IteratorInsertSelfTest) {
+  TEST_F(ListTest, IteratorInsertSelfTest) {
     one.push_front(second);
     one.push_back(third);
     one.push_front(first);
@@ -524,7 +420,7 @@ namespace hatch {
     EXPECT_EQ(data[2].precise, 3.3);
   }
 
-  TEST_F(PointerListTest, IteratorInsertBeginTest) {
+  TEST_F(ListTest, IteratorInsertBeginTest) {
     one.push_front(second);
     one.push_back(third);
     one.push_front(first);
@@ -564,7 +460,7 @@ namespace hatch {
     EXPECT_EQ(dump(two), 0);
   }
 
-  TEST_F(PointerListTest, IteratorInsertEndTest) {
+  TEST_F(ListTest, IteratorInsertEndTest) {
     one.push_front(second);
     one.push_back(third);
     one.push_front(first);
@@ -576,8 +472,14 @@ namespace hatch {
     auto end = two.end();
     auto iter = end.insert(one);
 
-    EXPECT_EQ(end, one.end());
+    EXPECT_NE(end, one.end());
     EXPECT_NE(iter, one.end());
+
+    iter++;
+    ++iter;
+    iter++;
+
+    EXPECT_EQ(iter, two.end());
 
     EXPECT_FALSE(two.empty());
     EXPECT_EQ(dump(two), 6);
@@ -604,7 +506,7 @@ namespace hatch {
     EXPECT_EQ(dump(one), 0);
   }
 
-  TEST_F(PointerListTest, IteratorInsertMiddleTest) {
+  TEST_F(ListTest, IteratorInsertMiddleTest) {
     one.push_front(second);
     one.push_back(third);
     one.push_front(first);
@@ -644,7 +546,7 @@ namespace hatch {
     EXPECT_EQ(dump(two), 0);
   }
 
-  TEST_F(PointerListTest, IteratorRemoveSelfTest) {
+  TEST_F(ListTest, IteratorRemoveSelfTest) {
     one.push_front(second);
     one.push_back(third);
     one.push_front(first);
@@ -671,7 +573,7 @@ namespace hatch {
     EXPECT_EQ(dump(list), 0);
   }
 
-  TEST_F(PointerListTest, IteratorRemoveEndTest) {
+  TEST_F(ListTest, IteratorRemoveEndTest) {
     one.push_front(second);
     one.push_back(third);
     one.push_front(first);
@@ -698,7 +600,7 @@ namespace hatch {
     EXPECT_EQ(dump(list), 0);
   }
 
-  TEST_F(PointerListTest, IteratorRemoveForeignTest) {
+  TEST_F(ListTest, IteratorRemoveForeignTest) {
     one.push_front(second);
     one.push_back(third);
     one.push_front(first);
@@ -731,7 +633,7 @@ namespace hatch {
     EXPECT_EQ(dump(list), 0);
   }
 
-  TEST_F(PointerListTest, IteratorRemoveMalorderTest) {
+  TEST_F(ListTest, IteratorRemoveMalorderTest) {
     one.push_front(second);
     one.push_back(third);
     one.push_front(first);
@@ -760,7 +662,7 @@ namespace hatch {
     EXPECT_EQ(dump(list), 0);
   }
 
-  TEST_F(PointerListTest, IteratorRemoveEntireTest) {
+  TEST_F(ListTest, IteratorRemoveEntireTest) {
     one.push_front(second);
     one.push_back(third);
     one.push_front(first);
@@ -787,7 +689,7 @@ namespace hatch {
     EXPECT_EQ(data[2].precise, 3.3);
   }
 
-  TEST_F(PointerListTest, IteratorRemoveNormalTest) {
+  TEST_F(ListTest, IteratorRemoveNormalTest) {
     one.push_front(third);
     one.push_back(fourth);
     one.push_front(second);

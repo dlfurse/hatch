@@ -130,8 +130,9 @@ set(hatch_core_sources
 
 set(hatch_utility_test_sources
   test/utility/container.cc
+  test/utility/chain.cc
   test/utility/keep.cc
-#  test/utility/list.cc
+  test/utility/list.cc
 #  test/utility/tree.cc
 )
 

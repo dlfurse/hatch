@@ -13,9 +13,7 @@ namespace hatch {
 
   template <class T, class U>
   kept<T, U>::kept(T* keeper) :
-      _keeper{nullptr},
-      _prev{static_cast<U*>(this)},
-      _next{static_cast<U*>(this)} {
+      _keeper{nullptr} {
     attach(keeper);
   }
 
@@ -26,9 +24,8 @@ namespace hatch {
 
   template <class T, class U>
   kept<T, U>::kept(kept<T, U>&& moved) noexcept :
-      _keeper{nullptr},
-      _prev{static_cast<U*>(this)},
-      _next{static_cast<U*>(this)} {
+      chain<U>{},
+      _keeper{nullptr} {
     attach(moved._keeper);
     moved.detach();
   }
@@ -43,9 +40,8 @@ namespace hatch {
 
   template <class T, class U>
   kept<T, U>::kept(const kept<T, U>& copied) :
-      _keeper{nullptr},
-      _prev{static_cast<U*>(this)},
-      _next{static_cast<U*>(this)}  {
+      chain<U>{},
+      _keeper{nullptr} {
     attach(copied._keeper);
   }
 
@@ -69,15 +65,9 @@ namespace hatch {
       auto* self = static_cast<U*>(this);
 
       if (_keeper->_kept) {
-        auto* prev = _keeper->_kept;
-        auto* next = _keeper->_kept->_next;
-
-        _prev = prev;
-        _next = next;
-
-        prev->_next = self;
-        next->_prev = self;
+        _keeper->_kept->splice(*self);
       }
+
       _keeper->_kept = self;
     }
   }
@@ -86,22 +76,15 @@ namespace hatch {
   void kept<T, U>::detach() {
     if (_keeper) {
       auto* self = static_cast<U*>(this);
+      auto* next = &this->next();
 
-      if (_keeper->_kept == self) {
-        _keeper->_kept = _next;
-        if (_keeper->_kept == self) {
-          _keeper->_kept = nullptr;
-        }
+      if (self == next) {
+        _keeper->_kept = nullptr;
+      } else {
+        _keeper->_kept = next;
       }
 
-      auto* prev = _prev;
-      auto* next = _next;
-
-      _prev = self;
-      _next = self;
-
-      prev->_next = next;
-      next->_prev = prev;
+      self->splice(*next);
     }
     _keeper = nullptr;
   }

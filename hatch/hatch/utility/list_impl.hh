@@ -81,7 +81,7 @@ namespace hatch {
 
   template <class T>
   T* list<T>::back() const {
-    return _head ? &_head->_prev->get() : nullptr;
+    return _head ? &_head->prev().get() : nullptr;
   }
 
   /////////////////////////
@@ -95,11 +95,12 @@ namespace hatch {
       if (_head->alone()) {
         _head = nullptr;
       } else {
-        auto* next = _head->_next;
+        auto* next = &_head->next();
         _head->splice(*next);
         _head = next;
       }
     }
+    this->release();
     return popped;
   }
 
@@ -111,31 +112,35 @@ namespace hatch {
       pushed->splice(*_head);
     }
     _head = pushed;
+    this->release();
   }
 
   template <class T>
-  void list<T>::push_front(list<T>& root) {
-    auto* pushed = root._head;
+  void list<T>::push_front(list<T>& list) {
+    auto* pushed = list._head;
     if (pushed) {
       if (_head) {
         pushed->splice(*_head);
       }
       _head = pushed;
     }
-    root._head = nullptr;
+    list.release();
+    list._head = nullptr;
+    this->release();
   }
 
   template <class T>
   T* list<T>::pop_back() {
     auto* popped = back();
     if (popped) {
-      if (_head->_prev->alone()) {
+      if (_head->prev().alone()) {
         _head = nullptr;
       } else {
-        auto* prev = _head->_prev;
+        auto* prev = &_head->prev();
         prev->splice(*_head);
       }
     }
+    this->release();
     return popped;
   }
 
@@ -148,6 +153,7 @@ namespace hatch {
     } else {
       _head = pushed;
     }
+    this->release();
   }
 
   template <class T>
@@ -160,7 +166,9 @@ namespace hatch {
         _head = pushed;
       }
     }
+    list.release();
     list._head = nullptr;
+    this->release();
   }
 
 } // namespace hatch

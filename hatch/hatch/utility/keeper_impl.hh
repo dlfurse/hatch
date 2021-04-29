@@ -5,6 +5,8 @@
 #error "do not include keeper_impl.hh directly. include keep.hh instead."
 #endif
 
+#include <utility> // std::forward
+
 namespace hatch {
 
   ///////////////////////////////////////////
@@ -38,25 +40,29 @@ namespace hatch {
   ///////////
 
   template <class T, class U>
-  template <class F>
-  void keeper<T, U>::foreach(F&& function) {
-    if (auto* node = _kept) {
-      do {
-        auto* next = static_cast<U*>(node->_next);
+  template <class V>
+  void keeper<T, U>::foreach(V&& callable) {
+    if (_kept) {
+      _kept->foreach(std::forward<V>(callable));
+    }
+  }
 
-        function(*node);
-
-        node = next;
-      } while (node != _kept);
+  template <class T, class U>
+  template <class V>
+  void keeper<T, U>::foreach(V&& callable) const {
+    if (_kept) {
+      _kept->foreach(std::forward<V>(callable));
     }
   }
 
   template <class T, class U>
   void keeper<T, U>::acquire(keeper<T, U>& keeper) {
     _kept = keeper._kept;
+
     foreach([&](U& node) {
       node._keeper = static_cast<T*>(this);
     });
+
     keeper._kept = nullptr;
   }
 
@@ -64,9 +70,16 @@ namespace hatch {
   void keeper<T, U>::release() {
     foreach([&](U& node) {
       node._keeper = nullptr;
-      node._prev = &node;
-      node._next = &node;
     });
+
+    if (auto* node = _kept) {
+      while (!node->alone()) {
+        auto* next = &node->next();
+        node->splice(node->next());
+        node = next;
+      }
+    }
+
     _kept = nullptr;
   }
 

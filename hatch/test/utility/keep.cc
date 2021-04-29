@@ -4,7 +4,6 @@
 #include <iostream>
 
 #include <cstdint>
-#include <cstring>
 
 namespace hatch {
 
@@ -40,14 +39,6 @@ namespace hatch {
         return _keeper;
       }
 
-      test_kept* prev() {
-        return _prev;
-      }
-
-      test_kept* next() {
-        return _next;
-      }
-
       void detach() {
         kept<test_keeper, test_kept>::detach();
       }
@@ -75,8 +66,8 @@ namespace hatch {
 
   TEST_F(KeepTest, KeepAloneTest) {
     for (auto index = 0u; index < kepts; index++) {
-      EXPECT_EQ(kept[index].prev(), &kept[index]);
-      EXPECT_EQ(kept[index].next(), &kept[index]);
+      EXPECT_EQ(&kept[index].prev(), &kept[index]);
+      EXPECT_EQ(&kept[index].next(), &kept[index]);
       EXPECT_EQ(kept[index].keeper(), nullptr);
     }
   }
@@ -84,8 +75,8 @@ namespace hatch {
   TEST_F(KeepTest, KeepOneTest) {
     kept[0].attach(&keeper[0]);
 
-    EXPECT_EQ(kept[0].prev(), &kept[0]);
-    EXPECT_EQ(kept[0].next(), &kept[0]);
+    EXPECT_EQ(&kept[0].prev(), &kept[0]);
+    EXPECT_EQ(&kept[0].next(), &kept[0]);
     EXPECT_EQ(kept[0].keeper(), &keeper[0]);
 
     EXPECT_EQ(keeper[0].count_kepts(), 1);
@@ -102,8 +93,8 @@ namespace hatch {
     EXPECT_EQ(keeper[0].count_kepts(), 0);
     EXPECT_FALSE(keeper[0].has_kept(&kept[0]));
 
-    EXPECT_EQ(kept[0].prev(), &kept[0]);
-    EXPECT_EQ(kept[0].next(), &kept[0]);
+    EXPECT_EQ(&kept[0].prev(), &kept[0]);
+    EXPECT_EQ(&kept[0].next(), &kept[0]);
     EXPECT_EQ(kept[0].keeper(), &boss);
   }
 
@@ -117,8 +108,8 @@ namespace hatch {
     EXPECT_EQ(keeper[0].count_kepts(), 0);
     EXPECT_FALSE(keeper[0].has_kept(&kept[0]));
 
-    EXPECT_EQ(kept[0].prev(), &kept[0]);
-    EXPECT_EQ(kept[0].next(), &kept[0]);
+    EXPECT_EQ(&kept[0].prev(), &kept[0]);
+    EXPECT_EQ(&kept[0].next(), &kept[0]);
     EXPECT_EQ(kept[0].keeper(), &keeper[1]);
   }
 
@@ -126,12 +117,12 @@ namespace hatch {
     kept[0].attach(&keeper[0]);
     test_kept node{std::move(kept[0])};
 
-    EXPECT_EQ(kept[0].prev(), &kept[0]);
-    EXPECT_EQ(kept[0].next(), &kept[0]);
+    EXPECT_EQ(&kept[0].prev(), &kept[0]);
+    EXPECT_EQ(&kept[0].next(), &kept[0]);
     EXPECT_EQ(kept[0].keeper(), nullptr);
 
-    EXPECT_EQ(node.prev(), &node);
-    EXPECT_EQ(node.next(), &node);
+    EXPECT_EQ(&node.prev(), &node);
+    EXPECT_EQ(&node.next(), &node);
     EXPECT_EQ(node.keeper(), &keeper[0]);
 
     EXPECT_EQ(keeper[0].count_kepts(), 1);
@@ -143,12 +134,12 @@ namespace hatch {
     kept[0].attach(&keeper[0]);
     kept[1] = std::move(kept[0]);
 
-    EXPECT_EQ(kept[0].prev(), &kept[0]);
-    EXPECT_EQ(kept[0].next(), &kept[0]);
+    EXPECT_EQ(&kept[0].prev(), &kept[0]);
+    EXPECT_EQ(&kept[0].next(), &kept[0]);
     EXPECT_EQ(kept[0].keeper(), nullptr);
 
-    EXPECT_EQ(kept[1].prev(), &kept[1]);
-    EXPECT_EQ(kept[1].next(), &kept[1]);
+    EXPECT_EQ(&kept[1].prev(), &kept[1]);
+    EXPECT_EQ(&kept[1].next(), &kept[1]);
     EXPECT_EQ(kept[1].keeper(), &keeper[0]);
 
     EXPECT_EQ(keeper[0].count_kepts(), 1);
@@ -160,13 +151,14 @@ namespace hatch {
     kept[0].attach(&keeper[0]);
     test_kept node{kept[0]};
 
-    EXPECT_EQ(kept[0].prev(), &node);
-    EXPECT_EQ(kept[0].next(), &node);
+    EXPECT_EQ(&kept[0].prev(), &node);
+    EXPECT_EQ(&kept[0].next(), &node);
     EXPECT_EQ(kept[0].keeper(), &keeper[0]);
 
-    EXPECT_EQ(node.prev(), &kept[0]);
-    EXPECT_EQ(node.next(), &kept[0]);
+    EXPECT_EQ(&node.prev(), &kept[0]);
+    EXPECT_EQ(&node.next(), &kept[0]);
     EXPECT_EQ(node.keeper(), &keeper[0]);
+
 
     EXPECT_EQ(keeper[0].count_kepts(), 2);
     EXPECT_TRUE(keeper[0].has_kept(&kept[0]));
@@ -177,12 +169,12 @@ namespace hatch {
     kept[0].attach(&keeper[0]);
     kept[1] = kept[0];
 
-    EXPECT_EQ(kept[0].prev(), &kept[1]);
-    EXPECT_EQ(kept[0].next(), &kept[1]);
+    EXPECT_EQ(&kept[0].prev(), &kept[1]);
+    EXPECT_EQ(&kept[0].next(), &kept[1]);
     EXPECT_EQ(kept[0].keeper(), &keeper[0]);
 
-    EXPECT_EQ(kept[1].prev(), &kept[0]);
-    EXPECT_EQ(kept[1].next(), &kept[0]);
+    EXPECT_EQ(&kept[1].prev(), &kept[0]);
+    EXPECT_EQ(&kept[1].next(), &kept[0]);
     EXPECT_EQ(kept[1].keeper(), &keeper[0]);
 
     EXPECT_EQ(keeper[0].count_kepts(), 2);
