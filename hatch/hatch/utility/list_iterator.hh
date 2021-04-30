@@ -36,6 +36,7 @@ namespace hatch {
     //////////////////
 
   public:
+    operator bool() const;
     bool operator==(const list_iterator& compared) const;
     bool operator!=(const list_iterator& compared) const;
 
@@ -74,8 +75,8 @@ namespace hatch {
     ////////////////////////////////////////
 
   public:
-    list_iterator insert(list<T>& list);
-    list<T> remove(list_iterator& end);
+    list_iterator insert(list<T>& other);
+    list<T> remove(list_iterator& other);
   };
 
 } // namespace hatch

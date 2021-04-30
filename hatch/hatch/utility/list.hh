@@ -39,25 +39,25 @@ namespace hatch {
     list_iterator<T> end();
     const list_iterator<T> end() const;
 
-    ////////////////
-    // Structure. //
-    ////////////////
+    //////////////
+    // Content. //
+    //////////////
 
   private:
     list_node<T>* _head;
 
-    //////////////////////////
-    // Structure: accessors //
-    //////////////////////////
+    /////////////////////
+    // Access content. //
+    /////////////////////
 
   public:
     bool empty() const;
     T* front() const;
     T* back() const;
 
-    /////////////////////////
-    // Structure: mutators //
-    /////////////////////////
+    /////////////////////
+    // Mutate content. //
+    /////////////////////
 
   public:
     T* pop_front();

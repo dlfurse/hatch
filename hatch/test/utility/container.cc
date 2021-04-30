@@ -12,7 +12,7 @@ namespace hatch {
       test_data(const uint64_t& left, const uint64_t& right) : value{left * right} {
       }
 
-      const uint64_t value;
+      uint64_t value;
     };
 
     class test_inheriting : public container<test_inheriting> {
@@ -20,7 +20,7 @@ namespace hatch {
       test_inheriting(const uint64_t& number) : value{number} {
       }
 
-      const uint64_t value;
+      uint64_t value;
     };
 
     using test_aggregating = container<test_data>;

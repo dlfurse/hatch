@@ -11,7 +11,7 @@
 namespace hatch {
 
   template <class T>
-  class list_node : public container<T>, public chain<list_node<T>> {
+  class list_node : public chain<list_node<T>>, public container<T> {
   public:
     friend class list<T>;
     friend class list_iterator<T>;
@@ -20,16 +20,16 @@ namespace hatch {
     // Constructors, destructor, assignment. //
     ///////////////////////////////////////////
 
-  protected:
-    list_node();
-    ~list_node();
-
   public:
-    list_node(list_node&& moved) noexcept;
-    list_node& operator=(list_node&& moved) noexcept;
+    template <class ...Args>
+    explicit list_node(Args&&... args);
+    virtual ~list_node();
 
-    list_node(const list_node&) = delete;
-    list_node& operator=(const list_node&) = delete;
+    explicit list_node(T&& moved) noexcept;
+    virtual list_node& operator=(T&& moved) noexcept override;
+
+    explicit list_node(const T&);
+    virtual list_node& operator=(const T&) override;
   };
 
 } // namespace hatch

@@ -67,6 +67,11 @@ namespace hatch {
   //////////////////
 
   template <class T>
+  list_iterator<T>::operator bool() const {
+    return this->_keeper;
+  }
+
+  template <class T>
   bool list_iterator<T>::operator==(const list_iterator& compared) const {
     return this->_keeper == compared._keeper && this->_node == compared._node;
   }
@@ -96,7 +101,7 @@ namespace hatch {
 
   template <class T>
   list_iterator<T>& list_iterator<T>::operator++() {
-    if (auto*& list = this->_keeper) {
+    if (auto* list = this->_keeper) {
       if (_node == _before) {
         if (list->_head == nullptr) {
           _node = _after;
@@ -128,7 +133,7 @@ namespace hatch {
 
   template <class T>
   list_iterator<T>& list_iterator<T>::operator--() {
-    if (auto*& list = this->_keeper) {
+    if (auto* list = this->_keeper) {
       if (_node == _after) {
         if (list->_head == nullptr) {
           _node = _before;
@@ -163,11 +168,10 @@ namespace hatch {
   ////////////////////////////////////////
 
   template <class T>
-  list_iterator<T> list_iterator<T>::insert(list<T>& newlist) {
-    if (auto* oldlist = this->_keeper) {
-      if (oldlist != &newlist) {
-
-        auto* const first_inserted = newlist._head;
+  list_iterator<T> list_iterator<T>::insert(list<T>& other) {
+    if (auto* list = this->_keeper) {
+      if (list != &other) {
+        auto* const first_inserted = other._head;
         auto* const end_inserted = _node;
 
         if (first_inserted) {
@@ -175,18 +179,18 @@ namespace hatch {
             if (end_inserted != _after) {
               end_inserted->splice(*first_inserted);
             } else {
-              oldlist->_head->splice(*first_inserted);
+              list->_head->splice(*first_inserted);
             }
 
-            if (end_inserted == oldlist->_head) {
-              oldlist->_head = first_inserted;
+            if (end_inserted == list->_head) {
+              list->_head = first_inserted;
             }
 
-            newlist._head = nullptr;
-            newlist.release();
+            other._head = nullptr;
+            other.release();
 
-            oldlist->release();
-            return {oldlist, first_inserted};
+            list->release();
+            return {list, first_inserted};
           }
         }
       }
@@ -204,7 +208,6 @@ namespace hatch {
         if (first_removed != _before && first_removed != _after && first_removed != end_removed) {
           if (end_removed != _before) {
             if (end_removed != _after) {
-
               auto* node = end_removed;
               do {
                 if (node == first_removed) {

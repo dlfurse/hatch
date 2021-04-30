@@ -20,7 +20,14 @@ namespace hatch {
 
   public:
     template <class ...Args>
-    container(Args&&... args);
+    explicit container(Args&&... args);
+    virtual ~container() = default;
+
+    explicit container(T&& moved) noexcept;
+    virtual container& operator=(T&& moved) noexcept;
+
+    explicit container(const T&);
+    virtual container& operator=(const T&);
 
     ////////////////
     // Container. //

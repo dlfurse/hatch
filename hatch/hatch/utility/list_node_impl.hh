@@ -7,8 +7,15 @@
 
 namespace hatch {
 
+  ///////////////////////////////////////////
+  // Constructors, destructor, assignment. //
+  ///////////////////////////////////////////
+
   template <class T>
-  list_node<T>::list_node() {
+  template <class ...Args>
+  list_node<T>::list_node(Args&&... args) :
+      chain<list_node<T>>{},
+      container<T>{std::forward<Args>(args)...} {
   }
 
   template <class T>
@@ -16,15 +23,26 @@ namespace hatch {
   }
 
   template <class T>
-  list_node<T>::list_node(list_node&& moved) noexcept :
-      container<T>{moved},
-      keeper<list_node<T>, list_iterator<T>>{moved} {
+  list_node<T>::list_node(T&& moved) noexcept :
+      chain<list_node<T>>{},
+      container<T>{moved} {
   }
 
   template <class T>
-  list_node<T>& list_node<T>::operator=(list_node&& moved) noexcept {
+  list_node<T>& list_node<T>::operator=(T&& moved) noexcept {
     container<T>::operator=(moved);
-    keeper<list_node<T>, list_iterator<T>>::operator=(moved);
+    return *this;
+  }
+
+  template <class T>
+  list_node<T>::list_node(const T& copied) :
+      chain<list_node<T>>{},
+      container<T>{copied} {
+  }
+
+  template <class T>
+  list_node<T>& list_node<T>::operator=(const T& copied) {
+    container<T>::operator=(copied);
     return *this;
   }
 
