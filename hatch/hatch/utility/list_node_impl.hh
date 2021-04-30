@@ -23,25 +23,26 @@ namespace hatch {
   }
 
   template <class T>
-  list_node<T>::list_node(T&& moved) noexcept :
-      chain<list_node<T>>{},
-      container<T>{moved} {
+  list_node<T>::list_node(list_node&& moved) noexcept :
+      chain<list_node<T>>{std::move(moved)},
+      container<T>{std::move(moved)} {
   }
 
   template <class T>
-  list_node<T>& list_node<T>::operator=(T&& moved) noexcept {
-    container<T>::operator=(moved);
+  list_node<T>& list_node<T>::operator=(list_node&& moved) noexcept {
+    chain<list_node<T>>::operator=(std::move(moved));
+    container<T>::operator=(std::move(moved));
     return *this;
   }
 
   template <class T>
-  list_node<T>::list_node(const T& copied) :
+  list_node<T>::list_node(const list_node& copied) :
       chain<list_node<T>>{},
       container<T>{copied} {
   }
 
   template <class T>
-  list_node<T>& list_node<T>::operator=(const T& copied) {
+  list_node<T>& list_node<T>::operator=(const list_node& copied) {
     container<T>::operator=(copied);
     return *this;
   }

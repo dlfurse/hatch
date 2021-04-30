@@ -15,11 +15,12 @@ namespace hatch {
     chain();
     ~chain();
 
-    chain(T&& moved) noexcept;
-    chain& operator=(T&& moved) noexcept;
+    chain(chain&& moved) noexcept;
+    chain& operator=(chain&& moved) noexcept;
 
-    chain(const T&) = delete;
-    chain& operator=(const T&) = delete;
+  public:
+    chain(const chain&) = delete;
+    chain& operator=(const chain&) = delete;
 
   ////////////
   // Chain. //

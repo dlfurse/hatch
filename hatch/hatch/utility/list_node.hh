@@ -25,11 +25,11 @@ namespace hatch {
     explicit list_node(Args&&... args);
     virtual ~list_node();
 
-    explicit list_node(T&& moved) noexcept;
-    virtual list_node& operator=(T&& moved) noexcept override;
+    list_node(list_node&& moved) noexcept;
+    list_node& operator=(list_node&& moved) noexcept;
 
-    explicit list_node(const T&);
-    virtual list_node& operator=(const T&) override;
+    list_node(const list_node&);
+    list_node& operator=(const list_node&);
   };
 
 } // namespace hatch

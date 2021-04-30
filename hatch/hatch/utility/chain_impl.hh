@@ -25,23 +25,23 @@ namespace hatch {
   }
 
   template <class T>
-  chain<T>::chain(T&& moved) noexcept :
+  chain<T>::chain(chain&& moved) noexcept :
       _prev{moved._prev},
       _next{moved._next} {
     _prev->_next = static_cast<T*>(this);
     _next->_prev = static_cast<T*>(this);
-    moved._prev = &moved;
-    moved._next = &moved;
+    moved._prev = static_cast<T*>(&moved);
+    moved._next = static_cast<T*>(&moved);
   }
 
   template <class T>
-  chain<T>& chain<T>::operator=(T&& moved) noexcept {
+  chain<T>& chain<T>::operator=(chain&& moved) noexcept {
     _prev = moved._prev;
     _next = moved._next;
     _prev->_next = static_cast<T*>(this);
     _next->_prev = static_cast<T*>(this);
-    moved._prev = &moved;
-    moved._next = &moved;
+    moved._prev = static_cast<T*>(&moved);
+    moved._next = static_cast<T*>(&moved);
     return *this;
   }
 
