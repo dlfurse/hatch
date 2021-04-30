@@ -2,11 +2,12 @@
 #define HATCH_TREE_HH
 
 #include <hatch/utility/tree_fwd.hh>
+#include <hatch/utility/keep.hh>
 
 namespace hatch {
 
   template <class T>
-  class tree {
+  class tree final : public keeper<tree<T>, tree_iterator<T>> {
   public:
     friend class tree_iterator<T>;
 
@@ -40,7 +41,6 @@ namespace hatch {
 
     tree_iterator<T> find(const tree_node<T>& node);
     const tree_iterator<T> find(const tree_node<T>& node) const;
-
 
     ////////////////
     // Structure. //

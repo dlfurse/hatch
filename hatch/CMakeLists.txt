@@ -133,7 +133,7 @@ set(hatch_utility_test_sources
   test/utility/chain.cc
   test/utility/keep.cc
   test/utility/list.cc
-#  test/utility/tree.cc
+  test/utility/tree.cc
 )
 
 add_executable(hatch_utility_test ${hatch_utility_test_sources})

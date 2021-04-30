@@ -50,16 +50,16 @@ namespace hatch {
     // Constructors, destructor. //
     ///////////////////////////////
 
-  protected:
-    tree_node();
+  public:
+    template <class ...Args>
+    explicit tree_node(Args&&... args);
     ~tree_node();
 
-  public:
     tree_node(tree_node&& moved) noexcept;
     tree_node& operator=(tree_node&& moved) noexcept;
 
-    tree_node(const tree_node&) = delete;
-    tree_node& operator=(const tree_node&) = delete;
+    tree_node(const tree_node&);
+    tree_node& operator=(const tree_node&);
 
     ////////////
     // Color. //

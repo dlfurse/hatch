@@ -5,12 +5,12 @@
 #error "do not include tree_iterator.hh directly. include tree.hh instead."
 #endif
 
-#include <type_traits>
+#include <hatch/utility/keep.hh>
 
 namespace hatch {
 
   template <class T>
-  class tree_iterator {
+  class tree_iterator final : public kept<tree<T>, tree_iterator<T>> {
   public:
     friend class tree<T>;
 
@@ -19,14 +19,14 @@ namespace hatch {
     ///////////////////////////////////////////
 
   private:
-    tree_iterator(tree<T>* tree, tree_node<T>* node);
+    tree_iterator(tree<T>* owner, tree_node<T>* node);
 
   public:
-    tree_iterator() = delete;
-    ~tree_iterator() = default;
+    tree_iterator();
+    ~tree_iterator();
 
-    tree_iterator(tree_iterator&& moved) = delete;
-    tree_iterator& operator=(tree_iterator&& moved) = delete;
+    tree_iterator(tree_iterator&& moved) noexcept;
+    tree_iterator& operator=(tree_iterator&& moved) noexcept;
 
     tree_iterator(const tree_iterator& copied);
     tree_iterator& operator=(const tree_iterator& copied);
@@ -36,6 +36,7 @@ namespace hatch {
     //////////////////
   
   public:
+    operator bool() const;
     bool operator==(const tree_iterator& compared) const;
     bool operator!=(const tree_iterator& compared) const;
 
@@ -44,9 +45,7 @@ namespace hatch {
     ////////////////
 
   private:
-    tree<T>* _tree;
     mutable tree_node<T>* _node;
-
     static tree_node<T>* _before;
     static tree_node<T>* _after;
 

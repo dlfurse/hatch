@@ -43,7 +43,9 @@ namespace hatch {
   template <class T>
   class container<T>::inherits {
   public:
-    inherits() = default;
+    template <class ...Args>
+    explicit inherits(Args&&... args) {
+    }
     ~inherits() = default;
 
     explicit inherits(T&& moved) noexcept {

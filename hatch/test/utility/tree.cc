@@ -192,19 +192,18 @@ namespace hatch {
 
     EXPECT_EQ(this_depth, 5);
 
-//    for (auto index = 0u; index < 63; index++) {
-//      nodes[index].remove();
-//      root = nodes[index + 1].root();
-//      int next_depth;
-//      try {
-//        next_depth = root->get().black_depth();
-//      } catch (const test_failure& failure) {
-//        auto message = std::stringstream() << "rb failure: " << failure;
-//        FAIL() << message.str();
-//      }
-//      EXPECT_GE(this_depth, next_depth);
-//      this_depth = next_depth;
-//    }
+    for (auto index = 0u; index < 63; index++) {
+      tree.begin().remove();
+      int next_depth;
+      try {
+        next_depth = tree.root()->get().black_depth();
+      } catch (const test_failure& failure) {
+        auto message = std::stringstream() << "rb failure: " << failure;
+        FAIL() << message.str();
+      }
+      EXPECT_GE(this_depth, next_depth);
+      this_depth = next_depth;
+    }
   }
 
 } // namespace hatch

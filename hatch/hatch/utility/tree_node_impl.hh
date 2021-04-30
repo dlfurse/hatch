@@ -34,7 +34,9 @@ namespace hatch {
   ///////////////////////////////
 
   template <class T>
-  tree_node<T>::tree_node() :
+  template <class ...Args>
+  tree_node<T>::tree_node(Args&&... args) :
+      container<T>::container{std::forward<Args>(args)...},
       _color{colors::black},
       _head{nullptr},
       _prev{nullptr},
@@ -49,7 +51,11 @@ namespace hatch {
 
   template <class T>
   tree_node<T>::tree_node(tree_node&& moved) noexcept :
-      tree_node() {
+      container<T>::container{std::move(moved)},
+      _color{colors::black},
+      _head{nullptr},
+      _prev{nullptr},
+      _next{nullptr} {
     auto side = moved.side();
     make_head(moved._head, side);
     make_prev(moved._prev);
@@ -58,12 +64,28 @@ namespace hatch {
 
   template <class T>
   tree_node<T>& tree_node<T>::operator=(tree_node&& moved) noexcept {
+    container<T>::operator=(std::move(moved));
     _prev = moved._prev;
     _next = moved._next;
     _prev->_next = this;
     _next->_prev = this;
     moved._prev = &moved;
     moved._next = &moved;
+    return *this;
+  }
+
+  template <class T>
+  tree_node<T>::tree_node(const tree_node& copied) :
+      container<T>::container{copied},
+      _color{colors::black},
+      _head{nullptr},
+      _prev{nullptr},
+      _next{nullptr} {
+  }
+
+  template <class T>
+  tree_node<T>& tree_node<T>::operator=(const tree_node& copied) {
+    container<T>::operator=(copied);
     return *this;
   }
 

@@ -40,12 +40,14 @@ namespace hatch {
 
   template<class T>
   tree<T>::tree(tree<T>&& moved) noexcept :
+      keeper<tree<T>, tree_iterator<T>>::keeper{std::move(moved)},
       _root{moved.root} {
     moved._root = nullptr;
   }
 
   template<class T>
   tree<T>& tree<T>::operator=(tree<T>&& moved) noexcept {
+    keeper<tree<T>, tree_iterator<T>>::operator=(std::move(moved));
     _root = moved.root;
     moved._root = nullptr;
   }
@@ -96,7 +98,7 @@ namespace hatch {
         current = current->prev();
       }
     }
-    return current;
+    return &current->get();
   }
 
   template<class T>
@@ -107,7 +109,7 @@ namespace hatch {
         current = current->next();
       }
     }
-    return current;
+    return &current->get();
   }
 
   /////////////////////////
@@ -116,6 +118,7 @@ namespace hatch {
 
   template<class T>
   tree_iterator<T> tree<T>::insert(tree_node<T>& node) {
+    this->release();
     if (_root) {
       _root->insert(node);
     } else {
