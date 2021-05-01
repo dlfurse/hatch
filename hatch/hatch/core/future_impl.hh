@@ -8,23 +8,19 @@
 namespace hatch {
 
   template <class ...T>
-  future<T...>::future(promise<T...>* promise) :
-      _promise{promise},
+  future<T...>::future(promise<T...>* owner) :
+      kept<promise<T...>, future<T...>>::kept{owner},
       _state{state::pending} {
-    promise->attach_future(*this);
   }
 
   template <class ...T>
   future<T...>::future() :
-      _promise{nullptr},
       _state{state::detached} {
   }
 
   template <class ...T>
   future<T...>::~future() {
-    if (_state == state::pending) {
-      _promise->detach_future(*this);
-    } else if (_state == state::completed) {
+    if (_state == state::completed) {
       _storage._value.~stored();
     } else if (_state == state::failed) {
       _storage._exception.~exception_ptr();
@@ -33,11 +29,9 @@ namespace hatch {
 
   template <class ...T>
   future<T...>::future(future&& moved) noexcept :
-      _promise{moved._promise},
+      kept<promise<T...>, future<T...>>::kept{std::move(moved)},
       _state{moved._state} {
-    if (_state == state::pending) {
-      _promise->attach_future(*this);
-    } else if (_state == state::completed) {
+    if (_state == state::completed) {
       new (&_storage._value) stored(std::move(moved._storage._value));
       moved._storage._value.~stored();
     } else if (_state == state::failed) {
@@ -45,23 +39,16 @@ namespace hatch {
       moved._storage._exception.~exception_ptr();
     }
 
-    _promise->detach_future(moved);
-    moved._promise = nullptr;
     moved._state = state::detached;
   }
 
   template <class ...T>
   future<T...>& future<T...>::operator=(future&& moved) noexcept {
-    if (_state == state::pending) {
-      _promise->detach_future(*this);
-    }
+    kept<promise<T...>, future<T...>>::operator=(std::move(moved));
 
-    _promise = moved._promise;
     _state = moved._state;
 
-    if (_state == state::pending) {
-      _promise->attach_future(*this);
-    } else if (_state == state::completed) {
+    if (_state == state::completed) {
       new (&_storage._value) stored(std::move(moved._storage._value));
       moved._storage._value.~stored();
     } else if (_state == state::failed) {
@@ -69,8 +56,6 @@ namespace hatch {
       moved._storage._exception.~exception_ptr();
     }
 
-    _promise->detach_future(moved);
-    moved._promise = nullptr;
     moved._state = state::detached;
 
     return *this;
@@ -78,11 +63,9 @@ namespace hatch {
 
   template <class ...T>
   future<T...>::future(const future& copied) :
-      _promise{copied._promise},
+      kept<promise < T...>, future<T...>>{copied},
       _state{copied._state} {
-    if (_state == state::pending) {
-      _promise->attach_future(*this);
-    } else if (_state == state::completed) {
+    if (_state == state::completed) {
       new (&_storage._value) stored(copied._storage._value);
     } else if (_state == state::failed) {
       new (&_storage._exception) std::exception_ptr(copied._storage._exception);
@@ -91,16 +74,11 @@ namespace hatch {
 
   template <class ...T>
   future<T...>& future<T...>::operator=(const future& copied) {
-    if (_state == state::pending) {
-      _promise->detach_future(*this);
-    }
+    kept<promise < T...>, future<T...>>::operator=(copied);
 
-    _promise = copied._promise;
     _state = copied._state;
 
-    if (_state == state::pending) {
-      _promise->attach_future(*this);
-    } else if (_state == state::completed) {
+    if (_state == state::completed) {
       new (&_storage._value) stored(copied._storage._value);
     } else if (_state == state::failed) {
       new (&_storage._exception) std::exception_ptr(copied._storage._exception);
@@ -199,7 +177,7 @@ namespace hatch {
   mapped_future<F, T...> future<T...>::then(F&& function) {
     switch (_state) {
       case state::pending:
-        return _promise->then(std::forward<F&&>(function));
+        return this->_keeper->then(std::forward<F&&>(function));
       case state::completed:
         try {
           return mapped_future<F, T...>(apply(function, _storage._value));
@@ -221,7 +199,7 @@ namespace hatch {
   future<T...> future<T...>::recover(F&& function) {
     switch (_state) {
       case state::pending:
-        return _promise->recover(std::forward<F&&>(function));
+        return this->_keeper->recover(std::forward<F&&>(function));
       case state::completed:
         return future<T...>(*this);
       case state::failed:

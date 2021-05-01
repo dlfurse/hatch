@@ -11,7 +11,7 @@
 namespace hatch {
 
   template <class T>
-  class list_node : public chain<list_node<T>>, public container<T> {
+  class list_node :  public container<T>, public chain<list_node<T>> {
   public:
     friend class list<T>;
     friend class list_iterator<T>;

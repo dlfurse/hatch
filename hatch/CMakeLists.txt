@@ -143,7 +143,7 @@ target_link_libraries(hatch_utility_test gtest_main)
 add_test(NAME hatch_utility_test COMMAND hatch_utility_test)
 
 set(hatch_core_test_sources
-  test/core/memory.cc
+#  test/core/memory.cc
   test/core/async.cc
 #  test/core/buffer.cc
 #  test/core/socket.cc

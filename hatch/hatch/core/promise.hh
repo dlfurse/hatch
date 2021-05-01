@@ -5,7 +5,7 @@
 #error "do not include promise.hh directly. include async.hh instead."
 #endif
 
-#include <hatch/utility/pointer_list.hh> // pointer_list_node<T>
+#include <hatch/utility/keep.hh> // keeper<T>
 
 #include <exception> // std::exception_ptr
 #include <list> // std::list
@@ -26,7 +26,7 @@ namespace hatch {
    */
 
   template <class ...T>
-  class promise {
+  class promise : public keeper<promise<T...>, future<T...>> {
     friend class future<T...>;
 
     static constexpr bool simple = sizeof...(T) == 1;
@@ -96,22 +96,6 @@ namespace hatch {
     bool is_finished() const;
     bool is_completed() const;
     bool is_failed() const;
-
-    /**
-     * Futures.
-     *
-     * Promises are only the writable interface of a value that takes time to compute.  The readable interfaces are
-     * Futures, and many of these can point back to the same promise.  The futures are stored in the promises
-     */
-
-  private:
-    void attach_future(future<T...>& f);
-    void detach_future(future<T...>& f);
-    void repossess_futures();
-    void dispossess_futures();
-    void discard_futures();
-
-    pointer_list_root<future<T...>> _futures;
 
     /**
      * Continuations.

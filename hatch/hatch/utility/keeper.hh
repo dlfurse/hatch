@@ -16,7 +16,7 @@ namespace hatch {
     // Constructors, destructor, assignment. //
     ///////////////////////////////////////////
 
-  public:
+  protected:
     keeper();
     ~keeper();
 

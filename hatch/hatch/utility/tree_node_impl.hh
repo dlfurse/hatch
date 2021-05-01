@@ -10,22 +10,12 @@
 namespace hatch {
 
   template <class T>
-  typename tree_node<T>::colors operator~(typename tree_node<T>::colors color) {
-    switch (color) {
-      case tree_node<T>::colors::red:
-        return tree_node<T>::colors::black;
-      case tree_node<T>::colors::black:
-        return tree_node<T>::colors::red;
-    }
-  }
-
-  template <class T>
-  typename tree_node<T>::sides operator~(typename tree_node<T>::sides side) {
+  typename tree_node<T>::sides tree_node<T>::swap(sides side) {
     switch (side) {
-      case tree_node<T>::sides::prev:
-        return tree_node<T>::sides::next;
-      case tree_node<T>::sides::next:
-        return tree_node<T>::sides::prev;
+      case sides::prev:
+        return sides::next;
+      case sides::next:
+        return sides::prev;
     }
   }
 
@@ -94,7 +84,7 @@ namespace hatch {
   ////////////
 
   template <class T>
-  colors tree_node<T>::color() const {
+  typename tree_node<T>::colors tree_node<T>::color() const {
     return _color;
   }
 
@@ -211,7 +201,7 @@ namespace hatch {
   }
 
   template <class T>
-  std::optional<sides> tree_node<T>::side() const {
+  std::optional<typename tree_node<T>::sides> tree_node<T>::side() const {
     if (_head) {
       if (this == _head->_prev) {
         return sides::prev;
@@ -372,7 +362,7 @@ namespace hatch {
 
   template <class T>
   void tree_node<T>::rotate(sides direction) {
-    if (auto* rotated = child(~direction)) {
+    if (auto* rotated = child(swap(direction))) {
       auto* pivoted = rotated->child(direction);
 
       auto* new_head = head();
@@ -380,7 +370,7 @@ namespace hatch {
       rotated->make_head(new_head, new_side);
       
       rotated->make_child(this, direction);
-      this->make_child(pivoted, ~direction);
+      this->make_child(pivoted, swap(direction));
     }
   }
 
@@ -405,7 +395,7 @@ namespace hatch {
         auto child_side = *child->side();
         
         auto head = parent->head();
-        auto other = parent->child(~child_side);
+        auto other = parent->child(swap(child_side));
         auto prev = child->prev();
         auto next = child->next();
         
@@ -414,7 +404,7 @@ namespace hatch {
         parent->make_next(next);
         
         child->make_head(head, parent_side);
-        child->make_child(other, ~child_side);
+        child->make_child(other, swap(child_side));
       } else {
         auto this_side = this->side();
         auto this_head = this->head();
@@ -472,7 +462,7 @@ namespace hatch {
     while (parent && parent->is_red()) {
       // node has a red parent, which means it must have a grandparent as well.
       auto parent_self_side = *parent->side();
-      auto parent_away_side = ~parent_self_side;
+      auto parent_away_side = swap(parent_self_side);
 
       auto* grandma = parent->head();
       auto* aunt = grandma->child(parent_away_side);
@@ -578,7 +568,7 @@ namespace hatch {
           auto* target = this;
           while (target->head()) {
             auto target_self_side = *target->side();
-            auto target_away_side = ~target_self_side;
+            auto target_away_side = swap(target_self_side);
 
             auto* parent = target->head();
             auto* sibling = parent->child(target_away_side);

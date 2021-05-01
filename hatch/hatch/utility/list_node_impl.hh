@@ -14,8 +14,8 @@ namespace hatch {
   template <class T>
   template <class ...Args>
   list_node<T>::list_node(Args&&... args) :
-      chain<list_node<T>>{},
-      container<T>{std::forward<Args>(args)...} {
+      container<T>{std::forward<Args>(args)...},
+      chain<list_node<T>>{} {
   }
 
   template <class T>
@@ -24,21 +24,21 @@ namespace hatch {
 
   template <class T>
   list_node<T>::list_node(list_node&& moved) noexcept :
-      chain<list_node<T>>{std::move(moved)},
-      container<T>{std::move(moved)} {
+      container<T>{std::move(moved)},
+      chain<list_node<T>>{std::move(moved)} {
   }
 
   template <class T>
   list_node<T>& list_node<T>::operator=(list_node&& moved) noexcept {
-    chain<list_node<T>>::operator=(std::move(moved));
     container<T>::operator=(std::move(moved));
+    chain<list_node<T>>::operator=(std::move(moved));
     return *this;
   }
 
   template <class T>
   list_node<T>::list_node(const list_node& copied) :
-      chain<list_node<T>>{},
-      container<T>{copied} {
+      container<T>{copied},
+      chain<list_node<T>>{} {
   }
 
   template <class T>
