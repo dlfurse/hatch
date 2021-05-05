@@ -41,8 +41,8 @@ namespace hatch {
   }
 
   TEST_F(ContainerTest, CreateAggregatesTest) {
-    constexpr auto left = 12;
-    constexpr auto right = 5234;
+    constexpr auto left = 12lu;
+    constexpr auto right = 5234lu;
     constexpr auto result = left * right;
 
     auto object = test_aggregating{left, right};
@@ -59,8 +59,8 @@ namespace hatch {
   }
 
   TEST_F(ContainerTest, PlacementNewAggregatesTest) {
-    constexpr auto left = 12;
-    constexpr auto right = 5234;
+    constexpr auto left = 12lu;
+    constexpr auto right = 5234lu;
     constexpr auto result = left * right;
 
     aggregates_ptr = new (&aggregates_raw) test_aggregating{left, right};

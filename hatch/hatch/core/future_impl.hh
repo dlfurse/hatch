@@ -9,7 +9,7 @@ namespace hatch {
 
   template <class ...T>
   future<T...>::future(promise<T...>* owner) :
-      kept<promise<T...>, future<T...>>::kept{owner},
+      owned<promise < T...>, future<T...>>::owned{owner},
       _state{state::pending} {
   }
 
@@ -29,7 +29,7 @@ namespace hatch {
 
   template <class ...T>
   future<T...>::future(future&& moved) noexcept :
-      kept<promise<T...>, future<T...>>::kept{std::move(moved)},
+      owned<promise < T...>, future<T...>>::owned{std::move(moved)},
       _state{moved._state} {
     if (_state == state::completed) {
       new (&_storage._value) stored(std::move(moved._storage._value));
@@ -44,7 +44,7 @@ namespace hatch {
 
   template <class ...T>
   future<T...>& future<T...>::operator=(future&& moved) noexcept {
-    kept<promise<T...>, future<T...>>::operator=(std::move(moved));
+    owned < promise < T...>, future < T...>>::operator=(std::move(moved));
 
     _state = moved._state;
 
@@ -63,7 +63,7 @@ namespace hatch {
 
   template <class ...T>
   future<T...>::future(const future& copied) :
-      kept<promise < T...>, future<T...>>{copied},
+      owned<promise < T...>, future<T...>>{copied},
       _state{copied._state} {
     if (_state == state::completed) {
       new (&_storage._value) stored(copied._storage._value);
@@ -74,7 +74,7 @@ namespace hatch {
 
   template <class ...T>
   future<T...>& future<T...>::operator=(const future& copied) {
-    kept<promise < T...>, future<T...>>::operator=(copied);
+    owned < promise < T...>, future < T...>>::operator=(copied);
 
     _state = copied._state;
 
@@ -177,7 +177,7 @@ namespace hatch {
   mapped_future<F, T...> future<T...>::then(F&& function) {
     switch (_state) {
       case state::pending:
-        return this->_keeper->then(std::forward<F&&>(function));
+        return this->_owner->then(std::forward<F&&>(function));
       case state::completed:
         try {
           return mapped_future<F, T...>(apply(function, _storage._value));
@@ -199,7 +199,7 @@ namespace hatch {
   future<T...> future<T...>::recover(F&& function) {
     switch (_state) {
       case state::pending:
-        return this->_keeper->recover(std::forward<F&&>(function));
+        return this->_owner->recover(std::forward<F&&>(function));
       case state::completed:
         return future<T...>(*this);
       case state::failed:

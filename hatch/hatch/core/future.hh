@@ -5,7 +5,7 @@
 #error "do not include future.hh directly.  include async.hh instead."
 #endif // HATCH_ASYNC_HH
 
-#include <hatch/utility/keep.hh> // kept<T>
+#include <hatch/utility/owning.hh> // owned<T>
 
 #include <exception> // std::exception_ptr
 #include <tuple> // std::apply, std::tuple, std::tuple_element_t
@@ -17,7 +17,7 @@
 namespace hatch {
 
   template <class ...T>
-  class future : public kept<promise<T...>, future<T...>> {
+  class future : public owned<promise < T...>, future<T...>> {
     friend class promise<T...>;
 
     static constexpr bool simple = sizeof...(T) == 1;

@@ -5,14 +5,14 @@
 #error "do not include pointer.hh directly. include memory.hh instead."
 #endif
 
-#include <cstdint> // uint64_t
+#include <hatch/utility/owning.hh>
 
-#include <hatch/utility/list.hh>
+#include <cstdint> // uint64_t
 
 namespace hatch {
 
   template <class T>
-  class pointer : public list_node<pointer<T>> {
+  class pointer {
   public:
     friend class allocator<T>;
 

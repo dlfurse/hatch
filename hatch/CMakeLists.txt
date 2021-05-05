@@ -71,12 +71,12 @@ set(hatch_utility_sources.hh
   hatch/utility/container.hh
   hatch/utility/container_impl.hh
 
-  hatch/utility/keep.hh
-  hatch/utility/keep_fwd.hh
-  hatch/utility/keeper.hh
-  hatch/utility/keeper_impl.hh
-  hatch/utility/kept.hh
-  hatch/utility/kept_impl.hh
+  hatch/utility/owning.hh
+  hatch/utility/owning_fwd.hh
+  hatch/utility/owner.hh
+  hatch/utility/owner_impl.hh
+  hatch/utility/owned.hh
+  hatch/utility/owned_impl.hh
 
   hatch/utility/list_fwd.hh
   hatch/utility/list.hh
@@ -131,7 +131,7 @@ set(hatch_core_sources
 set(hatch_utility_test_sources
   test/utility/container.cc
   test/utility/chain.cc
-  test/utility/keep.cc
+  test/utility/owning.cc
   test/utility/list.cc
   test/utility/tree.cc
 )
@@ -143,7 +143,7 @@ target_link_libraries(hatch_utility_test gtest_main)
 add_test(NAME hatch_utility_test COMMAND hatch_utility_test)
 
 set(hatch_core_test_sources
-#  test/core/memory.cc
+  test/core/memory.cc
   test/core/async.cc
 #  test/core/buffer.cc
 #  test/core/socket.cc

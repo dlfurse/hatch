@@ -21,7 +21,7 @@ namespace hatch {
 
   template <class T>
   list_iterator<T>::list_iterator(list<T>* owner, list_node<T>* node) :
-      kept<list<T>, list_iterator<T>>{owner},
+      owned<list < T>, list_iterator<T>>{owner},
       _node{node} {
   }
 
@@ -36,14 +36,14 @@ namespace hatch {
 
   template <class T>
   list_iterator<T>::list_iterator(list_iterator&& moved) noexcept :
-      kept<list<T>, list_iterator<T>>{moved},
+      owned<list < T>, list_iterator<T>>{moved},
       _node{moved._node} {
     moved._node = nullptr;
   }
 
   template <class T>
   list_iterator<T>& list_iterator<T>::operator=(list_iterator&& moved) noexcept {
-    kept<list<T>, list_iterator<T>>::operator=(moved);
+    owned < list < T >, list_iterator < T >> ::operator=(moved);
     _node = moved._node;
     moved._node = nullptr;
     return *this;
@@ -51,13 +51,13 @@ namespace hatch {
 
   template <class T>
   list_iterator<T>::list_iterator(const list_iterator& copied) :
-      kept<list<T>, list_iterator<T>>{copied},
+      owned<list < T>, list_iterator<T>>{copied},
       _node{copied._node} {
   }
 
   template <class T>
   list_iterator<T>& list_iterator<T>::operator=(const list_iterator& copied) {
-    kept<list<T>, list_iterator<T>>::operator=(copied);
+    owned < list < T >, list_iterator < T >> ::operator=(copied);
     _node = copied._node;
     return *this;
   }
@@ -68,17 +68,17 @@ namespace hatch {
 
   template <class T>
   list_iterator<T>::operator bool() const {
-    return this->_keeper;
+    return this->_owner;
   }
 
   template <class T>
   bool list_iterator<T>::operator==(const list_iterator& compared) const {
-    return this->_keeper == compared._keeper && this->_node == compared._node;
+    return this->_owner == compared._owner && this->_node == compared._node;
   }
 
   template <class T>
   bool list_iterator<T>::operator!=(const list_iterator& compared) const {
-    return this->_keeper != compared._keeper || this->_node != compared._node;
+    return this->_owner != compared._owner || this->_node != compared._node;
   }
 
   /////////////////////////////////////
@@ -101,7 +101,7 @@ namespace hatch {
 
   template <class T>
   list_iterator<T>& list_iterator<T>::operator++() {
-    if (auto* list = this->_keeper) {
+    if (auto* list = this->_owner) {
       if (_node == _before) {
         if (list->_head == nullptr) {
           _node = _after;
@@ -126,14 +126,14 @@ namespace hatch {
 
   template <class T>
   const list_iterator<T> list_iterator<T>::operator++(int) const {
-    auto* const list = this->_keeper;
+    auto* const list = this->_owner;
     this->operator++();
     return {list, _node};
   }
 
   template <class T>
   list_iterator<T>& list_iterator<T>::operator--() {
-    if (auto* list = this->_keeper) {
+    if (auto* list = this->_owner) {
       if (_node == _after) {
         if (list->_head == nullptr) {
           _node = _before;
@@ -158,7 +158,7 @@ namespace hatch {
 
   template <class T>
   const list_iterator<T> list_iterator<T>::operator--(int) const {
-    auto* const list = this->_keeper;
+    auto* const list = this->_owner;
     this->operator--();
     return {list, _node};
   }
@@ -169,7 +169,7 @@ namespace hatch {
 
   template <class T>
   list_iterator<T> list_iterator<T>::insert(list<T>& other) {
-    if (auto* list = this->_keeper) {
+    if (auto* list = this->_owner) {
       if (list != &other) {
         auto* const first_inserted = other._head;
         auto* const end_inserted = _node;
@@ -200,8 +200,8 @@ namespace hatch {
 
   template <class T>
   list<T> list_iterator<T>::remove(list_iterator<T>& other) {
-    if (auto* list = this->_keeper) {
-      if (list == other._keeper) {
+    if (auto* list = this->_owner) {
+      if (list == other._owner) {
         auto* const first_removed = _node;
         auto* const end_removed = other._node;
 

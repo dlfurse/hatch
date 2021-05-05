@@ -5,7 +5,7 @@
 #error "do not include promise.hh directly. include async.hh instead."
 #endif
 
-#include <hatch/utility/keep.hh> // keeper<T>
+#include <hatch/utility/owning.hh> // owner<T>
 
 #include <exception> // std::exception_ptr
 #include <list> // std::list
@@ -26,7 +26,7 @@ namespace hatch {
    */
 
   template <class ...T>
-  class promise : public keeper<promise<T...>, future<T...>> {
+  class promise : public owner<promise<T...>, future<T...>> {
     friend class future<T...>;
 
     static constexpr bool simple = sizeof...(T) == 1;

@@ -2,12 +2,12 @@
 #define HATCH_TREE_HH
 
 #include <hatch/utility/tree_fwd.hh>
-#include <hatch/utility/keep.hh>
+#include <hatch/utility/owning.hh>
 
 namespace hatch {
 
   template <class T>
-  class tree final : public keeper<tree<T>, tree_iterator<T>> {
+  class tree final : public owner<tree<T>, tree_iterator<T>> {
   public:
     friend class tree_iterator<T>;
 

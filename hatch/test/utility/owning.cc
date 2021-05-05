@@ -1,4 +1,4 @@
-#include <hatch/utility/keep.hh>
+#include <hatch/utility/owning.hh>
 #include <gtest/gtest.h>
 
 #include <iostream>
@@ -12,7 +12,7 @@ namespace hatch {
     class test_keeper;
     class test_kept;
 
-    class test_keeper : public keeper<test_keeper, test_kept> {
+    class test_keeper : public owner<test_keeper, test_kept> {
     public:
       bool has_kept(test_kept* kept) {
         bool result = false;
@@ -33,18 +33,18 @@ namespace hatch {
       }
     };
 
-    class test_kept : public kept<test_keeper, test_kept> {
+    class test_kept : public owned<test_keeper, test_kept> {
     public:
       test_keeper* keeper() {
-        return _keeper;
+        return _owner;
       }
 
       void detach() {
-        kept<test_keeper, test_kept>::detach();
+        owned<test_keeper, test_kept>::detach();
       }
 
       void attach(test_keeper* keeper) {
-        kept<test_keeper, test_kept>::attach(keeper);
+        owned<test_keeper, test_kept>::attach(keeper);
       }
 
       uint64_t value;

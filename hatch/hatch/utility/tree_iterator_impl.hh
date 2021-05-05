@@ -21,13 +21,13 @@ namespace hatch {
 
   template<class T>
   tree_iterator<T>::tree_iterator(tree<T>* owner, tree_node<T>* node) :
-      kept<tree<T>, tree_iterator<T>>::kept{owner},
+      owned<tree<T>, tree_iterator<T>>::owned{owner},
       _node{node} {
   }
 
   template<class T>
   tree_iterator<T>::tree_iterator() :
-      kept<tree<T>, tree_iterator<T>>::kept{},
+      owned<tree<T>, tree_iterator<T>>::owned{},
     _node{nullptr} {
   }
 
@@ -37,14 +37,14 @@ namespace hatch {
 
   template<class T>
   tree_iterator<T>::tree_iterator(tree_iterator&& moved) noexcept :
-      kept<tree<T>, tree_iterator<T>>::kept{std::move(moved)},
+      owned<tree<T>, tree_iterator<T>>::owned{std::move(moved)},
       _node{moved._node} {
     moved._node = nullptr;
   }
 
   template<class T>
   tree_iterator<T>& tree_iterator<T>::operator=(tree_iterator&& moved) noexcept {
-    kept<tree<T>, tree_iterator<T>>::operator=(std::move(moved));
+    owned<tree<T>, tree_iterator<T>>::operator=(std::move(moved));
     _node = moved._node;
     moved._node = nullptr;
     return *this;
@@ -52,13 +52,13 @@ namespace hatch {
 
   template<class T>
   tree_iterator<T>::tree_iterator(const tree_iterator& copied) :
-      kept<tree<T>, tree_iterator<T>>::kept{copied},
+      owned<tree<T>, tree_iterator<T>>::owned{copied},
       _node{copied._node} {
   }
 
   template<class T>
   tree_iterator<T>& tree_iterator<T>::operator=(const tree_iterator& copied) {
-    kept<tree<T>, tree_iterator<T>>::operator=(copied);
+    owned<tree<T>, tree_iterator<T>>::operator=(copied);
     _node = copied._node;
     return *this;
   }
@@ -69,17 +69,17 @@ namespace hatch {
 
   template <class T>
   tree_iterator<T>::operator bool() const {
-    return this->_keeper;
+    return this->_owner;
   }
 
   template<class T>
   bool tree_iterator<T>::operator==(const tree_iterator& compared) const {
-    return this->_keeper == compared._keeper && _node == compared._node;
+    return this->_owner == compared._owner && _node == compared._node;
   }
 
   template<class T>
   bool tree_iterator<T>::operator!=(const tree_iterator& compared) const {
-    return this->_keeper != compared._keeper || _node != compared._node;
+    return this->_owner != compared._owner || _node != compared._node;
   }
 
   /////////////////////////////////////
@@ -102,7 +102,7 @@ namespace hatch {
 
   template<class T>
   tree_iterator<T>& tree_iterator<T>::operator++() {
-    if (auto* tree = this->_keeper) {
+    if (auto* tree = this->_owner) {
       if (_node == _before) {
         if (tree->_root == nullptr) {
           _node = _after;
@@ -128,12 +128,12 @@ namespace hatch {
   const tree_iterator<T> tree_iterator<T>::operator++(int) const {
     auto* const node = _node;
     this->operator++();
-    return {this->_keeper, node};
+    return {this->_owner, node};
   }
 
   template<class T>
   tree_iterator<T>& tree_iterator<T>::operator--() {
-    if (auto* tree = this->_keeper) {
+    if (auto* tree = this->_owner) {
       if (_node == _after) {
         if (tree->_root == nullptr) {
           _node = _before;
@@ -159,7 +159,7 @@ namespace hatch {
   const tree_iterator<T> tree_iterator<T>::operator--(int) const {
     auto* const node = _node;
     this->operator--();
-    return {this->_keeper, node};
+    return {this->_owner, node};
   }
 
   ////////////////////////////////////////
@@ -168,7 +168,7 @@ namespace hatch {
 
   template <class T>
   tree<T> tree_iterator<T>::remove() {
-    if (auto* tree = this->_keeper) {
+    if (auto* tree = this->_owner) {
       if (_node) {
         auto* other = std::max(_node->predecessor(), _node->successor());
 

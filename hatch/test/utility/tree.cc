@@ -1,6 +1,8 @@
 #include <hatch/utility/tree.hh>
 #include <gtest/gtest.h>
 
+#include <sstream>
+
 #include <cstdint>
 
 namespace hatch {
@@ -79,14 +81,14 @@ namespace hatch {
 
   protected:
     static constexpr unsigned int count = 128;
-    std::vector<test_node> nodes;
 
-    tree<test_node> tree;
+    std::vector<test_node> _nodes;
+    tree<test_node> _tree;
 
     void SetUp() override {
-      nodes.reserve(count);
+      _nodes.reserve(count);
       for (auto value = 0u; value < count; value++) {
-        nodes.emplace_back(value);
+        _nodes.emplace_back(value);
       }
     }
   };
@@ -103,87 +105,89 @@ namespace hatch {
 
 
   TEST_F(PointerTreeTest, EmptyTree) {
-    EXPECT_TRUE(nodes[0].alone());
-    EXPECT_TRUE(nodes[0].is_black());
+    EXPECT_TRUE(_nodes[0].alone());
+    EXPECT_TRUE(_nodes[0].is_black());
   }
 
   TEST_F(PointerTreeTest, SimpleEasyTree) {
-    tree.insert(nodes[3]);
-    tree.insert(nodes[1]);
-    tree.insert(nodes[5]);
-    tree.insert(nodes[0]);
-    tree.insert(nodes[2]);
-    tree.insert(nodes[4]);
-    tree.insert(nodes[6]);
+    _tree.insert(_nodes[3]);
+    _tree.insert(_nodes[1]);
+    _tree.insert(_nodes[5]);
+    _tree.insert(_nodes[0]);
+    _tree.insert(_nodes[2]);
+    _tree.insert(_nodes[4]);
+    _tree.insert(_nodes[6]);
 
     int height;
     try {
-      height = nodes[3].black_depth();
+      height = _nodes[3].black_depth();
     } catch (const test_failure& failure) {
-      auto message = std::stringstream() << "rb failure: " << failure;
+      std::stringstream message{};
+      message << "rb failure: " << failure;
       FAIL() << message.str();
     }
     EXPECT_EQ(height, 2);
 
-    EXPECT_FALSE(nodes[0].alone());
-    EXPECT_TRUE(nodes[0].is_red());
-    EXPECT_TRUE(nodes[0].is_prev());
+    EXPECT_FALSE(_nodes[0].alone());
+    EXPECT_TRUE(_nodes[0].is_red());
+    EXPECT_TRUE(_nodes[0].is_prev());
 
-    EXPECT_FALSE(nodes[1].alone());
-    EXPECT_TRUE(nodes[1].is_black());
-    EXPECT_TRUE(nodes[1].is_prev());
+    EXPECT_FALSE(_nodes[1].alone());
+    EXPECT_TRUE(_nodes[1].is_black());
+    EXPECT_TRUE(_nodes[1].is_prev());
 
-    EXPECT_FALSE(nodes[2].alone());
-    EXPECT_TRUE(nodes[2].is_red());
-    EXPECT_TRUE(nodes[2].is_next());
+    EXPECT_FALSE(_nodes[2].alone());
+    EXPECT_TRUE(_nodes[2].is_red());
+    EXPECT_TRUE(_nodes[2].is_next());
 
-    EXPECT_FALSE(nodes[3].alone());
-    EXPECT_TRUE(nodes[3].is_black());
-    EXPECT_TRUE(nodes[3].is_root());
+    EXPECT_FALSE(_nodes[3].alone());
+    EXPECT_TRUE(_nodes[3].is_black());
+    EXPECT_TRUE(_nodes[3].is_root());
 
-    EXPECT_FALSE(nodes[4].alone());
-    EXPECT_TRUE(nodes[4].is_red());
-    EXPECT_TRUE(nodes[4].is_prev());
+    EXPECT_FALSE(_nodes[4].alone());
+    EXPECT_TRUE(_nodes[4].is_red());
+    EXPECT_TRUE(_nodes[4].is_prev());
 
-    EXPECT_FALSE(nodes[5].alone());
-    EXPECT_TRUE(nodes[5].is_black());
-    EXPECT_TRUE(nodes[5].is_next());
+    EXPECT_FALSE(_nodes[5].alone());
+    EXPECT_TRUE(_nodes[5].is_black());
+    EXPECT_TRUE(_nodes[5].is_next());
 
-    EXPECT_FALSE(nodes[6].alone());
-    EXPECT_TRUE(nodes[6].is_red());
-    EXPECT_TRUE(nodes[6].is_next());
+    EXPECT_FALSE(_nodes[6].alone());
+    EXPECT_TRUE(_nodes[6].is_red());
+    EXPECT_TRUE(_nodes[6].is_next());
 
-    EXPECT_EQ(nodes[3].minimum(), &nodes[0]);
-    EXPECT_EQ(nodes[1].minimum(), &nodes[0]);
-    EXPECT_EQ(nodes[5].minimum(), &nodes[4]);
+    EXPECT_EQ(_nodes[3].minimum(), &_nodes[0]);
+    EXPECT_EQ(_nodes[1].minimum(), &_nodes[0]);
+    EXPECT_EQ(_nodes[5].minimum(), &_nodes[4]);
 
     for (auto index = 0u; index < 6; index++) {
-      EXPECT_EQ(nodes[index].successor(), &nodes[index + 1]);
-      EXPECT_EQ(nodes[index].root(), &nodes[3]);
+      EXPECT_EQ(_nodes[index].successor(), &_nodes[index + 1]);
+      EXPECT_EQ(_nodes[index].root(), &_nodes[3]);
     }
 
-    EXPECT_EQ(nodes[3].maximum(), &nodes[6]);
-    EXPECT_EQ(nodes[1].maximum(), &nodes[2]);
-    EXPECT_EQ(nodes[5].maximum(), &nodes[6]);
+    EXPECT_EQ(_nodes[3].maximum(), &_nodes[6]);
+    EXPECT_EQ(_nodes[1].maximum(), &_nodes[2]);
+    EXPECT_EQ(_nodes[5].maximum(), &_nodes[6]);
 
     for (auto index = 6u; index < 0; index++) {
-      EXPECT_EQ(nodes[index].predecessor(), &nodes[index - 1]);
-      EXPECT_EQ(nodes[index].root(), &nodes[3]);
+      EXPECT_EQ(_nodes[index].predecessor(), &_nodes[index - 1]);
+      EXPECT_EQ(_nodes[index].root(), &_nodes[3]);
     }
   }
 
   TEST_F(PointerTreeTest, SimpleTougherTree) {
-    tree.insert(nodes[0]);
+    _tree.insert(_nodes[0]);
 
-    int this_depth = tree.root()->get().black_depth();
+    int this_depth = _tree.root()->get().black_depth();
 
     for (auto index = 1u; index < 64; index++) {
-      tree.insert(nodes[index]);
+      _tree.insert(_nodes[index]);
       int next_depth;
       try {
-        next_depth = tree.root()->get().black_depth();
+        next_depth = _tree.root()->get().black_depth();
       } catch (const test_failure& failure) {
-        auto message = std::stringstream() << "rb failure: " << failure;
+        std::stringstream message{};
+        message << "rb failure: " << failure;
         FAIL() << message.str();
       }
       EXPECT_LE(this_depth, next_depth);
@@ -193,12 +197,13 @@ namespace hatch {
     EXPECT_EQ(this_depth, 5);
 
     for (auto index = 0u; index < 63; index++) {
-      tree.begin().remove();
+      _tree.begin().remove();
       int next_depth;
       try {
-        next_depth = tree.root()->get().black_depth();
+        next_depth = _tree.root()->get().black_depth();
       } catch (const test_failure& failure) {
-        auto message = std::stringstream() << "rb failure: " << failure;
+        std::stringstream message{};
+        message << "rb failure: " << failure;
         FAIL() << message.str();
       }
       EXPECT_GE(this_depth, next_depth);

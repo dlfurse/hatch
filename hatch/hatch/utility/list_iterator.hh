@@ -5,12 +5,12 @@
 #error "do not include list_iterator.hh directly. include list.hh instead."
 #endif
 
-#include <hatch/utility/keep.hh>
+#include <hatch/utility/owning.hh>
 
 namespace hatch {
 
   template <class T>
-  class list_iterator final : public kept<list<T>, list_iterator<T>> {
+  class list_iterator final : public owned<list < T>, list_iterator<T>> {
   public:
     friend class list<T>;
 

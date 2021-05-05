@@ -23,7 +23,7 @@ namespace hatch {
 
   template <class ...T>
   promise<T...>::promise(promise&& moved) noexcept :
-      keeper<promise<T...>, future<T...>>::keeper{std::move(moved)},
+      owner<promise < T...>, future<T...>>::owner{std::move(moved)},
       _state{moved._state},
       _continuations{std::move(moved._continuations)},
       _recovery{std::move(moved._recovery)} {
@@ -32,7 +32,7 @@ namespace hatch {
 
   template <class ...T>
   promise<T...>& promise<T...>::operator=(promise&& moved) noexcept {
-    keeper<promise<T...>, future<T...>>::operator=(std::move(moved));
+    owner < promise < T...>, future < T...>>::operator=(std::move(moved));
 
     _state = moved._state;
     _continuations = std::move(moved._continuations);

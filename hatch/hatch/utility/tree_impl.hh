@@ -40,14 +40,14 @@ namespace hatch {
 
   template<class T>
   tree<T>::tree(tree<T>&& moved) noexcept :
-      keeper<tree<T>, tree_iterator<T>>::keeper{std::move(moved)},
+      owner<tree<T>, tree_iterator<T>>::owner{std::move(moved)},
       _root{moved.root} {
     moved._root = nullptr;
   }
 
   template<class T>
   tree<T>& tree<T>::operator=(tree<T>&& moved) noexcept {
-    keeper<tree<T>, tree_iterator<T>>::operator=(std::move(moved));
+    owner<tree<T>, tree_iterator<T>>::operator=(std::move(moved));
     _root = moved.root;
     moved._root = nullptr;
   }

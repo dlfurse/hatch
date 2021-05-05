@@ -5,12 +5,12 @@
 #error "do not include tree_iterator.hh directly. include tree.hh instead."
 #endif
 
-#include <hatch/utility/keep.hh>
+#include <hatch/utility/owning.hh>
 
 namespace hatch {
 
   template <class T>
-  class tree_iterator final : public kept<tree<T>, tree_iterator<T>> {
+  class tree_iterator final : public owned<tree < T>, tree_iterator<T>> {
   public:
     friend class tree<T>;
 

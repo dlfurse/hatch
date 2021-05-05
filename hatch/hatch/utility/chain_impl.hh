@@ -91,9 +91,8 @@ namespace hatch {
   void chain<T>::foreach(U&& callable) {
     auto* node = static_cast<T*>(this);
     do {
-      auto* next = &node->next();
       callable(*node);
-      node = next;
+      node = &node->next();
     } while (node != static_cast<T*>(this));
   }
 
@@ -102,9 +101,8 @@ namespace hatch {
   void chain<T>::foreach(U&& callable) const {
     auto* node = static_cast<const T*>(this);
     do {
-      auto* next = &node->next();
       callable(*node);
-      node = next;
+      node = &node->next();
     } while (node != static_cast<const T*>(this));
   }
 

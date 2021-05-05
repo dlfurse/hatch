@@ -15,6 +15,7 @@ namespace hatch {
       case sides::prev:
         return sides::next;
       case sides::next:
+      default:
         return sides::prev;
     }
   }
@@ -244,6 +245,7 @@ namespace hatch {
       case sides::prev:
         return _prev;
       case sides::next:
+      default:
         return _next;
     }
   }
