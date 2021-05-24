@@ -26,7 +26,7 @@ namespace hatch {
   // Chain. //
   ////////////
 
-  private:
+  protected:
     T* _prev;
     T* _next;
 

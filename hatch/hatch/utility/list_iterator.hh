@@ -19,7 +19,7 @@ namespace hatch {
     ///////////////////////////////////////////
 
   private:
-    list_iterator(list<T>* owner, list_node<T>* node);
+    explicit list_iterator(list<T>* owner, list_node<T>* node);
 
   public:
     list_iterator();

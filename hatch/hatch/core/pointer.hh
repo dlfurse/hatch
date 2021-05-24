@@ -5,16 +5,18 @@
 #error "do not include pointer.hh directly. include memory.hh instead."
 #endif
 
-#include <hatch/utility/owning.hh>
-
-#include <cstdint> // uint64_t
+#include <hatch/core/handle.hh>
+#include <hatch/core/slabs.hh>
 
 namespace hatch {
 
   template <class T>
-  class pointer {
+  class pointer : public handle<slab<T>> {
   public:
-    friend class allocator<T>;
+    friend class allocator;
+
+  private:
+    pointer(allocated<slab<T>>* allocated, allocator* allocator);
 
   public:
     pointer();
@@ -26,16 +28,14 @@ namespace hatch {
     pointer(pointer&& ptr) noexcept;
     pointer& operator=(pointer&& ptr) noexcept;
 
-  private:
-    pointer(allocator<T>* allocator, uint64_t index);
-
   public:
     T* operator->();
+    T& operator*();
+
     explicit operator bool();
 
   private:
-    mutable allocator<T>* _allocator{nullptr};
-    mutable uint64_t _index{0};
+    mutable allocator* _allocator{nullptr};
   };
 
 } // end namespace hatch

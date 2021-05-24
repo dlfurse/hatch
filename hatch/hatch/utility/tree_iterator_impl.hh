@@ -168,23 +168,27 @@ namespace hatch {
 
   template <class T>
   tree<T> tree_iterator<T>::remove() {
-    if (auto* tree = this->_owner) {
+    if (auto* owner = this->_owner) {
       if (_node) {
-        auto* other = std::max(_node->predecessor(), _node->successor());
+        auto* data = this->_owner->_data;
+        auto* other = _node->predecessor(data);
+        if (!other) {
+          other = _node->successor(data);
+        }
 
-        _node->remove();
+        _node->remove(data);
 
         if (other) {
-          tree->_root = other->root();
+          owner->_root = other->root(data);
         } else {
-          tree->_root = nullptr;
+          owner->_root = nullptr;
         }
-        tree->release();
+        owner->disown_all();
 
-        return ::hatch::tree<T>{_node};
+        return tree<T, Ref>{_node, data};
       }
     }
-    return ::hatch::tree<T>{nullptr};
+    return tree<T, Ref>{};
   }
 
 } // namespace hatch

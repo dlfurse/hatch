@@ -9,17 +9,17 @@
 
 namespace hatch {
 
-  template <class T>
-  class tree_iterator final : public owned<tree < T>, tree_iterator<T>> {
+  template <class T, template <class> class Ref>
+  class tree_iterator final : public owned<tree<T, Ref>, tree_iterator<T, Ref>> {
   public:
-    friend class tree<T>;
+    friend class tree<T, Ref>;
 
     ///////////////////////////////////////////
     // Constructors, destructor, assignment. //
     ///////////////////////////////////////////
 
   private:
-    tree_iterator(tree<T>* owner, tree_node<T>* node);
+    explicit tree_iterator(tree<T, Ref>* owner, tree_node<T, Ref>* node);
 
   public:
     tree_iterator();

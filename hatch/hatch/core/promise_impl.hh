@@ -58,7 +58,7 @@ namespace hatch {
       std::apply([&](const T&... args){c->complete(args...);}, data);
     }
 
-    this->release();
+    this->disown_all();
   }
 
   template <class ...T>
@@ -75,7 +75,7 @@ namespace hatch {
       continuation->complete(data...);
     }
 
-    this->release();
+    this->disown_all();
   }
 
   template <class ...T>
@@ -99,7 +99,7 @@ namespace hatch {
         continuation->fail(excp);
       }
 
-      this->release();
+      this->disown_all();
     }
   }
 

@@ -7,10 +7,12 @@
 
 #include <algorithm>
 
+using std::nullopt;
+
 namespace hatch {
 
-  template <class T>
-  typename tree_node<T>::sides tree_node<T>::swap(sides side) {
+  template <class T, template <class> class Ref>
+  typename tree_node<T, Ref>::sides tree_node<T, Ref>::swap(sides side) {
     switch (side) {
       case sides::prev:
         return sides::next;
@@ -24,37 +26,36 @@ namespace hatch {
   // Constructors, destructor. //
   ///////////////////////////////
 
-  template <class T>
+  template <class T, template <class> class Ref>
   template <class ...Args>
-  tree_node<T>::tree_node(Args&&... args) :
+  tree_node<T, Ref>::tree_node(Args&&... args) :
       container<T>::container{std::forward<Args>(args)...},
       _color{colors::black},
-      _head{nullptr},
-      _prev{nullptr},
-      _next{nullptr} {
-    static_assert(std::is_base_of_v<tree_node<T>, T>);
+      _head{},
+      _prev{},
+      _next{} {
   }
 
-  template <class T>
-  tree_node<T>::~tree_node() {
+  template <class T, template <class> class Ref>
+  tree_node<T, Ref>::~tree_node() {
     detach();
   }
 
-  template <class T>
-  tree_node<T>::tree_node(tree_node&& moved) noexcept :
+  template <class T, template <class> class Ref>
+  tree_node<T, Ref>::tree_node(tree_node&& moved) noexcept :
       container<T>::container{std::move(moved)},
       _color{colors::black},
-      _head{nullptr},
-      _prev{nullptr},
-      _next{nullptr} {
+      _head{},
+      _prev{},
+      _next{} {
     auto side = moved.side();
     make_head(moved._head, side);
     make_prev(moved._prev);
     make_next(moved._next);
   }
 
-  template <class T>
-  tree_node<T>& tree_node<T>::operator=(tree_node&& moved) noexcept {
+  template <class T, template <class> class Ref>
+  tree_node<T, Ref>& tree_node<T, Ref>::operator=(tree_node&& moved) noexcept {
     container<T>::operator=(std::move(moved));
     _prev = moved._prev;
     _next = moved._next;
@@ -65,52 +66,37 @@ namespace hatch {
     return *this;
   }
 
-  template <class T>
-  tree_node<T>::tree_node(const tree_node& copied) :
-      container<T>::container{copied},
-      _color{colors::black},
-      _head{nullptr},
-      _prev{nullptr},
-      _next{nullptr} {
-  }
-
-  template <class T>
-  tree_node<T>& tree_node<T>::operator=(const tree_node& copied) {
-    container<T>::operator=(copied);
-    return *this;
-  }
-
   ////////////
   // Color. //
   ////////////
 
-  template <class T>
-  typename tree_node<T>::colors tree_node<T>::color() const {
+  template <class T, template <class> class Ref>
+  typename tree_node<T, Ref>::colors tree_node<T, Ref>::color() const {
     return _color;
   }
 
-  template <class T>
-  void tree_node<T>::make_color(colors color) {
+  template <class T, template <class> class Ref>
+  void tree_node<T, Ref>::make_color(colors color) {
     _color = color;
   }
 
-  template <class T>
-  bool tree_node<T>::is_red() const {
+  template <class T, template <class> class Ref>
+  bool tree_node<T, Ref>::is_red() const {
     return _color == colors::red;
   }
 
-  template <class T>
-  void tree_node<T>::make_red() {
+  template <class T, template <class> class Ref>
+  void tree_node<T, Ref>::make_red() {
     _color = colors::red;
   }
 
-  template <class T>
-  bool tree_node<T>::is_black() const {
+  template <class T, template <class> class Ref>
+  bool tree_node<T, Ref>::is_black() const {
     return _color == colors::black;
   }
 
-  template <class T>
-  void tree_node<T>::make_black() {
+  template <class T, template <class> class Ref>
+  void tree_node<T, Ref>::make_black() {
     _color = colors::black;
   }
 
@@ -118,27 +104,27 @@ namespace hatch {
   // Structure: accessors. //
   ///////////////////////////
 
-  template <class T>
-  bool tree_node<T>::alone() const {
+  template <class T, template <class> class Ref>
+  bool tree_node<T, Ref>::alone() const {
     return !_head && !_prev && !_next;
   }
 
-  template<class T>
-  tree_node<T>* tree_node<T>::minimum() {
+  template <class T, template <class> class Ref>
+  tree_node<T, Ref>* tree_node<T, Ref>::minimum() {
     auto* current = this;
-    while (current->prev()) {
-      current = current->prev();
+    while (current->_prev) {
+      current = _prev;
     }
     return current;
   }
 
-  template<class T>
-  const tree_node<T>* tree_node<T>::minimum() const {
-    return const_cast<tree_node<T>*>(this)->minimum();
+  template <class T, template <class> class Ref>
+  const tree_node<T, Ref>* tree_node<T, Ref>::minimum() const {
+    return const_cast<tree_node<T, Ref>&>(*this).minimum();
   }
 
-  template <class T>
-  tree_node<T>* tree_node<T>::predecessor() {
+  template <class T, template <class> class Ref>
+  tree_node<T, Ref>* tree_node<T, Ref>::predecessor() {
     if (_prev) {
       return _prev->maximum();
     } else {
@@ -146,238 +132,260 @@ namespace hatch {
       while (current->is_prev()) {
         current = current->head();
       }
-      return current->head() ? current->head() : nullptr;
+      return current->head();
     }
   }
 
-  template <class T>
-  const tree_node<T>* tree_node<T>::predecessor() const {
-    return const_cast<tree_node<T>*>(this)->predecessor();
+  template <class T, template <class> class Ref>
+  const tree_node<T, Ref>* tree_node<T, Ref>::predecessor() const {
+    return const_cast<tree_node<T, Ref>&>(*this).predecessor();
   }
 
-  template <class T>
-  tree_node<T>* tree_node<T>::root() {
+  template <class T, template <class> class Ref>
+  tree_node<T, Ref>* tree_node<T, Ref>::root() {
     auto* current = this;
-    while (current->head()) {
-      current = current->head();
+    while (current->_head) {
+      current = _head;
     }
     return current;
   }
 
-  template <class T>
-  const tree_node<T>* tree_node<T>::root() const {
-    return const_cast<tree_node<T>*>(this)->root();
+  template <class T, template <class> class Ref>
+  const tree_node<T, Ref>* tree_node<T, Ref>::root() const {
+    return const_cast<tree_node<T, Ref>&>(*this).root();
   }
 
-  template <class T>
-  tree_node<T>* tree_node<T>::successor() {
+  template <class T, template <class> class Ref>
+  tree_node<T, Ref>* tree_node<T, Ref>::successor() {
     if (_next) {
       return _next->minimum();
     } else {
-      auto* current = this;
-      while (current->is_next()) {
-        current = current->head();
+      auto current_ref = Ref<tree_node<T, Ref>>{this};
+      auto* current_ptr = this;
+      while (true) {
+        if (auto head_ref = current_ptr->_head) {
+          auto* head_ptr = head_ref.address();
+          if (head_ptr->_next == current_ref) {
+            current_ref = head_ref;
+            current_ptr = head_ptr;
+          } else {
+            break;
+          }
+        }
       }
-      return current->head() ? current->head() : nullptr;
+      return current_ptr->_head;
     }
   }
 
-  template <class T>
-  const tree_node<T>* tree_node<T>::successor() const {
-    return const_cast<tree_node<T>*>(this)->successor();
+  template <class T, template <class> class Ref>
+  const tree_node<T, Ref>* tree_node<T, Ref>::successor() const {
+    return const_cast<tree_node<T, Ref>&>(*this).successor();
   }
 
-  template<class T>
-  tree_node<T>* tree_node<T>::maximum() {
+  template <class T, template <class> class Ref>
+  tree_node<T, Ref>* tree_node<T, Ref>::maximum() {
     auto* current = this;
-    while (current->next()) {
-      current = current->next();
+    while (current->_next) {
+      current = _next;
     }
     return current;
   }
 
-  template<class T>
-  const tree_node<T>* tree_node<T>::maximum() const {
-    return const_cast<tree_node<T>*>(this)->maximum();
+  template <class T, template <class> class Ref>
+  const tree_node<T, Ref>* tree_node<T, Ref>::maximum() const {
+    return const_cast<tree_node<T, Ref>&>(*this).maximum();
   }
 
-  template <class T>
-  std::optional<typename tree_node<T>::sides> tree_node<T>::side() const {
+  template <class T, template <class> class Ref>
+  std::optional<typename tree_node<T, Ref>::sides> tree_node<T, Ref>::side() const {
     if (_head) {
-      if (this == _head->_prev) {
+      auto* head = this->head(data);
+      if (this == head->prev(data)) {
         return sides::prev;
       }
-      if (this == _head->_next) {
+      if (this == head->next(data)) {
         return sides::next;
       }
     }
     return {};
   }
 
-  template <class T>
-  bool tree_node<T>::is_root() const {
+  template <class T, template <class> class Ref>
+  bool tree_node<T, Ref>::is_root() const {
     return !_head;
   }
 
-  template <class T>
-  bool tree_node<T>::is_prev() const {
-    return _head && this == _head->_prev;
+  template <class T, template <class> class Ref>
+  bool tree_node<T, Ref>::is_prev(void* data) const {
+    if (_head) {
+      auto* head = this->head(data);
+      return this == head->prev(data);
+    }
+    return false;
   }
 
-  template <class T>
-  bool tree_node<T>::is_next() const {
-    return _head && this == _head->_next;
+  template <class T, template <class> class Ref>
+  bool tree_node<T, Ref>::is_next() const {
+    if (_head) {
+      auto* head = this->head(data);
+      return this == head->next(data);
+    }
+    return false;
   }
 
-  template <class T>
-  tree_node<T>* tree_node<T>::head() {
-    return _head;
+  template <class T, template <class> class Ref>
+  tree_node<T, Ref>* tree_node<T, Ref>::head(void* data) {
+    if (_head) {
+      return &_head.get(data);
+    }
+    return nullptr;
   }
 
-  template <class T>
-  const tree_node<T>* tree_node<T>::head() const {
-    return const_cast<T&>(*this)->head();
+  template <class T, template <class> class Ref>
+  const tree_node<T, Ref>* tree_node<T, Ref>::head(void* data) const {
+    return const_cast<tree_node<T, Ref>&>(*this)->head(data);
   }
 
-  template <class T>
-  tree_node<T>* tree_node<T>::child(sides side) {
+  template <class T, template <class> class Ref>
+  tree_node<T, Ref>* tree_node<T, Ref>::child(sides side, void* data) {
     switch (side) {
       case sides::prev:
-        return _prev;
+        return prev(data);
       case sides::next:
       default:
-        return _next;
+        return next(data);
     }
   }
 
-  template <class T>
-  const tree_node<T>* tree_node<T>::child(sides side) const {
-    return const_cast<T&>(*this)->child(side);
+  template <class T, template <class> class Ref>
+  const tree_node<T, Ref>* tree_node<T, Ref>::child(sides side, void* data) const {
+    return const_cast<tree_node<T, Ref>&>(*this)->child(side);
   }
 
-  template <class T>
-  tree_node<T>* tree_node<T>::prev() {
-    return _prev;
+  template <class T, template <class> class Ref>
+  tree_node<T, Ref>* tree_node<T, Ref>::prev(void* data) {
+    if (_prev) {
+      return &_prev.get(data);
+    }
+    return nullptr;
   }
 
-  template <class T>
-  const tree_node<T>* tree_node<T>::prev() const {
-    return const_cast<T&>(*this)->prev();
+  template <class T, template <class> class Ref>
+  const tree_node<T, Ref>* tree_node<T, Ref>::prev(void* data) const {
+    return const_cast<tree_node<T, Ref>&>(*this)->prev();
   }
 
-  template <class T>
-  tree_node<T>* tree_node<T>::next() {
-    return _next;
+  template <class T, template <class> class Ref>
+  tree_node<T, Ref>* tree_node<T, Ref>::next(void* data) {
+    if (_next) {
+      return &_next.get(data);
+    }
+    return nullptr;
   }
 
-  template <class T>
-  const tree_node<T>* tree_node<T>::next() const {
-    return const_cast<T&>(*this)->next();
+  template <class T, template <class> class Ref>
+  const tree_node<T, Ref>* tree_node<T, Ref>::next(void* data) const {
+    return const_cast<tree_node<T, Ref>&>(*this)->next(data);
   }
 
   //////////////////////////
   // Structure: mutators. //
   //////////////////////////
 
-  template <class T>
-  void tree_node<T>::make_head(tree_node* new_head, std::optional<sides> new_side) {
-    if (auto* old_head = head()) {
-      switch (*side()) {
-        case sides::prev:
-          old_head->_prev = nullptr;
-          break;
-        case sides::next:
-          old_head->_next = nullptr;
-          break;
+  template <class T, template <class> class Ref>
+  void tree_node<T, Ref>::make_head(tree_node* new_head, std::optional<sides> new_side, void* data) {
+    if (auto* old_head = head(data)) {
+      if (this == old_head->prev(data)) {
+        old_head->_prev = Ref<T>{nullptr, data};
+      } else if (this == old_head->next(data)) {
+        old_head->_next = Ref<T>{nullptr, data};
       }
     }
 
-    _head = new_head;
+    _head = Ref<T>{new_head, data};
 
     if (new_head) {
-      switch (*new_side) {
-        case sides::prev:
-          new_head->_prev = this;
-          break;
-        case sides::next:
-          new_head->_next = this;
-          break;
+      auto side = *new_side;
+      if (side == sides::prev) {
+        new_head->_prev = Ref<T>{this, data};
+      } else if (side == sides::next) {
+        new_head->_next = Ref<T>{this, data};
       }
     }
   }
 
-  template <class T>
-  void tree_node<T>::make_child(tree_node* new_child, sides side) {
-    if (auto* old_child = child(side)) {
-      old_child->_head = nullptr;
+  template <class T, template <class> class Ref>
+  void tree_node<T, Ref>::make_child(tree_node* new_child, sides side, void* data) {
+    if (auto* old_child = child(side, data)) {
+      old_child->_head = Ref<T>{nullptr, data};
     }
 
     switch (side) {
       case sides::prev:
-        _prev = new_child;
+        _prev = Ref<T>{new_child, data};
         break;
       case sides::next:
-        _next = new_child;
+        _next = Ref<T>{new_child, data};
         break;
     }
 
     if (new_child) {
-      new_child->_head = this;
+      new_child->_head = Ref<T>{this, data};
     }
   }
 
 
 
-  template <class T>
-  void tree_node<T>::make_prev(tree_node* new_prev) {
-    if (auto* old_prev = prev()) {
-      old_prev->_head = nullptr;
+  template <class T, template <class> class Ref>
+  void tree_node<T, Ref>::make_prev(tree_node* new_prev, void* data) {
+    if (auto* old_prev = prev(data)) {
+      old_prev->_head = Ref<T>{nullptr, data};
     }
 
-    _prev = new_prev;
+    _prev = Ref<T>{new_prev, data};
 
     if (new_prev) {
-      new_prev->_head = this;
+      new_prev->_head = Ref<T>{this, data};
     }
   }
 
 
 
-  template <class T>
-  void tree_node<T>::make_next(tree_node* new_next) {
-    if (auto* old_next = next()) {
-      old_next->_head = nullptr;
+  template <class T, template <class> class Ref>
+  void tree_node<T, Ref>::make_next(tree_node* new_next, void* data) {
+    if (auto* old_next = next(data)) {
+      old_next->_head = Ref<T>{nullptr, data};
     }
 
-    _next = new_next;
+    _next = Ref<T>{new_next, data};
 
     if (new_next) {
-      new_next->_head = this;
+      new_next->_head = Ref<T>{this, data};
     }
   }
 
-  template <class T>
-  void tree_node<T>::detach() {
-    make_head(nullptr);
-    make_black();
+  template <class T, template <class> class Ref>
+  void tree_node<T, Ref>::detach(void* data) {
+    make_head(nullptr, nullopt, data);
+    make_black(data);
   }
 
-  template <class T>
-  void tree_node<T>::rotate(sides direction) {
-    if (auto* rotated = child(swap(direction))) {
-      auto* pivoted = rotated->child(direction);
+  template <class T, template <class> class Ref>
+  void tree_node<T, Ref>::rotate(sides direction, void* data) {
+    if (auto* rotated = child(swap(direction), data)) {
+      auto* pivoted = rotated->child(direction, data);
 
-      auto* new_head = head();
-      auto new_side = side();
-      rotated->make_head(new_head, new_side);
+      auto* new_head = head(data);
+      auto new_side = side(data);
+      rotated->make_head(new_head, new_side, data);
       
-      rotated->make_child(this, direction);
-      this->make_child(pivoted, swap(direction));
+      rotated->make_child(this, direction, data);
+      this->make_child(pivoted, swap(direction), data);
     }
   }
 
-  template <class T>
-  void tree_node<T>::exchange(tree_node* that) {
+  template <class T, template <class> class Ref>
+  void tree_node<T, Ref>::exchange(tree_node<T, Ref>* that, void* data) {
     if (that && that != this) {
       auto this_color = this->color();
       auto that_color = that->color();
@@ -386,52 +394,52 @@ namespace hatch {
       that->make_color(this_color);
 
       static constexpr tree_node* null = nullptr;
-      
+
       auto [parent, child, joined] =
-          this == that->head() ? std::make_tuple(this, that, true) :
-          that == this->head() ? std::make_tuple(that, this, true) :
+          this == that->head(data) ? std::make_tuple(this, that, true) :
+          that == this->head(data) ? std::make_tuple(that, this, true) :
           std::make_tuple(null, null, false);
-      
+
       if (joined) {
-        auto parent_side = parent->side();
-        auto child_side = *child->side();
-        
-        auto head = parent->head();
-        auto other = parent->child(swap(child_side));
-        auto prev = child->prev();
-        auto next = child->next();
-        
-        parent->make_head(child, child_side);
-        parent->make_prev(prev);
-        parent->make_next(next);
-        
-        child->make_head(head, parent_side);
-        child->make_child(other, swap(child_side));
+        auto parent_side = parent->side(data);
+        auto child_side = *child->side(data);
+
+        auto head = parent->head(data);
+        auto other = parent->child(swap(child_side), data);
+        auto prev = child->prev(data);
+        auto next = child->next(data);
+
+        parent->make_head(child, child_side, data);
+        parent->make_prev(prev, data);
+        parent->make_next(next, data);
+
+        child->make_head(head, parent_side, data);
+        child->make_child(other, swap(child_side), data);
       } else {
-        auto this_side = this->side();
-        auto this_head = this->head();
-        auto this_prev = this->prev();
-        auto this_next = this->next();
+        auto this_side = this->side(data);
+        auto this_head = this->head(data);
+        auto this_prev = this->prev(data);
+        auto this_next = this->next(data);
 
-        auto that_side = that->side();
-        auto that_head = that->head();
-        auto that_prev = that->prev();
-        auto that_next = that->next();
+        auto that_side = that->side(data);
+        auto that_head = that->head(data);
+        auto that_prev = that->prev(data);
+        auto that_next = that->next(data);
 
-        this->make_head(that_head, that_side);
-        this->make_prev(that_prev);
-        this->make_next(that_next);
+        this->make_head(that_head, that_side, data);
+        this->make_prev(that_prev, data);
+        this->make_next(that_next, data);
 
-        that->make_head(this_head, this_side);
-        that->make_prev(this_prev);
-        that->make_next(this_next);
+        that->make_head(this_head, this_side, data);
+        that->make_prev(this_prev, data);
+        that->make_next(this_next, data);
       }
     }
   }
 
-  template<class T>
-  void tree_node<T>::insert(tree_node<T>& node) {
-    node.remove();
+  template <class T, template <class> class Ref>
+  void tree_node<T, Ref>::insert(tree_node<T, Ref>& node, void* data) {
+    node.remove(data);
     node.make_red();
 
     auto* current = &node;
@@ -441,19 +449,19 @@ namespace hatch {
     // the end, parent will point to the head of the inserted node.
     while (true) {
       if (current->get() < parent->get()) {
-        if (parent->prev()) {
-          parent = parent->prev();
+        if (auto* prev = parent->prev(data)) {
+          parent = prev;
           continue;
         } else {
-          parent->make_child(current, sides::prev);
+          parent->make_child(current, sides::prev, data);
           break;
         }
       } else {
-        if (parent->next()) {
-          parent = parent->next();
+        if (auto* next = parent->next(data)) {
+          parent = next;
           continue;
         } else {
-          parent->make_child(current, sides::next);
+          parent->make_child(current, sides::next, data);
           break;
         }
       }
@@ -463,11 +471,11 @@ namespace hatch {
     // node we just inserted is red.
     while (parent && parent->is_red()) {
       // node has a red parent, which means it must have a grandparent as well.
-      auto parent_self_side = *parent->side();
+      auto parent_self_side = *parent->side(data);
       auto parent_away_side = swap(parent_self_side);
 
-      auto* grandma = parent->head();
-      auto* aunt = grandma->child(parent_away_side);
+      auto* grandma = parent->head(data);
+      auto* aunt = grandma->child(parent_away_side, data);
 
       if (aunt && aunt->is_red()) {
         // this node's parent has a red sibling.
@@ -480,7 +488,7 @@ namespace hatch {
         aunt->make_black();
 
         current = grandma;
-        parent = current->head();
+        parent = current->head(data);
 
         continue;
       } else {
@@ -489,7 +497,7 @@ namespace hatch {
         // -> rotate the grandparent away putting the parent in its place, then
         //    swap the the colors of the grandparent and the parent.
         //
-        if (current->side() == parent_away_side) {
+        if (current->side(data) == parent_away_side) {
           // this node is on a different side of its parent than its parent is
           // with respect to the parent's parent.
           //
@@ -498,11 +506,11 @@ namespace hatch {
           //    grandparent, then swap the current and parent pointers so the
           //    relationships are correctly labeled.
           //
-          parent->rotate(parent_self_side);
+          parent->rotate(parent_self_side, data);
           std::swap(current, parent);
         }
 
-        grandma->rotate(parent_away_side);
+        grandma->rotate(parent_away_side, data);
         grandma->make_red();
         parent->make_black();
 
@@ -522,19 +530,22 @@ namespace hatch {
     }
   }
 
-  template<class T>
-  void tree_node<T>::remove() {
+  template <class T, template <class> class Ref>
+  void tree_node<T, Ref>::remove(void* data) {
     if (!alone()) {
 
-      auto is_null_or_black = [](tree_node<T>* node) {
+      auto is_null_or_black = [](tree_node<T, Ref>* node) {
         return !node || node->is_black();
       };
 
-      auto is_real_and_red = [](tree_node<T>* node) {
+      auto is_real_and_red = [](tree_node<T, Ref>* node) {
         return node && node->is_red();
       };
 
-      if (prev() && next()) {
+      auto* prev = this->prev(data);
+      auto* next = this->next(data);
+
+      if (prev && next) {
         // this node has both children, so we swap it with either the
         // predecessor or successor, because either of these is guaranteed to
         // have at most one child.  this may leave the BST ordering condition
@@ -542,7 +553,11 @@ namespace hatch {
         // conditions will be restored when we finally remove this node at the
         // end.
         //
-        exchange(std::max(predecessor(), successor()));
+        if (auto* pred = predecessor(data)) {
+          exchange(pred, data);
+        } else if (auto* succ = successor(data)) {
+          exchange(succ, data);
+        }
       }
 
       if (is_black()) {
@@ -551,7 +566,7 @@ namespace hatch {
         // -> if red, no action needed, just fall through to disconnecting this
         //    node from its parent.
         //
-        if (auto* child = prev() ? prev() : next() ? next() : nullptr) {
+        if (auto* child = prev ? prev : next ? next : nullptr) {
           // this node is black and has a child, which must be red, because this
           // node was chosen by construction to have only one child and the black
           // heights on both sides of it must be equal.
@@ -568,14 +583,14 @@ namespace hatch {
           // out how to compensate.
           //
           auto* target = this;
-          while (target->head()) {
-            auto target_self_side = *target->side();
+          while (target->_head) {
+            auto target_self_side = *target->side(data);
             auto target_away_side = swap(target_self_side);
 
-            auto* parent = target->head();
-            auto* sibling = parent->child(target_away_side);
-            auto* inside = sibling->child(target_self_side);
-            auto* outside = sibling->child(target_away_side);
+            auto* parent = target->head(data);
+            auto* sibling = parent->child(target_away_side, data);
+            auto* inside = sibling->child(target_self_side, data);
+            auto* outside = sibling->child(target_away_side, data);
 
             // sibling may be red or black.
             if (is_real_and_red(sibling)) {
@@ -590,11 +605,11 @@ namespace hatch {
               parent->make_red();
               sibling->make_black();
 
-              parent->rotate(target_self_side);
+              parent->rotate(target_self_side, data);
 
-              sibling = parent->child(target_away_side);
-              inside = sibling->child(target_self_side);
-              outside = sibling->child(target_away_side);
+              sibling = parent->child(target_away_side, data);
+              inside = sibling->child(target_self_side, data);
+              outside = sibling->child(target_away_side, data);
             }
 
             // sibling must be black now.
@@ -635,10 +650,10 @@ namespace hatch {
                 sibling->make_red();
                 inside->make_black();
 
-                sibling->rotate(target_away_side);
+                sibling->rotate(target_away_side, data);
 
-                sibling = parent->child(target_away_side);
-                outside = sibling->child(target_away_side);
+                sibling = parent->child(target_away_side, data);
+                outside = sibling->child(target_away_side, data);
               }
               // sibling must have a red outside child now, the inside child color
               // is arbitrary.
@@ -650,14 +665,14 @@ namespace hatch {
               parent->make_black();
               outside->make_black();
 
-              parent->rotate(target_self_side);
+              parent->rotate(target_self_side, data);
 
               break;
             }
           }
         }
       }
-      detach();
+      detach(data);
     }
   }
 

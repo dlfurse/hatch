@@ -128,7 +128,7 @@ namespace hatch {
   const list_iterator<T> list_iterator<T>::operator++(int) const {
     auto* const list = this->_owner;
     this->operator++();
-    return {list, _node};
+    return list_iterator<T>{list, _node};
   }
 
   template <class T>
@@ -187,21 +187,21 @@ namespace hatch {
             }
 
             other._head = nullptr;
-            other.release();
+            other.disown_all();
 
-            list->release();
-            return {list, first_inserted};
+            list->disown_all();
+            return list_iterator<T>{list, first_inserted};
           }
         }
       }
     }
-    return {*this};
+    return list_iterator<T>{*this};
   }
 
   template <class T>
   list<T> list_iterator<T>::remove(list_iterator<T>& other) {
-    if (auto* list = this->_owner) {
-      if (list == other._owner) {
+    if (auto* owner = this->_owner) {
+      if (owner == other._owner) {
         auto* const first_removed = _node;
         auto* const end_removed = other._node;
 
@@ -213,29 +213,29 @@ namespace hatch {
                 if (node == first_removed) {
                   return {};
                 }
-                node = &node->next();
-              } while (node != list->_head);
+                node = node->_next;
+              } while (node != owner->_head);
 
               first_removed->splice(*end_removed);
 
-              if (first_removed == list->_head) {
-                list->_head = end_removed;
+              if (first_removed == owner->_head) {
+                owner->_head = end_removed;
               }
             } else {
-              first_removed->splice(*list->_head);
+              first_removed->splice(*owner->_head);
 
-              if (first_removed == list->_head) {
-                list->_head = nullptr;
+              if (first_removed == owner->_head) {
+                owner->_head = nullptr;
               }
             }
 
-            list->release();
-            return {first_removed};
+            owner->disown_all();
+            return list<T>{first_removed};
           }
         }
       }
     }
-    return {nullptr};
+    return list<T>{nullptr};
   }
 
 } // namespace hatch

@@ -47,22 +47,22 @@ namespace hatch {
 
   template <class T>
   list_iterator<T> list<T>::begin() {
-    return {this, _head ? _head : list_iterator<T>::_after};
+    return list_iterator<T>{this, _head ? _head : list_iterator<T>::_after};
   }
 
   template <class T>
   const list_iterator<T> list<T>::begin() const {
-    return {this, _head ? _head : list_iterator<T>::_after};
+    return list_iterator<T>{this, _head ? _head : list_iterator<T>::_after};
   }
 
   template <class T>
   list_iterator<T> list<T>::end() {
-    return {this, list_iterator<T>::_after};
+    return list_iterator<T>{this, list_iterator<T>::_after};
   }
 
   template <class T>
   const list_iterator<T> list<T>::end() const {
-    return {this, list_iterator<T>::_after};
+    return list_iterator<T>{this, list_iterator<T>::_after};
   }
 
   /////////////////////
@@ -90,7 +90,7 @@ namespace hatch {
 
   template <class T>
   T* list<T>::pop_front() {
-    this->release();
+    this->disown_all();
     auto* popped = front();
     if (popped) {
       if (_head->alone()) {
@@ -106,7 +106,7 @@ namespace hatch {
 
   template <class T>
   void list<T>::push_front(list_node<T>& node) {
-    this->release();
+    this->disown_all();
     auto* pushed = &node;
     pushed->splice(pushed->next());
     if (_head) {
@@ -117,7 +117,7 @@ namespace hatch {
 
   template <class T>
   void list<T>::push_front(list<T>& list) {
-    this->release();
+    this->disown_all();
     auto* pushed = list._head;
     if (pushed) {
       if (_head) {
@@ -125,13 +125,13 @@ namespace hatch {
       }
       _head = pushed;
     }
-    list.release();
+    list.disown_all();
     list._head = nullptr;
   }
 
   template <class T>
   T* list<T>::pop_back() {
-    this->release();
+    this->disown_all();
     auto* popped = back();
     if (popped) {
       if (_head->prev().alone()) {
@@ -146,7 +146,7 @@ namespace hatch {
 
   template <class T>
   void list<T>::push_back(list_node<T>& node) {
-    this->release();
+    this->disown_all();
     auto* pushed = &node;
     pushed->splice(pushed->next());
     if (_head) {
@@ -158,7 +158,7 @@ namespace hatch {
 
   template <class T>
   void list<T>::push_back(list<T>& list) {
-    this->release();
+    this->disown_all();
     auto* pushed = list._head;
     if (pushed) {
       if (_head) {
@@ -167,7 +167,7 @@ namespace hatch {
         _head = pushed;
       }
     }
-    list.release();
+    list.disown_all();
     list._head = nullptr;
   }
 

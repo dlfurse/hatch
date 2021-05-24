@@ -22,18 +22,18 @@ namespace hatch {
 
   template <class T, class U>
   owner<T, U>::~owner() {
-    release();
+    disown_all();
   }
 
   template <class T, class U>
   owner<T, U>::owner(owner&& moved) noexcept {
-    acquire(static_cast<T&&>(moved));
+    transfer_from(static_cast<T&&>(moved));
   }
 
   template <class T, class U>
   owner<T, U>& owner<T, U>::operator=(owner&& moved) noexcept {
-    release();
-    acquire(static_cast<T&&>(moved));
+    disown_all();
+    transfer_from(static_cast<T&&>(moved));
     return *this;
   }
 
@@ -58,30 +58,31 @@ namespace hatch {
   }
 
   template <class T, class U>
-  void owner<T, U>::acquire(T&& owner) {
+  void owner<T, U>::transfer_from(T&& owner) {
     _owned = owner._owned;
 
-    foreach([&](U& node) {
-      node._owner = static_cast<T*>(this);
-    });
+    if (auto* node = _owned) {
+      auto* self = static_cast<T*>(this);
+      do {
+        node->_owner = self;
+        node = node->_next;
+      } while (node != _owned);
+    }
 
     owner._owned = nullptr;
   }
 
   template <class T, class U>
-  void owner<T, U>::release() {
-    foreach([&](U& node) {
-      node._owner = nullptr;
-    });
-
+  void owner<T, U>::disown_all() {
     if (auto* node = _owned) {
-      while (!node->alone()) {
-        auto* next = &node->next();
-        node->splice(node->next());
+      do {
+        auto* next = node->_next;
+        node->_owner = nullptr;
+        node->_prev = node;
+        node->_next = node;
         node = next;
-      }
+      } while (node != _owned);
     }
-
     _owned = nullptr;
   }
 

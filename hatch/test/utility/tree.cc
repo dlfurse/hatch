@@ -1,13 +1,14 @@
 #include <hatch/utility/tree.hh>
 #include <gtest/gtest.h>
 
+#include <iostream>
 #include <sstream>
 
 #include <cstdint>
 
 namespace hatch {
 
-  class PointerTreeTest : public ::testing::Test {
+  class TreeTest : public ::testing::Test {
   public:
     class test_data {
     public:
@@ -93,23 +94,22 @@ namespace hatch {
     }
   };
 
-  std::ostream& operator<<(std::ostream& stream, const PointerTreeTest::test_node& node) {
+  std::ostream& operator<<(std::ostream& stream, const TreeTest::test_node& node) {
     stream << node.value << (node.is_red() ? ", r" : ", b");
     return stream;
   }
 
-  std::ostream& operator<<(std::ostream& stream, const PointerTreeTest::test_failure& failure) {
+  std::ostream& operator<<(std::ostream& stream, const TreeTest::test_failure& failure) {
     stream << failure.self.value << " (" << failure.prev.value << ", " << failure.next.value << ")";
     return stream;
   }
 
-
-  TEST_F(PointerTreeTest, EmptyTree) {
+  TEST_F(TreeTest, EmptyTree) {
     EXPECT_TRUE(_nodes[0].alone());
     EXPECT_TRUE(_nodes[0].is_black());
   }
 
-  TEST_F(PointerTreeTest, SimpleEasyTree) {
+  TEST_F(TreeTest, SimpleEasyTree) {
     _tree.insert(_nodes[3]);
     _tree.insert(_nodes[1]);
     _tree.insert(_nodes[5]);
@@ -175,12 +175,12 @@ namespace hatch {
     }
   }
 
-  TEST_F(PointerTreeTest, SimpleTougherTree) {
+  TEST_F(TreeTest, SimpleTougherTree) {
     _tree.insert(_nodes[0]);
 
     int this_depth = _tree.root()->get().black_depth();
 
-    for (auto index = 1u; index < 64; index++) {
+    for (auto index = 1u; index < count; index++) {
       _tree.insert(_nodes[index]);
       int next_depth;
       try {
@@ -194,9 +194,9 @@ namespace hatch {
       this_depth = next_depth;
     }
 
-    EXPECT_EQ(this_depth, 5);
+    EXPECT_EQ(this_depth, 6);
 
-    for (auto index = 0u; index < 63; index++) {
+    for (auto index = 1u; index < count; index++) {
       _tree.begin().remove();
       int next_depth;
       try {

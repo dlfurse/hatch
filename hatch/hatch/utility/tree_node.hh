@@ -12,21 +12,21 @@
 
 namespace hatch {
 
-  template <class T>
+  template <class T, template <class> class Ref>
   class tree_node : public container<T> {
   public:
-    friend class tree<T>;
-    friend class tree_iterator<T>;
+    friend class tree<T, Ref>;
+    friend class tree_iterator<T, Ref>;
 
   protected:
-    enum class colors : uint64_t {
-      black = 0,
-      red = 1,
+    enum class colors : bool {
+      black,
+      red,
     };
 
-    enum class sides : uint8_t {
-      prev = 0,
-      next = 1,
+    enum class sides : bool {
+      prev,
+      next,
     };
 
     sides swap(sides side);
@@ -43,8 +43,8 @@ namespace hatch {
     tree_node(tree_node&& moved) noexcept;
     tree_node& operator=(tree_node&& moved) noexcept;
 
-    tree_node(const tree_node&);
-    tree_node& operator=(const tree_node&);
+    tree_node(const tree_node&) = delete;
+    tree_node& operator=(const tree_node&) = delete;
 
     ////////////
     // Color. //
@@ -68,9 +68,9 @@ namespace hatch {
     ////////////////
 
   protected:
-    tree_node* _head;
-    tree_node* _prev;
-    tree_node* _next;
+    Ref<tree_node<T, Ref>> _head;
+    Ref<tree_node<T, Ref>> _prev;
+    Ref<tree_node<T, Ref>> _next;
 
     ///////////////////////////
     // Structure: accessors. //
@@ -79,20 +79,20 @@ namespace hatch {
   public:
     bool alone() const;
 
-    tree_node* minimum();
-    const tree_node* minimum() const;
+    tree_node<T, Ref>* minimum();
+    const tree_node<T, Ref>* minimum() const;
 
-    tree_node* predecessor();
-    const tree_node* predecessor() const;
+    tree_node<T, Ref>* predecessor();
+    const tree_node<T, Ref>* predecessor() const;
 
-    tree_node* root();
-    const tree_node* root() const;
+    tree_node<T, Ref>* root();
+    const tree_node<T, Ref>* root() const;
 
-    tree_node* successor();
-    const tree_node* successor() const;
+    tree_node<T, Ref>* successor();
+    const tree_node<T, Ref>* successor() const;
 
-    tree_node* maximum();
-    const tree_node* maximum() const;
+    tree_node<T, Ref>* maximum();
+    const tree_node<T, Ref>* maximum() const;
 
   protected:
     std::optional<sides> side() const;
@@ -100,31 +100,31 @@ namespace hatch {
     bool is_prev() const;
     bool is_next() const;
 
-    tree_node* head();
-    const tree_node* head() const;
+    tree_node<T, Ref>* head();
+    const tree_node<T, Ref>* head() const;
 
-    tree_node* child(sides side);
-    const tree_node* child(sides side) const;
+    tree_node<T, Ref>* child(sides side);
+    const tree_node<T, Ref>* child(sides side) const;
 
-    tree_node* prev();
-    const tree_node* prev() const;
+    tree_node<T, Ref>* prev();
+    const tree_node<T, Ref>* prev() const;
 
-    tree_node* next();
-    const tree_node* next() const;
+    tree_node<T, Ref>* next();
+    const tree_node<T, Ref>* next() const;
 
     //////////////////////////
     // Structure: mutators. //
     //////////////////////////
 
   protected:
-    void make_head(tree_node* new_head, std::optional<sides> new_side = {});
-    void make_child(tree_node* new_child, sides side);
-    void make_next(tree_node* new_next);
-    void make_prev(tree_node* new_prev);
+    void make_head(tree_node<T, Ref>* new_head, std::optional<sides> new_side);
+    void make_child(tree_node<T, Ref>* new_child, sides side);
+    void make_next(tree_node<T, Ref>* new_next);
+    void make_prev(tree_node<T, Ref>* new_prev);
 
     void detach();
     void rotate(sides side);
-    void exchange(tree_node* node);
+    void exchange(tree_node<T, Ref>* node);
 
   protected:
     void insert(tree_node& node);

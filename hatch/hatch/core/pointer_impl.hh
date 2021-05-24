@@ -10,74 +10,62 @@
 namespace hatch {
 
   template <class T>
+  pointer<T>::pointer(allocated<slab<T>>* owner, allocator* allocator) :
+      handle<slab<T>>::handle{owner},
+      _allocator{allocator} {
+  }
+
+  template <class T>
   pointer<T>::pointer() :
-      _allocator{nullptr},
-      _index{0} {
+      _allocator{nullptr} {
   }
 
   template <class T>
   pointer<T>::~pointer() {
-    _allocator->detach_pointer(*this);
-  }
-
-  template <class T>
-  pointer<T>::pointer(const pointer& ptr) :
-    _allocator{ptr._allocator},
-    _index{ptr._index} {
-    _allocator->attach_pointer(*this);
-  }
-
-  template <class T>
-  pointer<T>& pointer<T>::operator=(const pointer& ptr) {
-    assert(_allocator == ptr._allocator);
-    if (this != &ptr) {
-      _allocator->detach_pointer(*this);
-      _index = ptr._index;
-      _allocator->attach_pointer(*this);
+    if (_allocator && owned<allocated<slab<T>>, pointer<T>>::alone()) {
+      _allocator->destroy(*this);
     }
-    return *this;
   }
 
   template <class T>
   pointer<T>::pointer(pointer&& ptr) noexcept :
-    _allocator{ptr._allocator},
-    _index{ptr._index} {
-    _allocator->attach_pointer(this);
-    _allocator->detach_pointer(ptr);
+      handle<slab<T>>::owned{std::move(ptr)},
+      _allocator{ptr._allocator} {
     ptr._allocator = nullptr;
-    ptr._index = 0;
   }
 
   template <class T>
   pointer<T>& pointer<T>::operator=(pointer<T> &&ptr) noexcept {
-    assert(_allocator == ptr._allocator);
-    if (this != &ptr) {
-      _allocator->detach_pointer(*this);
-      _index = ptr._index;
-      _allocator->attach_pointer(*this);
-      _allocator->detach_pointer(ptr);
-      ptr._allocator = nullptr;
-      ptr._index = 0;
-    }
+    handle<slab<T>>::operator=(std::move(ptr));
+    ptr._allocator = nullptr;
     return *this;
   }
 
   template <class T>
-  pointer<T>::pointer(allocator<T>* allocator, uint64_t index) :
-      _allocator{allocator},
-      _index{index} {
-    _allocator->attach_pointer(*this);
+  pointer<T>::pointer(const pointer& ptr) :
+      handle<slab<T>>{ptr},
+  _allocator{ptr._allocator} {
   }
 
   template <class T>
-  T* pointer<T>::operator->() {
-    assert(_allocator);
-    return reinterpret_cast<T*>(&_allocator->_data[_index].data);
+  pointer<T>& pointer<T>::operator=(const pointer& ptr) {
+    handle<slab<T>>::operator=(ptr);
+    return *this;
   }
 
   template <class T>
   pointer<T>::operator bool() {
     return _allocator;
+  }
+
+  template <class T>
+  T* pointer<T>::operator->() {
+    return reinterpret_cast<T*>(&this->_owner->_data);
+  }
+
+  template <class T>
+  T& pointer<T>::operator*() {
+    return reinterpret_cast<T&>(this->_owner->_data);
   }
 
 } // end namespace hatch

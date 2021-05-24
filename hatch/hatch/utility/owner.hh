@@ -40,8 +40,8 @@ namespace hatch {
     template <class V>
     void foreach(V&& callable) const;
 
-    void acquire(T&& owner);
-    void release();
+    void transfer_from(T&& owner);
+    void disown_all();
   };
 
 } // namespace hatch

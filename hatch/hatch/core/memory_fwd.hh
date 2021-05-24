@@ -1,13 +1,20 @@
 #ifndef HATCH_MEMORY_FWD_HH
 #define HATCH_MEMORY_FWD_HH
 
+#include <cstdint>
+
 namespace hatch {
 
   template <class T>
   class pointer;
 
-  template <class T>
   class allocator;
+
+  template <uint64_t S>
+  class allocated;
+
+  template <uint64_t S>
+  class liberated;
 
 }
 

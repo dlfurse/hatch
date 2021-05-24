@@ -5,64 +5,38 @@
 #error "do not include hatch_container_impl.hh directly. include container.hh instead."
 #endif
 
+#include <iostream>
+
 namespace hatch {
 
   template <class T>
-  class container<T>::aggregates {
-  private:
-    T _instance;
-
-  public:
+  class inherits {
+  protected:
     template <class ...Args>
-    explicit aggregates(Args&&... args) :
-        _instance{std::forward<Args>(args)...} {
+    explicit inherits(Args&&...) {
     }
-    ~aggregates() = default;
 
-    explicit aggregates(T&& moved) noexcept :
-        _instance{std::move(moved)} {
-    }
-    aggregates& operator=(T&& moved) noexcept {
-      _instance = std::move(moved);
+    template <class ...Args>
+    inherits& operator=(Args&&...) {
       return *this;
-    }
-
-    explicit aggregates(const T& copied) :
-        _instance{copied} {
-    }
-    aggregates& operator=(const T& copied) {
-      _instance = copied;
-      return *this;
-    }
-
-    T& get(const container*) const {
-      return const_cast<T&>(reinterpret_cast<const T&>(_instance));
     }
   };
 
   template <class T>
-  class container<T>::inherits {
-  public:
+  class aggregates {
+  protected:
     template <class ...Args>
-    explicit inherits(Args&&... args) {
+    explicit aggregates(Args&&... args) :
+        _value{std::forward<Args>(args)...} {
     }
-    ~inherits() = default;
 
-    explicit inherits(T&& moved) noexcept {
-    }
-    inherits& operator=(T&& moved) noexcept {
+    template <class ...Args>
+    aggregates& operator=(Args&&... args) {
+      _value.operator=(std::forward<Args>(args)...);
       return *this;
     }
 
-    explicit inherits(const T& copied) {
-    }
-    inherits& operator=(const T& copied) {
-      return *this;
-    }
-
-    T& get(const container* container) const {
-      return const_cast<T&>(static_cast<const T&>(*container));
-    }
+    T _value;
   };
 
   //////////////////
@@ -72,29 +46,13 @@ namespace hatch {
   template <class T>
   template <class ...Args>
   container<T>::container(Args&&... args) :
-    _policy{std::forward<Args>(args)...} {
+      std::conditional_t<complete<T>, aggregates<T>, inherits<T>>{std::forward<Args>(args)...} {
   }
 
   template <class T>
-  container<T>::container(T&& moved) noexcept :
-      _policy{std::move(moved)} {
-  }
-
-  template <class T>
-  container<T>& container<T>::operator=(T&& moved) noexcept {
-    _policy = std::move(moved);
-    return *this;
-  }
-
-  template <class T>
-  container<T>::container(const T& moved) :
-      _policy{moved} {
-  }
-
-  template <class T>
-  container<T>& container<T>::operator=(const T& copied) {
-    _policy = copied;
-    return *this;
+  template <class ...Args>
+  container<T>& container<T>::operator=(Args&&... args) {
+    std::conditional_t<complete<T>, aggregates<T>, inherits<T>>::operator=(std::forward<Args>(args)...);
   }
 
   ////////////////
@@ -102,8 +60,15 @@ namespace hatch {
   ////////////////
 
   template <class T>
-  T& container<T>::get() const {
-    return _policy.get(this);
+  template <class U, std::enable_if_t<complete<U>, bool>>
+  U& container<T>::get() const {
+    return const_cast<U&>(this->_value);
+  }
+
+  template <class T>
+  template <class U, std::enable_if_t<!complete<U>, bool>>
+  U& container<T>::get() const {
+    return const_cast<U&>(static_cast<const U&>(*this));
   }
 
 } // namespace hatch

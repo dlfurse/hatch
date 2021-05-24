@@ -1,6 +1,8 @@
 #ifndef HATCH_REWRAPPER_HH
 #define HATCH_REWRAPPER_HH
 
+#include <cstdint> // uint8_t
+
 namespace hatch {
 
   /**
@@ -9,9 +11,6 @@ namespace hatch {
 
   template <class ...T>
   using voided = void;
-
-  template <int I>
-  struct typed {};
 
   /**
    * Complete
@@ -65,6 +64,11 @@ namespace hatch {
 
   template <template <class...> class Wrap, class ...T>
   using flatwrapped = typename rewrapper<Wrap<>, Wrap<T...>>::type;
+
+  ///////////////
+  // Typechain //
+  ///////////////
+
 }
 
 #endif // HATCH_REWRAPPER_HH

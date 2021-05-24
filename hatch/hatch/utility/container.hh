@@ -9,35 +9,38 @@
 namespace hatch {
 
   template <class T>
-  class container {
+  class inherits;
+
+  template <class T>
+  class aggregates;
+
+  template <class T>
+  class container : public std::conditional_t<complete<T>, aggregates<T>, inherits<T>> {
   private:
-    class aggregates;
-    class inherits;
 
     //////////////////
     // Constructor. //
     //////////////////
 
   public:
+    ~container() = default;
+
     template <class ...Args>
-    explicit container(Args&&... args);
-    virtual ~container() = default;
+    container(Args&&... args);
 
-    explicit container(T&& moved) noexcept;
-    virtual container& operator=(T&& moved) noexcept;
-
-    explicit container(const T&);
-    virtual container& operator=(const T&);
+    template <class ...Args>
+    container& operator=(Args&&... args);
 
     ////////////////
     // Container. //
     ////////////////
 
-  private:
-    std::conditional_t<complete<T>, aggregates, inherits> _policy;
-
   public:
-    T& get() const;
+    template <class U = T, std::enable_if_t<complete<U>, bool> = true>
+    U& get() const;
+
+    template <class U = T, std::enable_if_t<!complete<U>, bool> = true>
+    U& get() const;
   };
 
 } // namespace hatch

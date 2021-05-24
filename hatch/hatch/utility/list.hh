@@ -16,7 +16,7 @@ namespace hatch {
     ///////////////////////////////////////////
 
   private:
-    list(list_node<T>* head);
+    explicit list(list_node<T>* head);
 
   public:
     list();

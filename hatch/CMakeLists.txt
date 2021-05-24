@@ -2,13 +2,13 @@
 # global #
 ##########
 
-cmake_minimum_required(VERSION 3.16.3)
-cmake_policy(SET CMP0048 NEW)
+cmake_minimum_required(VERSION 3.19.2)
 project(hatch
     VERSION 0.1.0
     LANGUAGES C CXX)
 
 add_definitions(-Wall)
+add_definitions(-fno-rtti)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 
 #########
@@ -65,8 +65,17 @@ add_subdirectory(${CMAKE_CURRENT_BINARY_DIR}/googletest/src
 # utility #
 ###########
 
-set(hatch_utility_sources.hh
+set(hatch_utility_sources
   hatch/utility/meta.hh
+
+  hatch/utility/integral.hh
+  hatch/utility/integral_impl.hh
+
+  hatch/utility/pointed.hh
+  hatch/utility/pointed_impl.hh
+
+  hatch/utility/indexed.hh
+  hatch/utility/indexed_impl.hh
 
   hatch/utility/container.hh
   hatch/utility/container_impl.hh
@@ -104,6 +113,12 @@ set(hatch_core_sources
   hatch/core/memory_fwd.hh
   hatch/core/pointer.hh
   hatch/core/pointer_impl.hh
+  hatch/core/handle.hh
+  hatch/core/handle_impl.hh
+  hatch/core/allocated.hh
+  hatch/core/allocated_impl.hh
+  hatch/core/liberated.hh
+  hatch/core/liberated_impl.hh
   hatch/core/allocator.hh
   hatch/core/allocator_impl.hh
 
@@ -130,10 +145,12 @@ set(hatch_core_sources
 
 set(hatch_utility_test_sources
   test/utility/container.cc
+  test/utility/pointed.cc
+  test/utility/indexed.cc
   test/utility/chain.cc
   test/utility/owning.cc
   test/utility/list.cc
-  test/utility/tree.cc
+#  test/utility/tree.cc
 )
 
 add_executable(hatch_utility_test ${hatch_utility_test_sources})
@@ -143,7 +160,7 @@ target_link_libraries(hatch_utility_test gtest_main)
 add_test(NAME hatch_utility_test COMMAND hatch_utility_test)
 
 set(hatch_core_test_sources
-  test/core/memory.cc
+#  test/core/memory.cc
   test/core/async.cc
 #  test/core/buffer.cc
 #  test/core/socket.cc

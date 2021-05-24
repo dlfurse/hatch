@@ -13,119 +13,113 @@ namespace hatch {
   // Constructors, destructor, assignment. //
   ///////////////////////////////////////////
 
-  template<class T>
-  tree<T>::tree(tree_node<T>* root) :
-      _root{root} {
+  template<class T, template <class> class Ref>
+  tree<T, Ref>::tree(Ref<tree_node<T, Ref>> root, void* data) :
+      _root{root},
+      _data{data} {
   }
 
-  template<class T>
-  tree<T>::tree() :
-    _root{nullptr} {
+  template<class T, template <class> class Ref>
+  tree<T, Ref>::tree() :
+    _root{},
+    _data{nullptr} {
   }
 
-  template<class T>
-  tree<T>::~tree() {
+  template<class T, template <class> class Ref>
+  tree<T, Ref>::~tree() {
     while(_root) {
-      auto* min = _root->minimum();
-      auto* max = _root->maximum();
+      auto* min = _root->minimum(_data);
+      auto* max = _root->maximum(_data);
       if (min != _root) {
-        min->remove();
+        min->remove(_data);
       } else if (max != _root) {
-        max->remove();
+        max->remove(_data);
       } else {
         _root = nullptr;
       }
     }
   }
 
-  template<class T>
-  tree<T>::tree(tree<T>&& moved) noexcept :
+  template<class T, template <class> class Ref>
+  tree<T, Ref>::tree(tree&& moved) noexcept :
       owner<tree<T>, tree_iterator<T>>::owner{std::move(moved)},
-      _root{moved.root} {
-    moved._root = nullptr;
+      _root{moved._root},
+      _data{moved._data} {
+    moved._root = Ref<tree_node<T, Ref>>{};
+    moved._data = nullptr;
   }
 
-  template<class T>
-  tree<T>& tree<T>::operator=(tree<T>&& moved) noexcept {
+  template<class T, template <class> class Ref>
+  tree<T, Ref>& tree<T, Ref>::operator=(tree&& moved) noexcept {
     owner<tree<T>, tree_iterator<T>>::operator=(std::move(moved));
-    _root = moved.root;
-    moved._root = nullptr;
+    _root = moved._root;
+    _data = moved._data;
+    moved._root = Ref<tree_node<T, Ref>>{};
+    moved._data = nullptr;
   }
 
   ////////////////
   // Iterators. //
   ////////////////
 
-  template <class T>
-  tree_iterator<T> tree<T>::begin() {
-    return {this, _root ? minimum() : tree_iterator<T>::_after};
+  template<class T, template <class> class Ref>
+  tree_iterator<T, Ref> tree<T, Ref>::begin() {
+    return tree_iterator<T, Ref>{this, _root ? minimum() : tree_iterator<T, Ref>::_after};
   }
 
-  template <class T>
-  const tree_iterator<T> tree<T>::begin() const {
-    return {this, _root ? minimum() : tree_iterator<T>::_after};
+  template<class T, template <class> class Ref>
+  const tree_iterator<T, Ref> tree<T, Ref>::begin() const {
+    return const_cast<tree<T, Ref>&>(*this).begin();
   }
 
-  template <class T>
-  tree_iterator<T> tree<T>::end() {
-    return {this, tree_iterator<T>::_after};
+  template<class T, template <class> class Ref>
+  tree_iterator<T, Ref> tree<T, Ref>::end() {
+    return tree_iterator<T, Ref>{this, tree_iterator<T, Ref>::_after};
   }
 
-  template <class T>
-  const tree_iterator<T> tree<T>::end() const {
-    return {this, tree_iterator<T>::_after};
+  template<class T, template <class> class Ref>
+  const tree_iterator<T, Ref> tree<T, Ref>::end() const {
+    return const_cast<tree<T, Ref>&>(*this).end();
   }
 
   //////////////////////////
   // Structure: accessors //
   //////////////////////////
 
-  template<class T>
-  bool tree<T>::empty() const {
-    return _root == nullptr;
+  template<class T, template <class> class Ref>
+  bool tree<T, Ref>::empty() const {
+    return _root;
   }
 
-  template<class T>
-  T* tree<T>::root() const {
-    return _root ? &_root->get() : nullptr;
+  template<class T, template <class> class Ref>
+  T* tree<T, Ref>::root() const {
+    return _root ? &_root.get(_data)->get() : nullptr;
   }
 
-  template<class T>
-  T* tree<T>::minimum() const {
-    auto* current = _root;
-    if (current) {
-      while (current->prev()) {
-        current = current->prev();
-      }
-    }
-    return &current->get();
+  template<class T, template <class> class Ref>
+  T* tree<T, Ref>::minimum() const {
+    return _root ? &_root.get(_data)->minimum(_data)->get() : nullptr;
   }
 
-  template<class T>
-  T* tree<T>::maximum() const {
-    auto* current = _root;
-    if (current) {
-      while (current->next()) {
-        current = current->next();
-      }
-    }
-    return &current->get();
+  template<class T, template <class> class Ref>
+  T* tree<T, Ref>::maximum() const {
+    return _root ? &_root.get(_data)->maximum(_data)->get() : nullptr;
   }
 
   /////////////////////////
   // Structure: mutators //
   /////////////////////////
 
-  template<class T>
-  tree_iterator<T> tree<T>::insert(tree_node<T>& node) {
-    this->release();
+  template<class T, template <class> class Ref>
+  tree_iterator<T, Ref> tree<T, Ref>::insert(tree_node<T, Ref>& node) {
+    this->disown_all();
     if (_root) {
-      _root->insert(node);
+      _root->insert(node, _data);
     } else {
       _root = &node;
     }
-    _root = _root->root();
-    return {this, &node};
+    _root = Ref<tree_node<T, Ref>>{_root->root(_data), _data};
+    return tree_iterator<T, Ref>{this, &node};
   }
 }
 
