@@ -23,7 +23,7 @@ namespace hatch {
   }
 
   template <class T>
-  pointed<T>& pointed<T>::operator=(pointed&& moved) {
+  pointed<T>& pointed<T>::operator=(pointed&& moved) noexcept {
     _pointer = moved._pointer;
     moved._pointer = nullptr;
     return *this;
@@ -41,13 +41,15 @@ namespace hatch {
   }
 
   template <class T>
-  pointed<T>::pointed(T* address) :
-      _pointer{address} {
+  template <class U>
+  pointed<T>::pointed(U* address) :
+      _pointer{reinterpret_cast<T*>(address)} {
   }
 
   template <class T>
-  pointed<T>& pointed<T>::operator=(T* address) {
-    _pointer = address;
+  template <class U>
+  pointed<T>& pointed<T>::operator=(U* address) {
+    _pointer = reinterpret_cast<T*>(address);
     return *this;
   }
 
@@ -57,23 +59,43 @@ namespace hatch {
   }
 
   template <class T>
-  T& pointed<T>::operator*(datatype) {
-    return *_pointer;
+  bool pointed<T>::operator==(const pointed& other) const {
+    return _pointer == other._pointer;
   }
 
   template <class T>
-  const T& pointed<T>::operator*(datatype) const {
-    return const_cast<pointed<T>&>(*this).operator*();
+  bool pointed<T>::operator!=(const pointed& other) const {
+    return _pointer != other._pointer;
   }
 
   template <class T>
-  T* pointed<T>::operator->(datatype) {
+  T* pointed<T>::operator()() {
     return _pointer;
   }
 
   template <class T>
-  const T* pointed<T>::operator->(datatype) const {
+  const T* pointed<T>::operator()() const {
     return const_cast<pointed<T>&>(*this).operator->();
+  }
+
+  template <class T>
+  T* pointed<T>::operator->() {
+    return _pointer;
+  }
+
+  template <class T>
+  const T* pointed<T>::operator->() const {
+    return const_cast<pointed<T>&>(*this).operator->();
+  }
+
+  template <class T>
+  T& pointed<T>::operator*() {
+    return *_pointer;
+  }
+
+  template <class T>
+  const T& pointed<T>::operator*() const {
+    return const_cast<pointed<T>&>(*this).operator*();
   }
 
 } // namespace hatch

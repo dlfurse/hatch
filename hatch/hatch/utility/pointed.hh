@@ -1,36 +1,39 @@
 #ifndef HATCH_POINTED_HH
 #define HATCH_POINTED_HH
 
-#include <cstddef>
-
 namespace hatch {
 
-  template <class T = void>
+  template <class T>
   class pointed {
-  public:
-    using datatype = void;
-
   public:
     pointed();
     ~pointed();
 
+    template<class U>
+    explicit pointed(U* address);
+    template<class U>
+    pointed& operator=(U* address);
+
     pointed(pointed&& moved) noexcept;
-    pointed& operator=(pointed&& moved);
+    pointed& operator=(pointed&& moved) noexcept;
 
     pointed(const pointed& copied);
     pointed& operator=(const pointed& copied);
 
-    pointed(T* address);
-    pointed& operator=(T* address);
-
   public:
     operator bool() const;
 
-    T& operator*();
-    const T& operator*() const;
+    bool operator==(const pointed& other) const;
+    bool operator!=(const pointed& other) const;
+
+    T* operator()();
+    const T* operator()() const;
 
     T* operator->();
     const T* operator->() const;
+
+    T& operator*();
+    const T& operator*() const;
 
   private:
     T* _pointer;

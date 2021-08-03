@@ -1,30 +1,32 @@
 #ifndef HATCH_REWRAPPER_HH
 #define HATCH_REWRAPPER_HH
 
+#include <concepts>
+
 #include <cstdint> // uint8_t
 
 namespace hatch {
 
-  /**
-   * Converters
-   */
+  /////////////////
+  // Converters. //
+  /////////////////
 
   template <class ...T>
   using voided = void;
 
-  /**
-   * Complete
-   */
+  ///////////////
+  // Complete. //
+  ///////////////
 
-  template<class, class = void>
+  template <class, class = void>
   constexpr bool complete = false;
 
-  template<class T>
+  template <class T>
   constexpr bool complete<T, voided<decltype(sizeof(T))>> = true;
 
-  /**
-   * Wrappers
-   */
+  ///////////////
+  // Wrappers. //
+  ///////////////
 
   template <class Out, class In>
   class rewrapper;
@@ -65,10 +67,6 @@ namespace hatch {
   template <template <class...> class Wrap, class ...T>
   using flatwrapped = typename rewrapper<Wrap<>, Wrap<T...>>::type;
 
-  ///////////////
-  // Typechain //
-  ///////////////
-
-}
+} // namespace hatch
 
 #endif // HATCH_REWRAPPER_HH

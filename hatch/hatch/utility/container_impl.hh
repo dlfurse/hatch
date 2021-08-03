@@ -46,13 +46,14 @@ namespace hatch {
   template <class T>
   template <class ...Args>
   container<T>::container(Args&&... args) :
-      std::conditional_t<complete<T>, aggregates<T>, inherits<T>>{std::forward<Args>(args)...} {
+    std::conditional_t<complete<T>, aggregates<T>, inherits<T>>{std::forward<Args>(args)...} {
   }
 
   template <class T>
   template <class ...Args>
   container<T>& container<T>::operator=(Args&&... args) {
     std::conditional_t<complete<T>, aggregates<T>, inherits<T>>::operator=(std::forward<Args>(args)...);
+    return *this;
   }
 
   ////////////////
