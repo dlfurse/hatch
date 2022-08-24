@@ -3,10 +3,10 @@
 
 namespace hatch {
 
-  template <class T, class U>
+  template <class T, class U, template <class> class Ref>
   class owner;
 
-  template <class T, class U>
+  template <class T, class U, template <class> class Ref>
   class owned;
 
 } // namespace hatch

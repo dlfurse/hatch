@@ -1,4 +1,5 @@
 #include <hatch/utility/owning.hh>
+#include <hatch/utility/pointed.hh>
 #include <gtest/gtest.h>
 
 #include <iostream>
@@ -9,12 +10,12 @@ namespace hatch {
 
   class KeepTest : public ::testing::Test {
   protected:
-    class test_keeper;
-    class test_kept;
+    class test_owner;
+    class test_owned;
 
-    class test_keeper : public owner<test_keeper, test_kept> {
+    class test_owner : public owner<test_owner, test_owned, pointed> {
     public:
-      bool has_kept(test_kept* kept) {
+      bool has_kept(test_owned* kept) {
         bool result = false;
         foreach([&](auto& node) {
           if (kept == &node) {
@@ -33,28 +34,28 @@ namespace hatch {
       }
     };
 
-    class test_kept : public owned<test_keeper, test_kept> {
+    class test_owned : public owned<test_owner, test_owned, pointed> {
     public:
-      test_keeper* keeper() {
-        return _owner;
+      test_owner* keeper() {
+        return _owner.pointed<test_owner>::operator->();
       }
 
       void detach() {
-        owned<test_keeper, test_kept>::detach();
+        owned<test_owner, test_owned, pointed>::detach();
       }
 
-      void attach(test_keeper* keeper) {
-        owned<test_keeper, test_kept>::attach(keeper);
+      void attach(test_owner* keeper) {
+        owned<test_owner, test_owned, pointed>::attach(keeper);
       }
 
       uint64_t value;
     };
 
     static constexpr auto keepers = 4;
-    test_keeper keeper[keepers];
+    test_owner keeper[keepers];
 
     static constexpr auto kepts = 4;
-    test_kept kept[kepts];
+    test_owned kept[kepts];
 
   protected:
     void SetUp() override {
@@ -85,7 +86,7 @@ namespace hatch {
 
   TEST_F(KeepTest, KeepOneKeeperMoveConstructorTest) {
     kept[0].attach(&keeper[0]);
-    test_keeper boss{std::move(keeper[0])};
+    test_owner boss{std::move(keeper[0])};
 
     EXPECT_EQ(boss.count_kepts(), 1);
     EXPECT_TRUE(boss.has_kept(&kept[0]));
@@ -115,7 +116,7 @@ namespace hatch {
 
   TEST_F(KeepTest, KeepOneKeptMoveConstructorTest) {
     kept[0].attach(&keeper[0]);
-    test_kept node{std::move(kept[0])};
+    test_owned node{std::move(kept[0])};
 
     EXPECT_EQ(&kept[0].prev(), &kept[0]);
     EXPECT_EQ(&kept[0].next(), &kept[0]);
@@ -149,7 +150,7 @@ namespace hatch {
 
   TEST_F(KeepTest, KeepOneKeptCopyConstructorTest) {
     kept[0].attach(&keeper[0]);
-    test_kept node{kept[0]};
+    test_owned node{kept[0]};
 
     EXPECT_EQ(&kept[0].prev(), &node);
     EXPECT_EQ(&kept[0].next(), &node);

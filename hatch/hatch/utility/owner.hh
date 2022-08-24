@@ -7,10 +7,10 @@
 
 namespace hatch {
 
-  template <class T, class U>
+  template <class T, class U, template <class> class Ref>
   class owner {
   public:
-    friend class owned<T, U>;
+    friend class owned<T, U, Ref>;
 
     ///////////////////////////////////////////
     // Constructors, destructor, assignment. //
@@ -27,12 +27,12 @@ namespace hatch {
     owner(const owner& copied) = delete;
     owner& operator=(const owner& copied) = delete;
 
-    ///////////
-    // Keep. //
-    ///////////
+    /////////////
+    // Owning. //
+    /////////////
 
   protected:
-    U* _owned;
+    Ref<U> _owned;
 
     template <class V>
     void foreach(V&& callable);

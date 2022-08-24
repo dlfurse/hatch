@@ -1,11 +1,22 @@
 #ifndef HATCH_CHAIN_HH
 #define HATCH_CHAIN_HH
 
+#include <hatch/utility/indexed.hh>
+#include <hatch/utility/pointed.hh>
+
 namespace hatch {
 
+  template <class T, template <class> class Ref>
+  class chain_data;
+
   template <class T>
+  class chain_data<T, pointed> {
+    Ref<T> _prev;
+    Ref<T> _next;
+  };
+
+  template <class T, template <class> class Ref>
   class chain {
-  public:
 
   ///////////////////////////////////////////
   // Constructors, destructor, assignment. //
@@ -22,32 +33,46 @@ namespace hatch {
     chain(const chain&) = delete;
     chain& operator=(const chain&) = delete;
 
-  ////////////
-  // Chain. //
-  ////////////
+  ////////////////
+  // Structure. //
+  ////////////////
 
   protected:
-    T* _prev;
-    T* _next;
+    const Ref<T> _self;
+    Ref<T> _prev;
+    Ref<T> _next;
 
-  public:
+  ////////////////
+  // Accessors. //
+  ////////////////
+
+  protected:
     bool alone() const;
 
-    T& prev();
-    const T& prev() const;
+    Ref<T> prev();
+    const Ref<T> prev() const;
 
-    T& next();
-    const T& next() const;
+    Ref<T> next();
+    const Ref<T> next() const;
+
+  ///////////////
+  // Mutators. //
+  ///////////////
 
   protected:
-    void splice(T& node);
+    void splice(Ref<T> node);
 
+  ///////////////////
+  // Accumulators. //
+  ///////////////////
+
+  protected:
     template <class U>
     void foreach(U&& callable);
 
     template <class U>
     void foreach(U&& callable) const;
-};
+  };
 
 } // namespace hatch
 

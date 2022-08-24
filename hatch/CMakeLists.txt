@@ -80,6 +80,12 @@ set(hatch_utility_sources
   hatch/utility/container.hh
   hatch/utility/container_impl.hh
 
+  hatch/utility/chain.hh
+  hatch/utility/chain_impl.hh
+
+  hatch/utility/branch.hh
+  hatch/utility/branch_impl.hh
+
   hatch/utility/owning.hh
   hatch/utility/owning_fwd.hh
   hatch/utility/owner.hh
@@ -148,26 +154,27 @@ set(hatch_utility_test_sources
   test/utility/pointed.cc
   test/utility/indexed.cc
   test/utility/chain.cc
-  test/utility/owning.cc
-  test/utility/list.cc
+  test/utility/branch.cc
+#  test/utility/owning.cc
+#  test/utility/list.cc
 #  test/utility/tree.cc
 )
 
 add_executable(hatch_utility_test ${hatch_utility_test_sources})
-set_property(TARGET hatch_utility_test PROPERTY CXX_STANDARD 17)
+set_property(TARGET hatch_utility_test PROPERTY CXX_STANDARD 20)
 target_link_libraries(hatch_utility_test gtest_main)
 
 add_test(NAME hatch_utility_test COMMAND hatch_utility_test)
 
-set(hatch_core_test_sources
+#set(hatch_core_test_sources
 #  test/core/memory.cc
-  test/core/async.cc
+#  test/core/async.cc
 #  test/core/buffer.cc
 #  test/core/socket.cc
-)
-
-add_executable(hatch_core_test ${hatch_core_test_sources})
-set_property(TARGET hatch_core_test PROPERTY CXX_STANDARD 17)
-target_link_libraries(hatch_core_test gtest_main)
-
-add_test(NAME hatch_core_test COMMAND hatch_core_test)
+#)
+#
+#add_executable(hatch_core_test ${hatch_core_test_sources})
+#set_property(TARGET hatch_core_test PROPERTY CXX_STANDARD 20)
+#target_link_libraries(hatch_core_test gtest_main)
+#
+#add_test(NAME hatch_core_test COMMAND hatch_core_test)

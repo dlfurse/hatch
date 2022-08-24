@@ -17,6 +17,8 @@ namespace hatch {
       test_type value;
     };
 
+    using test_aggregating = container<test_data>;
+
     class test_inheriting : public container<test_inheriting> {
     public:
       test_inheriting(const uint64_t& number) : value{number} {
@@ -24,8 +26,6 @@ namespace hatch {
 
       test_type value;
     };
-
-    using test_aggregating = container<test_data>;
 
     std::aligned_storage_t<sizeof(test_inheriting)> inherits_raw;
     test_inheriting* inherits_ptr;

@@ -9,17 +9,17 @@
 
 namespace hatch {
 
-  template <class T, class U>
-  class owned : public chain<U> {
+  template <class T, class U, template <class> class Ref>
+  class owned : public chain<U, Ref> {
   public:
-    friend class owner<T, U>;
+    friend class owner<T, U, Ref>;
 
     ///////////////////////////////////////////
     // Constructors, destructor, assignment. //
     ///////////////////////////////////////////
 
   protected:
-    explicit owned(T* owner = nullptr);
+    explicit owned(Ref<T> owner = nullptr);
     ~owned();
 
     owned(owned&& moved) noexcept;
@@ -28,14 +28,14 @@ namespace hatch {
     owned(const owned& copied);
     owned& operator=(const owned& copied);
 
-    ///////////
-    // Keep. //
-    ///////////
+    /////////////
+    // Owning. //
+    /////////////
 
   protected:
-    T* _owner;
+    Ref<T> _owner;
 
-    void attach(T* owner);
+    void attach(Ref<T> owner);
     void detach();
   };
 

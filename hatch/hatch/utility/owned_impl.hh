@@ -11,53 +11,53 @@ namespace hatch {
   // Constructors, destructor, assignment. //
   ///////////////////////////////////////////
 
-  template <class T, class U>
-  owned<T, U>::owned(T* owner) :
+  template <class T, class U, template <class> class Ref>
+  owned<T, U, Ref>::owned(Ref<T> owner) :
       _owner{nullptr} {
     attach(owner);
   }
 
-  template <class T, class U>
-  owned<T, U>::~owned() {
+  template <class T, class U, template <class> class Ref>
+  owned<T, U, Ref>::~owned() {
     detach();
   }
 
-  template <class T, class U>
-  owned<T, U>::owned(owned<T, U>&& moved) noexcept :
-      chain<U>{},
+  template <class T, class U, template <class> class Ref>
+  owned<T, U, Ref>::owned(owned<T, U, Ref>&& moved) noexcept :
+      chain<U, Ref>{},
       _owner{nullptr} {
     attach(moved._owner);
     moved.detach();
   }
 
-  template <class T, class U>
-  owned<T, U>& owned<T, U>::operator=(owned<T, U>&& moved) noexcept {
+  template <class T, class U, template <class> class Ref>
+  owned<T, U, Ref>& owned<T, U, Ref>::operator=(owned<T, U, Ref>&& moved) noexcept {
     detach();
     attach(moved._owner);
     moved.detach();
     return *this;
   }
 
-  template <class T, class U>
-  owned<T, U>::owned(const owned<T, U>& copied) :
-      chain<U>{},
+  template <class T, class U, template <class> class Ref>
+  owned<T, U, Ref>::owned(const owned<T, U, Ref>& copied) :
+      chain<U, Ref>{},
       _owner{nullptr} {
     attach(copied._owner);
   }
 
-  template <class T, class U>
-  owned<T, U>& owned<T, U>::operator=(const owned<T, U>& copied) {
+  template <class T, class U, template <class> class Ref>
+  owned<T, U, Ref>& owned<T, U, Ref>::operator=(const owned<T, U, Ref>& copied) {
     detach();
     attach(copied._owner);
     return *this;
   }
 
-  ///////////
-  // Keep. //
-  ///////////
+  /////////////
+  // Owning. //
+  /////////////
 
-  template <class T, class U>
-  void owned<T, U>::attach(T* owner) {
+  template <class T, class U, template <class> class Ref>
+  void owned<T, U, Ref>::attach(Ref<T> owner) {
     detach();
 
     _owner = owner;
@@ -72,8 +72,8 @@ namespace hatch {
     }
   }
 
-  template <class T, class U>
-  void owned<T, U>::detach() {
+  template <class T, class U, template <class> class Ref>
+  void owned<T, U, Ref>::detach() {
     if (_owner) {
       auto* self = static_cast<U*>(this);
       auto* next = &this->next();

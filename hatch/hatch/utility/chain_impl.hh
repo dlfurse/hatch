@@ -5,37 +5,42 @@
 #error "do not include chain_impl.hh directly. include chain.hh instead."
 #endif
 
+#include <utility> // move
+
 namespace hatch {
 
   ///////////////////////////////////////////
   // Constructors, destructor, assignment. //
   ///////////////////////////////////////////
 
-  template <class T>
-  chain<T>::chain() :
-      _prev{static_cast<T*>(this)},
-      _next{static_cast<T*>(this)} {
+  template <class T, template <class> class Ref>
+  chain<T, Ref>::chain() :
+      _self{static_cast<T*>(this)},
+      _prev{_self},
+      _next{_self} {
   }
 
-  template <class T>
-  chain<T>::~chain() {
+  template <class T, template <class> class Ref>
+  chain<T, Ref>::~chain() {
+    static_assert(std::is_base_of_v<chain<T, Ref>, T>);
     if (!alone()) {
       splice(next());
     }
   }
 
-  template <class T>
-  chain<T>::chain(chain&& moved) noexcept :
-      _prev{moved._prev},
-      _next{moved._next} {
-    _prev->_next = static_cast<T*>(this);
-    _next->_prev = static_cast<T*>(this);
+  template <class T, template <class> class Ref>
+  chain<T, Ref>::chain(chain&& moved) noexcept :
+      _self{std::move(moved._self)},
+      _prev{std::move(moved._prev)},
+      _next{std::move(moved._next)} {
+    _prev->_next = _self;
+    _next->_prev = _self;
     moved._prev = static_cast<T*>(&moved);
     moved._next = static_cast<T*>(&moved);
   }
 
-  template <class T>
-  chain<T>& chain<T>::operator=(chain&& moved) noexcept {
+  template <class T, template <class> class Ref>
+  chain<T, Ref>& chain<T, Ref>::operator=(chain&& moved) noexcept {
     _prev = moved._prev;
     _next = moved._next;
     _prev->_next = static_cast<T*>(this);
@@ -45,65 +50,76 @@ namespace hatch {
     return *this;
   }
 
-  ////////////
-  // Chain. //
-  ////////////
+  ////////////////
+  // Accessors. //
+  ////////////////
 
-  template <class T>
-  bool chain<T>::alone() const {
-    return _prev == this && _next == this;
+  template <class T, template <class> class Ref>
+  bool chain<T, Ref>::alone() const {
+    const auto self = Ref<T>{static_cast<T*>(const_cast<chain<T, Ref>*>(this))};
+    return _prev == self && _next == self;
   }
 
-  template <class T>
-  T& chain<T>::prev() {
-    return *_prev;
+  template <class T, template <class> class Ref>
+  Ref<T> chain<T, Ref>::prev() {
+    return _prev;
   }
 
-  template <class T>
-  const T& chain<T>::prev() const {
-    return *_prev;
+  template <class T, template <class> class Ref>
+  const Ref<T> chain<T, Ref>::prev() const {
+    return const_cast<chain<T, Ref>*>(this)->prev();
   }
 
-  template <class T>
-  T& chain<T>::next() {
-    return *_next;
+  template <class T, template <class> class Ref>
+  Ref<T> chain<T, Ref>::next() {
+    return _next;
   }
 
-  template <class T>
-  const T& chain<T>::next() const {
-    return *_next;
+  template <class T, template <class> class Ref>
+  const Ref<T> chain<T, Ref>::next() const {
+    return const_cast<chain<T, Ref>*>(this)->next();
   }
 
-  template <class T>
-  void chain<T>::splice(T& node) {
+  ///////////////
+  // Mutators. //
+  ///////////////
+
+  template <class T, template <class> class Ref>
+  void chain<T, Ref>::splice(Ref<T> node) {
     auto prev = node._prev;
-    auto next = &node;
+    auto next = node;
 
     _prev->_next = next;
     next->_prev = _prev;
 
     this->_prev = prev;
-    prev->_next = static_cast<T*>(this);
+    prev->_next = Ref<T>{this};
   }
 
-  template <class T>
+  ///////////////////
+  // Accumulators. //
+  ///////////////////
+
+  template <class T, template <class> class Ref>
   template <class U>
-  void chain<T>::foreach(U&& callable) {
-    auto* node = static_cast<T*>(this);
+  void chain<T, Ref>::foreach(U&& callable) {
+    const auto self = Ref<T>(this);
+    auto node = self;
     do {
       callable(*node);
-      node = &node->next();
-    } while (node != static_cast<T*>(this));
+      node = node->_next;
+    } while (node != self);
   }
 
-  template <class T>
+  template <class T, template <class> class Ref>
   template <class U>
-  void chain<T>::foreach(U&& callable) const {
-    auto* node = static_cast<const T*>(this);
+  void chain<T, Ref>::foreach(U&& callable) const {
+    const auto self = Ref<T>(this);
+    auto node = self;
     do {
       callable(*node);
-      node = &node->next();
-    } while (node != static_cast<const T*>(this));
+      node = node->_next;
+    } while (node != self);
   }
 
 } // namespace hatch
