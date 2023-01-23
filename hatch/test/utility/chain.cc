@@ -43,7 +43,7 @@ namespace hatch {
       }
 
       void splice(test_indexed_chain& link) {
-        chain<test_indexed_chain, test_indexed>::splice(link);
+        chain<test_indexed_chain, test_indexed>::splice(test_indexed<test_indexed_chain>{&link});
       }
 
     public:
@@ -70,7 +70,7 @@ namespace hatch {
       }
 
       void splice(test_pointed_chain& link) {
-        chain<test_pointed_chain, pointed>::splice(link);
+        chain<test_pointed_chain, pointed>::splice(pointed<test_pointed_chain>(&link));
       }
 
       uint16_t value;

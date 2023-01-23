@@ -13,40 +13,41 @@ namespace hatch {
   // Constructors, destructor, assignment. //
   ///////////////////////////////////////////
 
-  template <class T, template <class> class Ref>
-  chain<T, Ref>::chain() :
-      _self{static_cast<T*>(this)},
-      _prev{_self},
-      _next{_self} {
+  template <class T, template <class...> class Ref, class ...Args>
+  chain<Ref<T, Args...>>::chain() :
+      _prev{static_cast<T*>(this)},
+      _next{_prev} {
   }
 
-  template <class T, template <class> class Ref>
-  chain<T, Ref>::~chain() {
-    static_assert(std::is_base_of_v<chain<T, Ref>, T>);
+  template <class T, template <class...> class Ref, class ...Args>
+  chain<Ref<T, Args...>>::~chain() {
     if (!alone()) {
       splice(next());
     }
   }
 
-  template <class T, template <class> class Ref>
-  chain<T, Ref>::chain(chain&& moved) noexcept :
-      _self{std::move(moved._self)},
+  template <class T, template <class...> class Ref, class ...Args>
+  chain<Ref<T, Args...>>::chain(chain&& moved) noexcept :
       _prev{std::move(moved._prev)},
       _next{std::move(moved._next)} {
-    _prev->_next = _self;
-    _next->_prev = _self;
-    moved._prev = static_cast<T*>(&moved);
-    moved._next = static_cast<T*>(&moved);
+    auto self = Ref<T, Args...>{static_cast<T*>(this)};
+    _prev->_next = self;
+    _next->_prev = self;
+    auto other = Ref<T, Args...>{static_cast<T*>(&moved)};
+    moved._prev = other;
+    moved._next = other;
   }
 
-  template <class T, template <class> class Ref>
-  chain<T, Ref>& chain<T, Ref>::operator=(chain&& moved) noexcept {
+  template <class T, template <class...> class Ref, class ...Args>
+  chain<Ref<T, Args...>>& chain<Ref<T, Args...>>::operator=(chain&& moved) noexcept {
     _prev = moved._prev;
     _next = moved._next;
-    _prev->_next = static_cast<T*>(this);
-    _next->_prev = static_cast<T*>(this);
-    moved._prev = static_cast<T*>(&moved);
-    moved._next = static_cast<T*>(&moved);
+    auto self = Ref<T>{static_cast<T*>(this)};
+    _prev->_next = self;
+    _next->_prev = self;
+    auto other = Ref<T>{static_cast<T*>(&moved)};
+    moved._prev = other;
+    moved._next = other;
     return *this;
   }
 
@@ -86,6 +87,7 @@ namespace hatch {
 
   template <class T, template <class> class Ref>
   void chain<T, Ref>::splice(Ref<T> node) {
+    auto self = Ref<T>{static_cast<T*>(this)};
     auto prev = node._prev;
     auto next = node;
 
@@ -93,7 +95,7 @@ namespace hatch {
     next->_prev = _prev;
 
     this->_prev = prev;
-    prev->_next = Ref<T>{this};
+    prev->_next = self;
   }
 
   ///////////////////

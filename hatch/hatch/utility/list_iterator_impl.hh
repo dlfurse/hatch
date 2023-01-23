@@ -36,14 +36,14 @@ namespace hatch {
 
   template <class T>
   list_iterator<T>::list_iterator(list_iterator&& moved) noexcept :
-      owned<list < T>, list_iterator<T>>{moved},
+      owned<list<T>, list_iterator<T>>{moved},
       _node{moved._node} {
     moved._node = nullptr;
   }
 
   template <class T>
   list_iterator<T>& list_iterator<T>::operator=(list_iterator&& moved) noexcept {
-    owned < list < T >, list_iterator < T >> ::operator=(moved);
+    owned<list<T>, list_iterator<T>>::operator=(moved);
     _node = moved._node;
     moved._node = nullptr;
     return *this;

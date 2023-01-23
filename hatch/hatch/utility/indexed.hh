@@ -7,8 +7,11 @@
 
 namespace hatch {
 
-  template <class T, widths Width, nosignint<Width> Stride = sizeof(T), nosignint<Width> Offset = 0>
+  template <class T, widths Width, unsigned_t<Width> Stride = sizeof(T), unsigned_t<Width> Offset = 0>
   class indexed {
+  public:
+    static constexpr auto null = unsigned_max<Width>;
+
   public:
     class context {
     public:
@@ -26,9 +29,6 @@ namespace hatch {
 
       ~context();
     };
-
-  public:
-    static constexpr auto null = nosignmax<Width>;
 
   public:
     indexed();
@@ -61,7 +61,7 @@ namespace hatch {
     const T& operator*() const;
 
   private:
-    using index = nosignint<Width>;
+    using index = unsigned_t<Width>;
     index _index;
 
     static __thread std::byte* _context;

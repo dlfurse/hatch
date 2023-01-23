@@ -6,17 +6,11 @@
 
 namespace hatch {
 
-  template <class T, template <class> class Ref>
-  class chain_data;
-
   template <class T>
-  class chain_data<T, pointed> {
-    Ref<T> _prev;
-    Ref<T> _next;
-  };
+  class chain;
 
-  template <class T, template <class> class Ref>
-  class chain {
+  template <class T, template <class...> class Ref, class ...Args>
+  class chain<Ref<T, Args...>> {
 
   ///////////////////////////////////////////
   // Constructors, destructor, assignment. //
@@ -38,9 +32,8 @@ namespace hatch {
   ////////////////
 
   protected:
-    const Ref<T> _self;
-    Ref<T> _prev;
-    Ref<T> _next;
+    Ref<T, Args...> _prev;
+    Ref<T, Args...> _next;
 
   ////////////////
   // Accessors. //
@@ -49,18 +42,18 @@ namespace hatch {
   protected:
     bool alone() const;
 
-    Ref<T> prev();
-    const Ref<T> prev() const;
+    Ref<T, Args...> prev();
+    const Ref<T, Args...> prev() const;
 
-    Ref<T> next();
-    const Ref<T> next() const;
+    Ref<T, Args...> next();
+    const Ref<T, Args...> next() const;
 
   ///////////////
   // Mutators. //
   ///////////////
 
   protected:
-    void splice(Ref<T> node);
+    void splice(Ref<T, Args...> node);
 
   ///////////////////
   // Accumulators. //
