@@ -71,8 +71,8 @@ set(hatch_utility_sources
   hatch/utility/meta_impl.hh
   hatch/utility/meta_decl.hh
 
-#  hatch/utility/integral.hh
-#  hatch/utility/integral_impl.hh
+  hatch/utility/integral.hh
+  hatch/utility/integral_impl.hh
 #
 #  hatch/utility/pointed.hh
 #  hatch/utility/pointed_impl.hh
@@ -154,6 +154,7 @@ set(hatch_utility_sources
 
 set(hatch_utility_test_sources
   test/utility/meta.cc
+  test/utility/integral.cc
 #  test/utility/container.cc
 #  test/utility/pointed.cc
 #  test/utility/indexed.cc

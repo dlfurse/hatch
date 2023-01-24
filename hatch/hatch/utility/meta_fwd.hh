@@ -31,16 +31,6 @@ namespace hatch {
   template <class T, class U = void>
   class complete;
 
-  /**
-   * Wrapper.
-   *
-   * Takes a type formed from template instantiations and replaces those with
-   * instantiations of another templated type.
-   */
-
-  template <class Out, class In>
-  class wrapper;
-
 } // namespace hatch
 
 #endif // HATCH_META_HH
