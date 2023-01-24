@@ -18,6 +18,22 @@ namespace hatch {
   };
 
   /**
+   * Typed.
+   */
+
+  template <auto V>
+  class typed {;
+  public:
+    bool operator==(const typed<V>&) const {
+      return true;
+    }
+    template <class T>
+    bool operator==(const T&) const {
+      return false;
+    }
+  };
+
+  /**
    * Complete.
    */
 

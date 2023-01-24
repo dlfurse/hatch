@@ -16,7 +16,7 @@ namespace hatch {
   /**
    * Typed.
    *
-   * Enshrines an integer as a type.
+   * Returns
    */
 
   template <auto V>

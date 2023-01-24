@@ -1,5 +1,5 @@
-#ifndef HATCH_INTEGRAL_DECL_HH
-#define HATCH_INTEGRAL_DECL_HH
+#ifndef HATCH_INTEGRAL_DEFS_HH
+#define HATCH_INTEGRAL_DEFS_HH
 
 #ifndef HATCH_INTEGRAL_HH
 #error "do not include integral_impl.hh directly. include integral.hh instead."
@@ -84,4 +84,4 @@ namespace hatch {
 
 } // namespace hatch
 
-#endif // HATCH_INTEGRAL_DECL_HH
+#endif // HATCH_INTEGRAL_DEFS_HH

@@ -17,7 +17,8 @@ namespace hatch {
     }
 
     template <class ...Args>
-    inherits& operator=(Args&&...) {
+    inherits& operator=(Args&&... args) {
+      static_cast<const T&>(*this).operator=(std::forward<Args...>(args...));
       return *this;
     }
   };
@@ -39,35 +40,35 @@ namespace hatch {
     T _value;
   };
 
-  //////////////////
-  // Constructor. //
-  //////////////////
+  /**
+   * Construction and assignment.
+   */
 
   template <class T>
   template <class ...Args>
   container<T>::container(Args&&... args) :
-    std::conditional_t<complete<T>, aggregates<T>, inherits<T>>{std::forward<Args>(args)...} {
+    std::conditional_t<complete_v<T>, aggregates<T>, inherits<T>>{std::forward<Args>(args)...} {
   }
 
   template <class T>
   template <class ...Args>
   container<T>& container<T>::operator=(Args&&... args) {
-    std::conditional_t<complete<T>, aggregates<T>, inherits<T>>::operator=(std::forward<Args>(args)...);
+    std::conditional_t<complete_v<T>, aggregates<T>, inherits<T>>::operator=(std::forward<Args>(args)...);
     return *this;
   }
 
-  ////////////////
-  // Container. //
-  ////////////////
+  /**
+   * Object retrieval.
+   */
 
   template <class T>
-  template <class U, std::enable_if_t<complete<U>, bool>>
+  template <class U, std::enable_if_t<complete_v<U>, bool>>
   U& container<T>::get() const {
     return const_cast<U&>(this->_value);
   }
 
   template <class T>
-  template <class U, std::enable_if_t<!complete<U>, bool>>
+  template <class U, std::enable_if_t<!complete_v<U>, bool>>
   U& container<T>::get() const {
     return const_cast<U&>(static_cast<const U&>(*this));
   }

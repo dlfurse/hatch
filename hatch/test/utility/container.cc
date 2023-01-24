@@ -1,4 +1,5 @@
 #include <hatch/utility/container.hh>
+#include <hatch/utility/integral.hh>
 #include <gtest/gtest.h>
 
 #include <cstdint>
@@ -7,21 +8,21 @@ namespace hatch {
 
   class ContainerTest : public ::testing::Test {
   protected:
-    using test_type = uint64_t;
+    using test_type = u64;
 
     class test_data {
     public:
-      test_data(const uint64_t& left, const uint64_t& right) : value{left * right} {
+      test_data(const test_type& left, const test_type& right) : value{left * right} {
       }
 
-      test_type value;
+      u64 value;
     };
 
     using test_aggregating = container<test_data>;
 
     class test_inheriting : public container<test_inheriting> {
     public:
-      test_inheriting(const uint64_t& number) : value{number} {
+      test_inheriting(const test_type& number) : value{number} {
       }
 
       test_type value;
@@ -58,7 +59,7 @@ namespace hatch {
   }
 
   TEST_F(ContainerTest, PlacementNewInheritsTest) {
-    constexpr uint64_t number = 1;
+    constexpr auto number = 1lu;
 
     inherits_ptr = new (&inherits_raw) test_inheriting{number};
 
