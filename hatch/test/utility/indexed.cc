@@ -20,11 +20,11 @@ namespace hatch {
 
     using test_indexed = indexed<test_pair, test_width, test_stride, test_offset>;
 
-    test_raw* _data;
-    std::byte* _address;
-    std::aligned_storage_t<test_count * sizeof(test_raw), alignof(test_raw)> _block;
+    test_raw* _data{nullptr};
+    std::byte* _address{nullptr};
+    std::aligned_storage_t<test_count * sizeof(test_raw), alignof(test_raw)> _block{};
 
-    virtual void SetUp() override {
+    void SetUp() override {
       _data = reinterpret_cast<test_raw*>(&_block);
       _address = reinterpret_cast<std::byte*>(&_block);
       for (auto index = 0lu; index < test_count; ++index) {

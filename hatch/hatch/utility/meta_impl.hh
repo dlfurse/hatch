@@ -31,6 +31,14 @@ namespace hatch {
     bool operator==(const T&) const {
       return false;
     }
+
+    bool operator!=(const typed<V>&) const {
+      return false;
+    }
+    template <class T>
+    bool operator!=(const T&) const {
+      return true;
+    }
   };
 
   /**

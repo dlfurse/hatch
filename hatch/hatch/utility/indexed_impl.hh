@@ -7,7 +7,7 @@
 
 namespace hatch {
 
-  template <class T, widths Width, nosignint<Width> Stride, nosignint<Width> Offset>
+  template <class T, widths Width, unsigned_t<Width> Stride, unsigned_t<Width> Offset>
   template <class U>
   indexed<T, Width, Stride, Offset>::context::context(U* address) {
     indexed::_context = reinterpret_cast<std::byte*>(address);
@@ -18,7 +18,7 @@ namespace hatch {
     indexed::_context = nullptr;
   }
 
-  template <class T, widths Width, natural<Width> Stride, natural<Width> Offset>
+  template <class T, widths Width, unsigned_t<Width> Stride, unsigned_t<Width> Offset>
   __thread std::byte* indexed<T, Width, Stride, Offset>::_context = nullptr;
 
   template <class T, widths Width, unsigned_t<Width> Stride, unsigned_t<Width> Offset>
@@ -54,13 +54,13 @@ namespace hatch {
     return *this;
   }
 
-  template <class T, widths Width, nosignint<Width> Stride, nosignint<Width> Offset>
+  template <class T, widths Width, unsigned_t<Width> Stride, unsigned_t<Width> Offset>
   template <class U>
   indexed<T, Width, Stride, Offset>::indexed(U* address) :
       _index{address ? (index)((reinterpret_cast<std::byte*>(address) - _context - Offset)/(Stride)) : null} {
   }
 
-  template <class T, widths Width, nosignint<Width> Stride, nosignint<Width> Offset>
+  template <class T, widths Width, unsigned_t<Width> Stride, unsigned_t<Width> Offset>
   template <class U>
   indexed<T, Width, Stride, Offset>& indexed<T, Width, Stride, Offset>::operator=(U* address) {
     _index = address ? (index)(reinterpret_cast<std::byte*>(address) - _context - Offset)/(Stride) : null;

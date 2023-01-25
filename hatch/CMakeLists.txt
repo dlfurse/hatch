@@ -81,16 +81,21 @@ set(hatch_utility_sources
   hatch/utility/container_decl.hh
   hatch/utility/container_impl.hh
 
-#
-#  hatch/utility/pointed.hh
-#  hatch/utility/pointed_impl.hh
-#
-#  hatch/utility/indexed.hh
-#  hatch/utility/indexed_impl.hh
-#
-#
-#  hatch/utility/chain.hh
-#  hatch/utility/chain_impl.hh
+  hatch/utility/pointed.hh
+  hatch/utility/pointed_fwd.hh
+  hatch/utility/pointed_decl.hh
+  hatch/utility/pointed_impl.hh
+
+  hatch/utility/indexed.hh
+  hatch/utility/indexed_fwd.hh
+  hatch/utility/indexed_decl.hh
+  hatch/utility/indexed_impl.hh
+  hatch/utility/indexed_defs.hh
+
+  hatch/utility/chain.hh
+  hatch/utility/chain_fwd.hh
+  hatch/utility/chain_decl.hh
+  hatch/utility/chain_impl.hh
 #
 #  hatch/utility/branch.hh
 #  hatch/utility/branch_impl.hh
@@ -162,9 +167,9 @@ set(hatch_utility_test_sources
   test/utility/meta.cc
   test/utility/integral.cc
   test/utility/container.cc
-#  test/utility/pointed.cc
-#  test/utility/indexed.cc
-#  test/utility/chain.cc
+  test/utility/pointed.cc
+  test/utility/indexed.cc
+  test/utility/chain.cc
 #  test/utility/branch.cc
 #  test/utility/owning.cc
 #  test/utility/list.cc

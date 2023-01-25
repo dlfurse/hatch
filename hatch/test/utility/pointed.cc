@@ -1,6 +1,7 @@
 #include <hatch/utility/pointed.hh>
 #include <gtest/gtest.h>
 
+#include <climits>
 #include <cstdint>
 
 namespace hatch {
@@ -10,16 +11,15 @@ namespace hatch {
     using test_raw = uint32_t;
     using test_atom = int16_t;
     using test_pair = std::pair<test_atom, test_atom>;
+    using test_pointed = pointed<test_pair>;
 
     static constexpr auto test_count = 24u;
 
-    using test_pointed = pointed<test_pair>;
+    test_raw* _data{nullptr};
+    std::byte* _address{nullptr};
+    std::aligned_storage_t<test_count * sizeof(test_raw), alignof(test_raw)> _memory{};
 
-    test_raw* _data;
-    std::byte* _address;
-    std::aligned_storage_t<test_count * sizeof(test_raw), alignof(test_raw)> _memory;
-
-    virtual void SetUp() override {
+    void SetUp() override {
       _data = reinterpret_cast<test_raw*>(&_memory);
       _address = reinterpret_cast<std::byte*>(&_memory);
     }

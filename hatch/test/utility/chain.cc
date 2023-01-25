@@ -17,7 +17,7 @@ namespace hatch {
     template <class T>
     using test_indexed = indexed<T, widths::bits16, test_stride, test_offset>;
 
-    class test_indexed_chain : public chain<test_indexed_chain, test_indexed> {
+    class test_indexed_chain : public chain<test_indexed> {
     public:
       using context = indexed<test_indexed_chain, widths::bits16, test_stride, test_offset>::context;
 
@@ -26,7 +26,7 @@ namespace hatch {
       }
 
       test_indexed_chain(test_indexed_chain&& moved) noexcept :
-          chain<test_indexed_chain, test_indexed>(std::move(moved)),
+          chain<test_indexed>(std::move(moved)),
           left{moved.left},
           right{moved.right} {
         moved.left = 0;
@@ -34,7 +34,7 @@ namespace hatch {
       }
 
       test_indexed_chain& operator=(test_indexed_chain&& moved) noexcept {
-        chain<test_indexed_chain, test_indexed>::operator=(std::move(moved));
+        chain<test_indexed>::operator=(std::move(moved));
         left = moved.left;
         right = moved.right;
         moved.left = 0;
@@ -42,8 +42,20 @@ namespace hatch {
         return *this;
       }
 
+      bool alone() const {
+        return chain<test_indexed>::alone();
+      }
+
+      test_indexed_chain& next() {
+        return static_cast<test_indexed_chain&>(*chain<test_indexed>::next());
+      }
+
+      chain<test_indexed>& prev() {
+        return static_cast<test_indexed_chain&>(*chain<test_indexed>::prev());
+      }
+
       void splice(test_indexed_chain& link) {
-        chain<test_indexed_chain, test_indexed>::splice(test_indexed<test_indexed_chain>{&link});
+        chain<test_indexed>::splice(test_indexed<chain<test_indexed>>{&link});
       }
 
     public:
@@ -51,26 +63,38 @@ namespace hatch {
       uint32_t right;
     };
 
-    class test_pointed_chain : public chain<test_pointed_chain, pointed> {
+    class test_pointed_chain : public chain<pointed> {
     public:
       test_pointed_chain(uint16_t number) : value{number} {
       }
 
       test_pointed_chain(test_pointed_chain&& moved) noexcept :
-          chain<test_pointed_chain, pointed>(std::move(moved)),
+          chain<pointed>(std::move(moved)),
           value{moved.value} {
         moved.value = 0;
       }
 
       test_pointed_chain& operator=(test_pointed_chain&& moved) noexcept {
-        chain<test_pointed_chain, pointed>::operator=(std::move(moved));
+        chain<pointed>::operator=(std::move(moved));
         value = moved.value;
         moved.value = 0;
         return *this;
       }
 
+      bool alone() const {
+        return chain<pointed>::alone();
+      }
+
+      test_pointed_chain& next() {
+        return static_cast<test_pointed_chain&>(*chain<pointed>::next());
+      }
+
+      test_pointed_chain& prev() {
+        return static_cast<test_pointed_chain&>(*chain<pointed>::prev());
+      }
+
       void splice(test_pointed_chain& link) {
-        chain<test_pointed_chain, pointed>::splice(pointed<test_pointed_chain>(&link));
+        chain<pointed>::splice(pointed<chain<pointed>>(&link));
       }
 
       uint16_t value;
