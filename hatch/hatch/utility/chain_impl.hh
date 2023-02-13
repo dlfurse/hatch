@@ -5,6 +5,8 @@
 #error "do not include chain_impl.hh directly. include chain.hh instead."
 #endif
 
+#include <hatch/utility/pointed.hh> // pointed
+
 #include <utility> // move
 
 namespace hatch {
@@ -13,39 +15,39 @@ namespace hatch {
    * Construction and assignment.
    */
 
-  template <template <class> class Ref>
-  chain<Ref>::chain() :
+  template <template <class, auto...> class R, auto ...A>
+  chain<R, A...>::chain() :
       _prev{this},
       _next{_prev} {
   }
 
-  template <template <class> class Ref>
-  chain<Ref>::~chain() {
+  template <template <class, auto...> class R, auto ...A>
+  chain<R, A...>::~chain() {
     if (!alone()) {
       splice(next());
     }
   }
 
-  template <template <class> class Ref>
-  chain<Ref>::chain(chain&& moved) noexcept :
+  template <template <class, auto...> class R, auto ...A>
+  chain<R, A...>::chain(chain&& moved) noexcept :
       _prev{std::move(moved._prev)},
       _next{std::move(moved._next)} {
-    auto self = Ref<chain>{this};
+    auto self = R<chain, A...>{this};
     _prev->_next = self;
     _next->_prev = self;
-    auto other = Ref<chain>{&moved};
+    auto other = R<chain, A...>{&moved};
     moved._prev = other;
     moved._next = other;
   }
 
-  template <template <class> class Ref>
-  chain<Ref>& chain<Ref>::operator=(chain&& moved) noexcept {
+  template <template <class, auto...> class R, auto ...A>
+  chain<R, A...>& chain<R, A...>::operator=(chain&& moved) noexcept {
     _prev = moved._prev;
     _next = moved._next;
-    auto self = Ref<chain>{this};
+    auto self = R<chain, A...>{this};
     _prev->_next = self;
     _next->_prev = self;
-    auto other = Ref<chain>{&moved};
+    auto other = R<chain, A...>{&moved};
     moved._prev = other;
     moved._next = other;
     return *this;
@@ -55,48 +57,50 @@ namespace hatch {
    * Accessors.
    */
 
-  template <template <class> class Ref>
-  bool chain<Ref>::alone() const {
-    const auto self = Ref<chain>{const_cast<chain<Ref>*>(this)};
+  template <template <class, auto...> class R, auto ...A>
+  bool chain<R, A...>::alone() const {
+    const auto self = R<chain, A...>{const_cast<chain*>(this)};
     return _prev == self && _next == self;
   }
 
-  template <template <class> class Ref>
-  Ref<chain<Ref>> chain<Ref>::prev() {
+  template <template <class, auto...> class R, auto ...A>
+  R<chain<R, A...>, A...> chain<R, A...>::prev() {
     return _prev;
   }
 
-  template <template <class> class Ref>
-  const Ref<chain<Ref>> chain<Ref>::prev() const {
-    return const_cast<chain<Ref>*>(this)->prev();
+  template <template <class, auto...> class R, auto ...A>
+  const R<chain<R, A...>, A...> chain<R, A...>::prev() const {
+    return const_cast<chain*>(this)->prev();
   }
 
-  template <template <class> class Ref>
-  Ref<chain<Ref>> chain<Ref>::next() {
+  template <template <class, auto...> class R, auto ...A>
+  R<chain<R, A...>, A...> chain<R, A...>::next() {
     return _next;
   }
 
-  template <template <class> class Ref>
-  const Ref<chain<Ref>> chain<Ref>::next() const {
-    return const_cast<chain<Ref>*>(this)->next();
+  template <template <class, auto...> class R, auto ...A>
+  const R<chain<R, A...>, A...> chain<R, A...>::next() const {
+    return const_cast<chain*>(this)->next();
   }
 
   /**
    * Mutators.
    */
 
-  template <template <class> class Ref>
-  void chain<Ref>::splice(Ref<chain> node) {
-    auto self = Ref<chain>{this};
+  template <template <class, auto...> class R, auto ...A>
+  void chain<R, A...>::splice(R<chain, A...> node) {
+    chain* node_p{node()};
+    R<chain, A...> node_prev_r{node_p->_prev};
+    chain* node_prev_p{node_prev_r()};
+    R<chain, A...> this_r{this};
+    chain* this_prev_p{_prev()};
 
-    auto prev = node->_prev;
-    auto next = node;
 
-    _prev->_next = next;
-    next->_prev = _prev;
+    this_prev_p->_next = node;
+    node_p->_prev = _prev;
 
-    this->_prev = prev;
-    prev->_next = self;
+    node_prev_p->_next = this_r;
+    this->_prev = node_prev_r;
   }
 
 } // namespace hatch

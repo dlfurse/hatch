@@ -3,38 +3,43 @@
 #include <hatch/utility/pointed.hh>
 #include <gtest/gtest.h>
 
+#include <array>
 #include <cstdint>
+#include <iostream>
 
 namespace hatch {
 
   class ChainTest : public ::testing::Test {
+
+    /**
+     * Indexed.
+     */
+
   protected:
-    static constexpr auto test_offset = 4u;
-    static constexpr auto test_stride = 16u;
-    static constexpr auto test_count = 8u;
-    static constexpr auto test_capacity = 12u;
+    static constexpr auto test_offset = 4lu;
+    static constexpr auto test_stride = 16lu;
+    static constexpr auto test_count = 8lu;
+    static constexpr auto test_capacity = 12lu;
 
-    template <class T>
-    using test_indexed = indexed<T, widths::bits16, test_stride, test_offset>;
+    using test_indexed_chain = chain<indexed, widths::bits16, test_stride, test_offset>;
+    using test_indexed_reference = indexed<test_indexed_chain , widths::bits16, test_stride, test_offset>;
+    using test_indexed_context = test_indexed_reference::context;
 
-    class test_indexed_chain : public chain<test_indexed> {
+    class test_indexed_node : public test_indexed_chain {
     public:
-      using context = indexed<test_indexed_chain, widths::bits16, test_stride, test_offset>::context;
-
-    public:
-      test_indexed_chain(uint32_t left, uint32_t right) : left{left}, right{right} {
+      test_indexed_node(uint32_t left, uint32_t right) : left{left}, right{right} {
       }
 
-      test_indexed_chain(test_indexed_chain&& moved) noexcept :
-          chain<test_indexed>(std::move(moved)),
+      test_indexed_node(test_indexed_node&& moved) noexcept :
+          test_indexed_chain(std::move(moved)),
           left{moved.left},
           right{moved.right} {
         moved.left = 0;
         moved.right = 0;
       }
 
-      test_indexed_chain& operator=(test_indexed_chain&& moved) noexcept {
-        chain<test_indexed>::operator=(std::move(moved));
+      test_indexed_node& operator=(test_indexed_node&& moved) noexcept {
+        test_indexed_chain::operator=(std::move(moved));
         left = moved.left;
         right = moved.right;
         moved.left = 0;
@@ -42,20 +47,20 @@ namespace hatch {
         return *this;
       }
 
-      bool alone() const {
-        return chain<test_indexed>::alone();
+      bool test_alone() const {
+        return test_indexed_chain::alone();
       }
 
-      test_indexed_chain& next() {
-        return static_cast<test_indexed_chain&>(*chain<test_indexed>::next());
+      test_indexed_reference test_next() {
+        return test_indexed_chain::next();
       }
 
-      chain<test_indexed>& prev() {
-        return static_cast<test_indexed_chain&>(*chain<test_indexed>::prev());
+      test_indexed_reference test_prev() {
+        return test_indexed_chain::prev();
       }
 
-      void splice(test_indexed_chain& link) {
-        chain<test_indexed>::splice(test_indexed<chain<test_indexed>>{&link});
+      void test_splice(test_indexed_reference link) {
+        test_indexed_chain::splice(link);
       }
 
     public:
@@ -63,451 +68,464 @@ namespace hatch {
       uint32_t right;
     };
 
-    class test_pointed_chain : public chain<pointed> {
+    /**
+     * Pointed.
+     */
+
+  protected:
+    using test_pointed_chain = chain<pointed>;
+    using test_pointed_reference = pointed<chain<pointed>>;
+
+    class test_pointed_node : public test_pointed_chain {
     public:
-      test_pointed_chain(uint16_t number) : value{number} {
+      test_pointed_node(uint16_t number) : value{number} {
       }
 
-      test_pointed_chain(test_pointed_chain&& moved) noexcept :
-          chain<pointed>(std::move(moved)),
+      test_pointed_node(test_pointed_node&& moved) noexcept :
+          test_pointed_chain(std::move(moved)),
           value{moved.value} {
         moved.value = 0;
       }
 
-      test_pointed_chain& operator=(test_pointed_chain&& moved) noexcept {
-        chain<pointed>::operator=(std::move(moved));
+      test_pointed_node& operator=(test_pointed_node&& moved) noexcept {
+        test_pointed_chain::operator=(std::move(moved));
         value = moved.value;
         moved.value = 0;
         return *this;
       }
 
-      bool alone() const {
-        return chain<pointed>::alone();
+      bool test_alone() const {
+        return test_pointed_chain::alone();
       }
 
-      test_pointed_chain& next() {
-        return static_cast<test_pointed_chain&>(*chain<pointed>::next());
+      test_pointed_reference test_next() {
+        return test_pointed_chain::next();
       }
 
-      test_pointed_chain& prev() {
-        return static_cast<test_pointed_chain&>(*chain<pointed>::prev());
+      test_pointed_reference test_prev() {
+        return test_pointed_chain::prev();
       }
 
-      void splice(test_pointed_chain& link) {
-        chain<pointed>::splice(pointed<chain<pointed>>(&link));
+      void test_splice(test_pointed_reference link) {
+        test_pointed_chain::splice(link);
       }
 
+    public:
       uint16_t value;
     };
 
-    std::aligned_storage_t<test_capacity * test_stride, alignof(test_indexed_chain)> test_indexed_memory;
-    std::aligned_storage_t<test_capacity * sizeof(test_pointed_chain), alignof(test_pointed_chain)> test_pointed_memory;
+    /**
+     * Memory initialization.
+     */
 
-    std::vector<test_indexed_chain*> test_indexed_pointers{test_count, nullptr};
-    std::vector<test_pointed_chain*> test_pointed_pointers{test_count, nullptr};
+    std::aligned_storage_t<test_capacity * test_stride, alignof(test_indexed_node)> test_indexed_memory{};
+    std::aligned_storage_t<test_capacity * sizeof(test_pointed_node), alignof(test_pointed_node)> test_pointed_memory{};
 
     std::byte* test_indexed_address{reinterpret_cast<std::byte*>(&test_indexed_memory)};
     std::byte* test_pointed_address{reinterpret_cast<std::byte*>(&test_pointed_memory)};
 
+    std::array<test_indexed_node*, test_count> test_indexed_refs{};
+    std::array<test_pointed_node*, test_count> test_pointed_refs{};
+
     void SetUp() override {
-      auto context = test_indexed_chain::context(&test_indexed_memory);
-      for (auto index = 0u; index < test_count; ++index) {
-        auto left = 3 * index + 2;
-        auto right = 4 * index + 1;
-        test_indexed_pointers[index] = new(test_indexed_address + index * test_stride + test_offset) test_indexed_chain{left, right};
+      auto context = test_indexed_context(&test_indexed_memory);
+      for (auto index = 0lu; index < test_count; ++index) {
+        auto left = static_cast<uint32_t>(3 * index + 2);
+        auto right = static_cast<uint32_t>(4 * index + 1);
+        test_indexed_refs[index] = new(test_indexed_address + index * test_stride + test_offset) test_indexed_node{left, right};
 
         auto number = static_cast<uint16_t>(2 * index + 5);
-        test_pointed_pointers[index] = new (test_pointed_address + index * sizeof(test_pointed_chain)) test_pointed_chain{number};
+        test_pointed_refs[index] = new (test_pointed_address + index * sizeof(test_pointed_node)) test_pointed_node{number};
       }
     }
   };
 
   TEST_F(ChainTest, EmptyIndexedTest) {
-    auto context = test_indexed_chain::context(&test_indexed_memory);
-    for (auto index = 0u; index < test_count; ++index) {
-      EXPECT_TRUE(test_indexed_pointers[index]->alone());
+    auto context = test_indexed_context(&test_indexed_memory);
+    for (auto index = 0lu; index < test_count; ++index) {
+      EXPECT_TRUE(test_indexed_refs[index]->test_alone());
     }
   }
 
   TEST_F(ChainTest, EmptyPointedTest) {
-    for (auto index = 0u; index < test_count; ++index) {
-      EXPECT_TRUE(test_pointed_pointers[index]->alone());
+    for (auto index = 0lu; index < test_count; ++index) {
+      EXPECT_TRUE(test_pointed_refs[index]->test_alone());
     }
   }
 
   TEST_F(ChainTest, SimpleIndexedSpliceTest) {
-    auto context = test_indexed_chain::context(&test_indexed_memory);
+    auto context = test_indexed_context(&test_indexed_memory);
 
-    auto& first = *test_indexed_pointers[0];
-    auto& second = *test_indexed_pointers[1];
-    auto& third = *test_indexed_pointers[2];
+    auto* first = test_indexed_refs[0];
+    auto* second = test_indexed_refs[1];
+    auto* third = test_indexed_refs[2];
 
-    EXPECT_TRUE(first.alone());
-    EXPECT_TRUE(second.alone());
-    EXPECT_TRUE(third.alone());
+    EXPECT_TRUE(first->test_alone());
+    EXPECT_TRUE(second->test_alone());
+    EXPECT_TRUE(third->test_alone());
 
-    second.splice(third);
+    second->test_splice(test_indexed_reference{third});
 
-    EXPECT_EQ(&second.next(), &third);
-    EXPECT_EQ(&third.next(), &second);
-    EXPECT_EQ(&second.prev(), &third);
-    EXPECT_EQ(&third.prev(), &second);
+    EXPECT_EQ(second->test_next()(), third);
+    EXPECT_EQ(third->test_next()(), second);
+    EXPECT_EQ(second->test_prev()(), third);
+    EXPECT_EQ(third->test_prev()(), second);
 
-    EXPECT_TRUE(first.alone());
-    EXPECT_FALSE(second.alone());
-    EXPECT_FALSE(third.alone());
+    EXPECT_TRUE(first->test_alone());
+    EXPECT_FALSE(second->test_alone());
+    EXPECT_FALSE(third->test_alone());
 
-    first.splice(second);
+    first->test_splice(test_indexed_reference{second});
 
-    EXPECT_EQ(&first.next(), &second);
-    EXPECT_EQ(&second.next(), &third);
-    EXPECT_EQ(&third.next(), &first);
-    EXPECT_EQ(&first.prev(), &third);
-    EXPECT_EQ(&second.prev(), &first);
-    EXPECT_EQ(&third.prev(), &second);
+    EXPECT_EQ(first->test_next()(), second);
+    EXPECT_EQ(second->test_next()(), third);
+    EXPECT_EQ(third->test_next()(), first);
+    EXPECT_EQ(first->test_prev()(), third);
+    EXPECT_EQ(second->test_prev()(), first);
+    EXPECT_EQ(third->test_prev()(), second);
 
-    EXPECT_FALSE(first.alone());
-    EXPECT_FALSE(second.alone());
-    EXPECT_FALSE(third.alone());
+    EXPECT_FALSE(first->test_alone());
+    EXPECT_FALSE(second->test_alone());
+    EXPECT_FALSE(third->test_alone());
 
-    second.splice(second.next());
+    second->test_splice(second->test_next());
 
-    EXPECT_EQ(&first.next(), &third);
-    EXPECT_EQ(&third.next(), &first);
-    EXPECT_EQ(&first.prev(), &third);
-    EXPECT_EQ(&third.prev(), &first);
+    EXPECT_EQ(first->test_next()(), third);
+    EXPECT_EQ(third->test_next()(), first);
+    EXPECT_EQ(first->test_prev()(), third);
+    EXPECT_EQ(third->test_prev()(), first);
 
-    EXPECT_FALSE(first.alone());
-    EXPECT_TRUE(second.alone());
-    EXPECT_FALSE(third.alone());
+    EXPECT_FALSE(first->test_alone());
+    EXPECT_TRUE(second->test_alone());
+    EXPECT_FALSE(third->test_alone());
 
-    first.splice(first);
+    first->test_splice(test_indexed_reference{first});
 
-    EXPECT_EQ(&first.next(), &third);
-    EXPECT_EQ(&third.next(), &first);
-    EXPECT_EQ(&first.prev(), &third);
-    EXPECT_EQ(&third.prev(), &first);
+    EXPECT_EQ(first->test_next()(), third);
+    EXPECT_EQ(third->test_next()(), first);
+    EXPECT_EQ(first->test_prev()(), third);
+    EXPECT_EQ(third->test_prev()(), first);
 
-    EXPECT_FALSE(first.alone());
-    EXPECT_TRUE(second.alone());
-    EXPECT_FALSE(third.alone());
+    EXPECT_FALSE(first->test_alone());
+    EXPECT_TRUE(second->test_alone());
+    EXPECT_FALSE(third->test_alone());
   }
 
   TEST_F(ChainTest, SimplePointedSpliceTest) {
-    auto& first = *test_pointed_pointers[0];
-    auto& second = *test_pointed_pointers[1];
-    auto& third = *test_pointed_pointers[2];
+    auto* first = test_pointed_refs[0];
+    auto* second = test_pointed_refs[1];
+    auto* third = test_pointed_refs[2];
 
-    EXPECT_TRUE(first.alone());
-    EXPECT_TRUE(second.alone());
-    EXPECT_TRUE(third.alone());
+    EXPECT_TRUE(first->test_alone());
+    EXPECT_TRUE(second->test_alone());
+    EXPECT_TRUE(third->test_alone());
 
-    second.splice(third);
+    second->test_splice(test_pointed_reference{third});
 
-    EXPECT_EQ(&second.next(), &third);
-    EXPECT_EQ(&third.next(), &second);
-    EXPECT_EQ(&second.prev(), &third);
-    EXPECT_EQ(&third.prev(), &second);
+    EXPECT_EQ(second->test_next()(), third);
+    EXPECT_EQ(third->test_next()(), second);
+    EXPECT_EQ(second->test_prev()(), third);
+    EXPECT_EQ(third->test_prev()(), second);
 
-    EXPECT_TRUE(first.alone());
-    EXPECT_FALSE(second.alone());
-    EXPECT_FALSE(third.alone());
+    EXPECT_TRUE(first->test_alone());
+    EXPECT_FALSE(second->test_alone());
+    EXPECT_FALSE(third->test_alone());
 
-    first.splice(second);
+    first->test_splice(test_pointed_reference{second});
 
-    EXPECT_EQ(&first.next(), &second);
-    EXPECT_EQ(&second.next(), &third);
-    EXPECT_EQ(&third.next(), &first);
-    EXPECT_EQ(&first.prev(), &third);
-    EXPECT_EQ(&second.prev(), &first);
-    EXPECT_EQ(&third.prev(), &second);
+    EXPECT_EQ(first->test_next()(), second);
+    EXPECT_EQ(second->test_next()(), third);
+    EXPECT_EQ(third->test_next()(), first);
+    EXPECT_EQ(first->test_prev()(), third);
+    EXPECT_EQ(second->test_prev()(), first);
+    EXPECT_EQ(third->test_prev()(), second);
 
-    EXPECT_FALSE(first.alone());
-    EXPECT_FALSE(second.alone());
-    EXPECT_FALSE(third.alone());
+    EXPECT_FALSE(first->test_alone());
+    EXPECT_FALSE(second->test_alone());
+    EXPECT_FALSE(third->test_alone());
 
-    second.splice(second.next());
+    second->test_splice(second->test_next());
 
-    EXPECT_EQ(&first.next(), &third);
-    EXPECT_EQ(&third.next(), &first);
-    EXPECT_EQ(&first.prev(), &third);
-    EXPECT_EQ(&third.prev(), &first);
+    EXPECT_EQ(first->test_next()(), third);
+    EXPECT_EQ(third->test_next()(), first);
+    EXPECT_EQ(first->test_prev()(), third);
+    EXPECT_EQ(third->test_prev()(), first);
 
-    EXPECT_FALSE(first.alone());
-    EXPECT_TRUE(second.alone());
-    EXPECT_FALSE(third.alone());
+    EXPECT_FALSE(first->test_alone());
+    EXPECT_TRUE(second->test_alone());
+    EXPECT_FALSE(third->test_alone());
 
-    first.splice(first);
+    first->test_splice(test_pointed_reference{first});
 
-    EXPECT_EQ(&first.next(), &third);
-    EXPECT_EQ(&third.next(), &first);
-    EXPECT_EQ(&first.prev(), &third);
-    EXPECT_EQ(&third.prev(), &first);
+    EXPECT_EQ(first->test_next()(), third);
+    EXPECT_EQ(third->test_next()(), first);
+    EXPECT_EQ(first->test_prev()(), third);
+    EXPECT_EQ(third->test_prev()(), first);
 
-    EXPECT_FALSE(first.alone());
-    EXPECT_TRUE(second.alone());
-    EXPECT_FALSE(third.alone());
+    EXPECT_FALSE(first->test_alone());
+    EXPECT_TRUE(second->test_alone());
+    EXPECT_FALSE(third->test_alone());
   }
 
   TEST_F(ChainTest, MultipleIndexedSpliceTest) {
-    auto context = test_indexed_chain::context(&test_indexed_memory);
+    auto context = test_indexed_context(&test_indexed_memory);
 
-    auto& first = *test_indexed_pointers[0];
-    auto& second = *test_indexed_pointers[1];
-    auto& third = *test_indexed_pointers[2];
-    auto& fourth = *test_indexed_pointers[3];
-    auto& fifth = *test_indexed_pointers[4];
-    auto& sixth = *test_indexed_pointers[5];
+    auto* first = test_indexed_refs[0];
+    auto* second = test_indexed_refs[1];
+    auto* third = test_indexed_refs[2];
+    auto* fourth = test_indexed_refs[3];
+    auto* fifth = test_indexed_refs[4];
+    auto* sixth = test_indexed_refs[5];
 
-    EXPECT_TRUE(first.alone());
-    EXPECT_TRUE(second.alone());
-    EXPECT_TRUE(third.alone());
+    EXPECT_TRUE(first->test_alone());
+    EXPECT_TRUE(second->test_alone());
+    EXPECT_TRUE(third->test_alone());
 
-    EXPECT_TRUE(fourth.alone());
-    EXPECT_TRUE(fifth.alone());
-    EXPECT_TRUE(sixth.alone());
+    EXPECT_TRUE(fourth->test_alone());
+    EXPECT_TRUE(fifth->test_alone());
+    EXPECT_TRUE(sixth->test_alone());
 
-    second.splice(third);
-    first.splice(second);
+    second->test_splice(test_indexed_reference{third});
+    first->test_splice(test_indexed_reference{second});
 
-    fifth.splice(sixth);
-    fourth.splice(fifth);
+    fifth->test_splice(test_indexed_reference{sixth});
+    fourth->test_splice(test_indexed_reference{fifth});
 
-    EXPECT_FALSE(first.alone());
-    EXPECT_FALSE(second.alone());
-    EXPECT_FALSE(third.alone());
+    EXPECT_FALSE(first->test_alone());
+    EXPECT_FALSE(second->test_alone());
+    EXPECT_FALSE(third->test_alone());
 
-    EXPECT_FALSE(fourth.alone());
-    EXPECT_FALSE(fifth.alone());
-    EXPECT_FALSE(sixth.alone());
+    EXPECT_FALSE(fourth->test_alone());
+    EXPECT_FALSE(fifth->test_alone());
+    EXPECT_FALSE(sixth->test_alone());
 
-    second.splice(fifth);
+    second->test_splice(test_indexed_reference{fifth});
 
-    EXPECT_EQ(&fourth.next(), &second);
-    EXPECT_EQ(&second.next(), &third);
-    EXPECT_EQ(&third.next(), &first);
-    EXPECT_EQ(&first.next(), &fifth);
-    EXPECT_EQ(&fifth.next(), &sixth);
-    EXPECT_EQ(&sixth.next(), &fourth);
-    EXPECT_EQ(&fourth.prev(), &sixth);
-    EXPECT_EQ(&second.prev(), &fourth);
-    EXPECT_EQ(&third.prev(), &second);
-    EXPECT_EQ(&first.prev(), &third);
-    EXPECT_EQ(&fifth.prev(), &first);
-    EXPECT_EQ(&sixth.prev(), &fifth);
+    EXPECT_EQ(fourth->test_next()(), second);
+    EXPECT_EQ(second->test_next()(), third);
+    EXPECT_EQ(third->test_next()(), first);
+    EXPECT_EQ(first->test_next()(), fifth);
+    EXPECT_EQ(fifth->test_next()(), sixth);
+    EXPECT_EQ(sixth->test_next()(), fourth);
+    EXPECT_EQ(fourth->test_prev()(), sixth);
+    EXPECT_EQ(second->test_prev()(), fourth);
+    EXPECT_EQ(third->test_prev()(), second);
+    EXPECT_EQ(first->test_prev()(), third);
+    EXPECT_EQ(fifth->test_prev()(), first);
+    EXPECT_EQ(sixth->test_prev()(), fifth);
   }
 
   TEST_F(ChainTest, MultiplePointedSpliceTest) {
-    auto& first = *test_pointed_pointers[0];
-    auto& second = *test_pointed_pointers[1];
-    auto& third = *test_pointed_pointers[2];
-    auto& fourth = *test_pointed_pointers[3];
-    auto& fifth = *test_pointed_pointers[4];
-    auto& sixth = *test_pointed_pointers[5];
+    auto* first = test_pointed_refs[0];
+    auto* second = test_pointed_refs[1];
+    auto* third = test_pointed_refs[2];
+    auto* fourth = test_pointed_refs[3];
+    auto* fifth = test_pointed_refs[4];
+    auto* sixth = test_pointed_refs[5];
 
-    EXPECT_TRUE(first.alone());
-    EXPECT_TRUE(second.alone());
-    EXPECT_TRUE(third.alone());
+    EXPECT_TRUE(first->test_alone());
+    EXPECT_TRUE(second->test_alone());
+    EXPECT_TRUE(third->test_alone());
 
-    EXPECT_TRUE(fourth.alone());
-    EXPECT_TRUE(fifth.alone());
-    EXPECT_TRUE(sixth.alone());
+    EXPECT_TRUE(fourth->test_alone());
+    EXPECT_TRUE(fifth->test_alone());
+    EXPECT_TRUE(sixth->test_alone());
 
-    second.splice(third);
-    first.splice(second);
+    second->test_splice(test_pointed_reference{third});
+    first->test_splice(test_pointed_reference{second});
 
-    fifth.splice(sixth);
-    fourth.splice(fifth);
+    fifth->test_splice(test_pointed_reference{sixth});
+    fourth->test_splice(test_pointed_reference{fifth});
 
-    EXPECT_FALSE(first.alone());
-    EXPECT_FALSE(second.alone());
-    EXPECT_FALSE(third.alone());
+    EXPECT_FALSE(first->test_alone());
+    EXPECT_FALSE(second->test_alone());
+    EXPECT_FALSE(third->test_alone());
 
-    EXPECT_FALSE(fourth.alone());
-    EXPECT_FALSE(fifth.alone());
-    EXPECT_FALSE(sixth.alone());
+    EXPECT_FALSE(fourth->test_alone());
+    EXPECT_FALSE(fifth->test_alone());
+    EXPECT_FALSE(sixth->test_alone());
 
-    second.splice(fifth);
+    second->test_splice(test_pointed_reference{fifth});
 
-    EXPECT_EQ(&fourth.next(), &second);
-    EXPECT_EQ(&second.next(), &third);
-    EXPECT_EQ(&third.next(), &first);
-    EXPECT_EQ(&first.next(), &fifth);
-    EXPECT_EQ(&fifth.next(), &sixth);
-    EXPECT_EQ(&sixth.next(), &fourth);
-    EXPECT_EQ(&fourth.prev(), &sixth);
-    EXPECT_EQ(&second.prev(), &fourth);
-    EXPECT_EQ(&third.prev(), &second);
-    EXPECT_EQ(&first.prev(), &third);
-    EXPECT_EQ(&fifth.prev(), &first);
-    EXPECT_EQ(&sixth.prev(), &fifth);
+    EXPECT_EQ(fourth->test_next()(), second);
+    EXPECT_EQ(second->test_next()(), third);
+    EXPECT_EQ(third->test_next()(), first);
+    EXPECT_EQ(first->test_next()(), fifth);
+    EXPECT_EQ(fifth->test_next()(), sixth);
+    EXPECT_EQ(sixth->test_next()(), fourth);
+    EXPECT_EQ(fourth->test_prev()(), sixth);
+    EXPECT_EQ(second->test_prev()(), fourth);
+    EXPECT_EQ(third->test_prev()(), second);
+    EXPECT_EQ(first->test_prev()(), third);
+    EXPECT_EQ(fifth->test_prev()(), first);
+    EXPECT_EQ(sixth->test_prev()(), fifth);
   }
 
   TEST_F(ChainTest, IndexedMoveConstructorTest) {
-    auto context = test_indexed_chain::context(&test_indexed_memory);
+    auto context = test_indexed_context(&test_indexed_memory);
 
-    auto& first = *test_indexed_pointers[0];
-    auto& second = *test_indexed_pointers[1];
-    auto& third = *test_indexed_pointers[2];
-    auto& fourth = *test_indexed_pointers[3];
+    auto* first = test_indexed_refs[0];
+    auto* second = test_indexed_refs[1];
+    auto* third = test_indexed_refs[2];
+    auto* fourth = test_indexed_refs[3];
 
-    first.splice(second);
-    first.splice(third);
-    first.splice(fourth);
+    first->test_splice(test_indexed_reference{second});
+    first->test_splice(test_indexed_reference{third});
+    first->test_splice(test_indexed_reference{fourth});
 
-    EXPECT_EQ(&first.next(), &second);
-    EXPECT_EQ(&first.prev(), &fourth);
+    EXPECT_EQ(first->test_next()(), second);
+    EXPECT_EQ(first->test_prev()(), fourth);
 
-    EXPECT_EQ(&second.next(), &third);
-    EXPECT_EQ(&second.prev(), &first);
+    EXPECT_EQ(second->test_next()(), third);
+    EXPECT_EQ(second->test_prev()(), first);
 
-    EXPECT_EQ(&third.next(), &fourth);
-    EXPECT_EQ(&third.prev(), &second);
+    EXPECT_EQ(third->test_next()(), fourth);
+    EXPECT_EQ(third->test_prev()(), second);
 
-    EXPECT_EQ(&fourth.next(), &first);
-    EXPECT_EQ(&fourth.prev(), &third);
+    EXPECT_EQ(fourth->test_next()(), first);
+    EXPECT_EQ(fourth->test_prev()(), third);
 
     auto* address = test_indexed_address + test_count * test_stride + test_offset;
-    auto* pointer = new (address) test_indexed_chain{std::move(second)};
-    auto& node = *pointer;
+    auto* node = new (address) test_indexed_node{std::move(*second)};
+    
+    EXPECT_EQ(first->test_next()(), node);
+    EXPECT_EQ(first->test_prev()(), fourth);
 
-    EXPECT_EQ(&first.next(), &node);
-    EXPECT_EQ(&first.prev(), &fourth);
+    EXPECT_EQ(node->test_next()(), third);
+    EXPECT_EQ(node->test_prev()(), first);
 
-    EXPECT_EQ(&node.next(), &third);
-    EXPECT_EQ(&node.prev(), &first);
+    EXPECT_EQ(third->test_next()(), fourth);
+    EXPECT_EQ(third->test_prev()(), node);
 
-    EXPECT_EQ(&third.next(), &fourth);
-    EXPECT_EQ(&third.prev(), &node);
+    EXPECT_EQ(fourth->test_next()(), first);
+    EXPECT_EQ(fourth->test_prev()(), third);
 
-    EXPECT_EQ(&fourth.next(), &first);
-    EXPECT_EQ(&fourth.prev(), &third);
-
-    EXPECT_EQ(&second.next(), &second);
-    EXPECT_EQ(&second.prev(), &second);
+    EXPECT_EQ(second->test_next()(), second);
+    EXPECT_EQ(second->test_prev()(), second);
   }
 
   TEST_F(ChainTest, PointedMoveConstructorTest) {
-    auto& first = *test_pointed_pointers[0];
-    auto& second = *test_pointed_pointers[1];
-    auto& third = *test_pointed_pointers[2];
-    auto& fourth = *test_pointed_pointers[3];
+    auto* first = test_pointed_refs[0];
+    auto* second = test_pointed_refs[1];
+    auto* third = test_pointed_refs[2];
+    auto* fourth = test_pointed_refs[3];
 
-    first.splice(second);
-    first.splice(third);
-    first.splice(fourth);
+    first->test_splice(test_pointed_reference{second});
+    first->test_splice(test_pointed_reference{third});
+    first->test_splice(test_pointed_reference{fourth});
 
-    EXPECT_EQ(&first.next(), &second);
-    EXPECT_EQ(&first.prev(), &fourth);
+    EXPECT_EQ(first->test_next()(), second);
+    EXPECT_EQ(first->test_prev()(), fourth);
 
-    EXPECT_EQ(&second.next(), &third);
-    EXPECT_EQ(&second.prev(), &first);
+    EXPECT_EQ(second->test_next()(), third);
+    EXPECT_EQ(second->test_prev()(), first);
 
-    EXPECT_EQ(&third.next(), &fourth);
-    EXPECT_EQ(&third.prev(), &second);
+    EXPECT_EQ(third->test_next()(), fourth);
+    EXPECT_EQ(third->test_prev()(), second);
 
-    EXPECT_EQ(&fourth.next(), &first);
-    EXPECT_EQ(&fourth.prev(), &third);
+    EXPECT_EQ(fourth->test_next()(), first);
+    EXPECT_EQ(fourth->test_prev()(), third);
 
-    auto node = test_pointed_chain{std::move(second)};
+    auto* address = test_pointed_address + test_count * sizeof(test_pointed_node);
+    auto* node = new (address) test_pointed_node{std::move(*second)};
 
-    EXPECT_EQ(&first.next(), &node);
-    EXPECT_EQ(&first.prev(), &fourth);
+    EXPECT_EQ(first->test_next()(), node);
+    EXPECT_EQ(first->test_prev()(), fourth);
 
-    EXPECT_EQ(&node.next(), &third);
-    EXPECT_EQ(&node.prev(), &first);
+    EXPECT_EQ(node->test_next()(), third);
+    EXPECT_EQ(node->test_prev()(), first);
 
-    EXPECT_EQ(&third.next(), &fourth);
-    EXPECT_EQ(&third.prev(), &node);
+    EXPECT_EQ(third->test_next()(), fourth);
+    EXPECT_EQ(third->test_prev()(), node);
 
-    EXPECT_EQ(&fourth.next(), &first);
-    EXPECT_EQ(&fourth.prev(), &third);
+    EXPECT_EQ(fourth->test_next()(), first);
+    EXPECT_EQ(fourth->test_prev()(), third);
 
-    EXPECT_EQ(&second.next(), &second);
-    EXPECT_EQ(&second.prev(), &second);
+    EXPECT_EQ(second->test_next()(), second);
+    EXPECT_EQ(second->test_prev()(), second);
   }
 
   TEST_F(ChainTest, IndexedMoveAssignmentTest) {
-    auto context = test_indexed_chain::context(&test_indexed_memory);
+    auto context = test_indexed_context(&test_indexed_memory);
 
-    auto& first = *test_indexed_pointers[0];
-    auto& second = *test_indexed_pointers[1];
-    auto& third = *test_indexed_pointers[2];
-    auto& fourth = *test_indexed_pointers[3];
-    auto& fifth = *test_indexed_pointers[4];
+    auto* first = test_indexed_refs[0];
+    auto* second = test_indexed_refs[1];
+    auto* third = test_indexed_refs[2];
+    auto* fourth = test_indexed_refs[3];
+    auto* fifth = test_indexed_refs[4];
 
-    first.splice(second);
-    first.splice(third);
-    first.splice(fourth);
+    first->test_splice(test_indexed_reference{second});
+    first->test_splice(test_indexed_reference{third});
+    first->test_splice(test_indexed_reference{fourth});
 
-    EXPECT_EQ(&first.next(), &second);
-    EXPECT_EQ(&first.prev(), &fourth);
+    EXPECT_EQ(first->test_next()(), second);
+    EXPECT_EQ(first->test_prev()(), fourth);
 
-    EXPECT_EQ(&second.next(), &third);
-    EXPECT_EQ(&second.prev(), &first);
+    EXPECT_EQ(second->test_next()(), third);
+    EXPECT_EQ(second->test_prev()(), first);
 
-    EXPECT_EQ(&third.next(), &fourth);
-    EXPECT_EQ(&third.prev(), &second);
+    EXPECT_EQ(third->test_next()(), fourth);
+    EXPECT_EQ(third->test_prev()(), second);
 
-    EXPECT_EQ(&fourth.next(), &first);
-    EXPECT_EQ(&fourth.prev(), &third);
+    EXPECT_EQ(fourth->test_next()(), first);
+    EXPECT_EQ(fourth->test_prev()(), third);
 
-    fifth = std::move(second);
+    *fifth = std::move(*second);
 
-    EXPECT_EQ(&first.next(), &fifth);
-    EXPECT_EQ(&first.prev(), &fourth);
+    EXPECT_EQ(first->test_next()(), fifth);
+    EXPECT_EQ(first->test_prev()(), fourth);
 
-    EXPECT_EQ(&fifth.next(), &third);
-    EXPECT_EQ(&fifth.prev(), &first);
+    EXPECT_EQ(fifth->test_next()(), third);
+    EXPECT_EQ(fifth->test_prev()(), first);
 
-    EXPECT_EQ(&third.next(), &fourth);
-    EXPECT_EQ(&third.prev(), &fifth);
+    EXPECT_EQ(third->test_next()(), fourth);
+    EXPECT_EQ(third->test_prev()(), fifth);
 
-    EXPECT_EQ(&fourth.next(), &first);
-    EXPECT_EQ(&fourth.prev(), &third);
+    EXPECT_EQ(fourth->test_next()(), first);
+    EXPECT_EQ(fourth->test_prev()(), third);
 
-    EXPECT_EQ(&second.next(), &second);
-    EXPECT_EQ(&second.prev(), &second);
+    EXPECT_EQ(second->test_next()(), second);
+    EXPECT_EQ(second->test_prev()(), second);
   }
 
   TEST_F(ChainTest, PointedMoveAssignmentTest) {
-    auto& first = *test_pointed_pointers[0];
-    auto& second = *test_pointed_pointers[1];
-    auto& third = *test_pointed_pointers[2];
-    auto& fourth = *test_pointed_pointers[3];
-    auto& fifth = *test_pointed_pointers[4];
+    auto* first = test_pointed_refs[0];
+    auto* second = test_pointed_refs[1];
+    auto* third = test_pointed_refs[2];
+    auto* fourth = test_pointed_refs[3];
+    auto* fifth = test_pointed_refs[4];
 
-    first.splice(second);
-    first.splice(third);
-    first.splice(fourth);
+    first->test_splice(test_pointed_reference{second});
+    first->test_splice(test_pointed_reference{third});
+    first->test_splice(test_pointed_reference{fourth});
 
-    EXPECT_EQ(&first.next(), &second);
-    EXPECT_EQ(&first.prev(), &fourth);
+    EXPECT_EQ(first->test_next()(), second);
+    EXPECT_EQ(first->test_prev()(), fourth);
 
-    EXPECT_EQ(&second.next(), &third);
-    EXPECT_EQ(&second.prev(), &first);
+    EXPECT_EQ(second->test_next()(), third);
+    EXPECT_EQ(second->test_prev()(), first);
 
-    EXPECT_EQ(&third.next(), &fourth);
-    EXPECT_EQ(&third.prev(), &second);
+    EXPECT_EQ(third->test_next()(), fourth);
+    EXPECT_EQ(third->test_prev()(), second);
 
-    EXPECT_EQ(&fourth.next(), &first);
-    EXPECT_EQ(&fourth.prev(), &third);
+    EXPECT_EQ(fourth->test_next()(), first);
+    EXPECT_EQ(fourth->test_prev()(), third);
 
-    fifth = std::move(second);
+    *fifth = std::move(*second);
 
-    EXPECT_EQ(&first.next(), &fifth);
-    EXPECT_EQ(&first.prev(), &fourth);
+    EXPECT_EQ(first->test_next()(), fifth);
+    EXPECT_EQ(first->test_prev()(), fourth);
 
-    EXPECT_EQ(&fifth.next(), &third);
-    EXPECT_EQ(&fifth.prev(), &first);
+    EXPECT_EQ(fifth->test_next()(), third);
+    EXPECT_EQ(fifth->test_prev()(), first);
 
-    EXPECT_EQ(&third.next(), &fourth);
-    EXPECT_EQ(&third.prev(), &fifth);
+    EXPECT_EQ(third->test_next()(), fourth);
+    EXPECT_EQ(third->test_prev()(), fifth);
 
-    EXPECT_EQ(&fourth.next(), &first);
-    EXPECT_EQ(&fourth.prev(), &third);
+    EXPECT_EQ(fourth->test_next()(), first);
+    EXPECT_EQ(fourth->test_prev()(), third);
 
-    EXPECT_EQ(&second.next(), &second);
-    EXPECT_EQ(&second.prev(), &second);
+    EXPECT_EQ(second->test_next()(), second);
+    EXPECT_EQ(second->test_prev()(), second);
   }
 }

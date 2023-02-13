@@ -3,9 +3,11 @@
 
 #include <hatch/utility/integral_fwd.hh>
 
+#include <stddef.h>
+
 namespace hatch {
 
-  template<class T, widths Width, typename integral<Width, signs::is_unsigned>::type Stride = sizeof(T), typename integral<Width, signs::is_unsigned>::type Offset = 0>
+  template <class T, widths W, size_t S, size_t O>
   class indexed;
 
 } // namespace hatch

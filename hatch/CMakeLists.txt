@@ -96,9 +96,11 @@ set(hatch_utility_sources
   hatch/utility/chain_fwd.hh
   hatch/utility/chain_decl.hh
   hatch/utility/chain_impl.hh
-#
-#  hatch/utility/branch.hh
-#  hatch/utility/branch_impl.hh
+
+  hatch/utility/branch.hh
+  hatch/utility/branch_fwd.hh
+  hatch/utility/branch_decl.hh
+  hatch/utility/branch_impl.hh
 #
 #  hatch/utility/owning.hh
 #  hatch/utility/owning_fwd.hh
@@ -170,7 +172,7 @@ set(hatch_utility_test_sources
   test/utility/pointed.cc
   test/utility/indexed.cc
   test/utility/chain.cc
-#  test/utility/branch.cc
+  test/utility/branch.cc
 #  test/utility/owning.cc
 #  test/utility/list.cc
 #  test/utility/tree.cc

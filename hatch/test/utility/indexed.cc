@@ -19,6 +19,7 @@ namespace hatch {
     static constexpr auto test_offset = (sizeof(test_raw) - sizeof(test_pair)) / 2;
 
     using test_indexed = indexed<test_pair, test_width, test_stride, test_offset>;
+    using test_context = test_indexed::context;
 
     test_raw* _data{nullptr};
     std::byte* _address{nullptr};
@@ -34,7 +35,7 @@ namespace hatch {
   };
 
   TEST_F(IndexedTest, DefaultNullTest) {
-    auto guard = test_indexed::context{&_block};
+    auto guard = test_context{&_block};
 
     auto indexed = test_indexed{};
 
@@ -42,7 +43,7 @@ namespace hatch {
   }
 
   TEST_F(IndexedTest, AddressConstructorTest) {
-    auto guard = test_indexed::context{_address};
+    auto guard = test_context{_address};
 
     constexpr uint64_t index = 13u;
 
@@ -63,7 +64,7 @@ namespace hatch {
   }
 
   TEST_F(IndexedTest, AddressAssignmentTest) {
-    auto guard = test_indexed::context{&_block};
+    auto guard = test_context{&_block};
 
     constexpr uint64_t index = 3u;
 
@@ -85,7 +86,7 @@ namespace hatch {
   }
   
   TEST_F(IndexedTest, MoveConstructorTest) {
-    auto guard = test_indexed::context{&_block};
+    auto guard = test_context{&_block};
 
     constexpr uint64_t index_one = 19u;
 
@@ -109,7 +110,7 @@ namespace hatch {
   }
 
   TEST_F(IndexedTest, MoveAssignmentTest) {
-    auto guard = test_indexed::context{&_block};
+    auto guard = test_context{&_block};
 
     constexpr uint64_t index_one = 19u;
 
@@ -150,7 +151,7 @@ namespace hatch {
   }
   
   TEST_F(IndexedTest, CopyConstructorTest) {
-    auto guard = test_indexed::context{&_block};
+    auto guard = test_context{&_block};
 
     constexpr uint64_t index_one = 9u;
 
@@ -177,7 +178,7 @@ namespace hatch {
   }
 
   TEST_F(IndexedTest, CopyAssignmentTest) {
-    auto guard = test_indexed::context{&_block};
+    auto guard = test_context{&_block};
 
     constexpr uint64_t index_one = 12u;
 

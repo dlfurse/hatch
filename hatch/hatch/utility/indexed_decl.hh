@@ -11,13 +11,13 @@
 
 namespace hatch {
 
-  template <class T, widths Width, unsigned_t<Width> Stride, unsigned_t<Width> Offset>
+  template <class T, widths W, size_t S, size_t O>
   class indexed {
   public:
-    static constexpr auto null = unsigned_max_v<Width>;
+    static constexpr auto null = unsigned_max_v<W>;
 
   public:
-    class context {
+  class context {
     public:
       context() = delete;
 
@@ -28,11 +28,14 @@ namespace hatch {
       context& operator=(const context&) = delete;
 
     public:
-      template <class U>
+      template<class U>
       explicit context(U* address);
 
       ~context();
     };
+
+  private:
+    static __thread std::byte* _context;
 
   public:
     indexed();
@@ -44,9 +47,10 @@ namespace hatch {
     indexed(const indexed& copied);
     indexed& operator=(const indexed& copied);
 
-    template <class U>
+    template<class U>
     explicit indexed(U* address);
-    template <class U>
+
+    template<class U>
     indexed& operator=(U* address);
 
   public:
@@ -65,10 +69,8 @@ namespace hatch {
     const T& operator*() const;
 
   private:
-    using index = unsigned_t<Width>;
+    using index = unsigned_t<W>;
     index _index;
-
-    static __thread std::byte* _context;
   };
 
 } // namespace hatch

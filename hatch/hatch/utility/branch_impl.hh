@@ -9,169 +9,168 @@
 
 namespace hatch {
 
-  branch_detail::sides swap(branch_detail::sides side) {
-    using sides = branch_detail::sides;
+  template <template <class, auto ...> class R, auto ...A>
+  typename branch<R, A...>::sides_t branch<R, A...>::swap(sides_t side) {
     switch (side) {
-      case sides::root:
-        return sides::root;
-      case sides::prev:
-        return sides::next;
-      case sides::next:
-        return sides::prev;
+      case sides_t::root:
+        return sides_t::root;
+      case sides_t::prev:
+        return sides_t::next;
+      case sides_t::next:
+        return sides_t::prev;
     }
   }
 
-  branch_detail::colors swap(branch_detail::colors color) {
-    using colors = branch_detail::colors;
+  template <template <class, auto ...> class R, auto ...A>
+  typename branch<R, A...>::colors_t branch<R, A...>::swap(colors_t color) {
     switch (color) {
-      case colors::black:
-        return colors::red;
-      case colors::red:
-        return colors::black;
+      case colors_t::black:
+        return colors_t::red;
+      case colors_t::red:
+        return colors_t::black;
     }
   }
 
-  ///////////////////////////////
-  // Constructors, destructor. //
-  ///////////////////////////////
+  /**
+   * Constructors, destructor, assignment.
+   */
 
-  template<class T, template<class> class Ref>
-  branch<T, Ref>::branch() :
-      _color{colors::black},
-      _side{sides::root},
+  template <template <class, auto ...> class R, auto ...A>
+  branch<R, A...>::branch() :
+      _color{colors_t::black},
+      _side{sides_t::root},
       _head{},
       _prev{},
       _next{} {
   }
 
-  template<class T, template<class> class Ref>
-  branch<T, Ref>::~branch() {
+  template <template <class, auto ...> class R, auto ...A>
+  branch<R, A...>::~branch() {
     detach();
-    static_assert(std::is_base_of_v<branch<T, Ref>, T>);
   }
 
-  template<class T, template<class> class Ref>
-  branch<T, Ref>::branch(branch&& moved) noexcept :
+  template <template <class, auto ...> class R, auto ...A>
+  branch<R, A...>::branch(branch&& moved) noexcept :
       _color{moved._color},
       _side{},
       _head{},
       _prev{},
       _next{} {
-    moved._color = colors::black;
+    moved._color = colors_t::black;
     make_head(moved._head, moved._side);
     make_prev(moved._prev);
     make_next(moved._next);
   }
 
-  template<class T, template<class> class Ref>
-  branch <T, Ref>& branch<T, Ref>::operator=(branch&& moved) noexcept {
+  template <template <class, auto ...> class R, auto ...A>
+  branch<R, A...>& branch<R, A...>::operator=(branch&& moved) noexcept {
     _color = moved._color;
-    moved._color = colors::black;
+    moved._color = colors_t::black;
     make_head(moved._head, moved._side);
     make_prev(moved._prev);
     make_next(moved._next);
     return *this;
   }
 
-  ////////////
-  // Color. //
-  ////////////
+  /**
+   * Color.
+   */
 
-  template<class T, template<class> class Ref>
-  typename branch<T, Ref>::colors branch<T, Ref>::color() const {
+  template <template <class, auto ...> class R, auto ...A>
+  typename branch<R, A...>::colors_t branch<R, A...>::color() const {
     return _color;
   }
 
-  template<class T, template<class> class Ref>
-  void branch<T, Ref>::make_color(colors color) {
+  template <template <class, auto ...> class R, auto ...A>
+  void branch<R, A...>::make_color(colors_t color) {
     _color = color;
   }
 
-  template<class T, template<class> class Ref>
-  bool branch<T, Ref>::is_red() const {
-    return _color == colors::red;
+  template <template <class, auto ...> class R, auto ...A>
+  bool branch<R, A...>::is_red() const {
+    return _color == colors_t::red;
   }
 
-  template<class T, template<class> class Ref>
-  void branch<T, Ref>::make_red() {
-    _color = colors::red;
+  template <template <class, auto ...> class R, auto ...A>
+  void branch<R, A...>::make_red() {
+    _color = colors_t::red;
   }
 
-  template<class T, template<class> class Ref>
-  bool branch<T, Ref>::is_black() const {
-    return _color == colors::black;
+  template <template <class, auto ...> class R, auto ...A>
+  bool branch<R, A...>::is_black() const {
+    return _color == colors_t::black;
   }
 
-  template<class T, template<class> class Ref>
-  void branch<T, Ref>::make_black() {
-    _color = colors::black;
+  template <template <class, auto ...> class R, auto ...A>
+  void branch<R, A...>::make_black() {
+    _color = colors_t::black;
   }
 
-  ///////////////////////////
-  // Structure: accessors. //
-  ///////////////////////////
+  /**
+   * Accessors.
+   */
 
-  template<class T, template<class> class Ref>
-  bool branch<T, Ref>::alone() const {
+  template <template <class, auto ...> class R, auto ...A>
+  bool branch<R, A...>::alone() const {
     return !_head && !_prev && !_next;
   }
 
-  template<class T, template<class> class Ref>
-  branch_detail::sides branch<T, Ref>::side() const {
+  template <template <class, auto ...> class R, auto ...A>
+  typename branch<R, A...>::sides_t branch<R, A...>::side() const {
     return _side;
   }
 
-  template<class T, template<class> class Ref>
-  Ref<T> branch<T, Ref>::head() {
+  template <template <class, auto ...> class R, auto ...A>
+  typename branch<R, A...>::ref_t branch<R, A...>::head() {
     return _head;
   }
 
-  template<class T, template<class> class Ref>
-  const Ref<T> branch<T, Ref>::head() const {
-    return const_cast<T&>(*this)->head();
+  template <template <class, auto ...> class R, auto ...A>
+  const typename branch<R, A...>::ref_t branch<R, A...>::head() const {
+    return const_cast<branch&>(*this).head();
   }
 
-  template<class T, template<class> class Ref>
-  Ref<T> branch<T, Ref>::prev() {
+  template <template <class, auto ...> class R, auto ...A>
+  typename branch<R, A...>::ref_t branch<R, A...>::prev() {
     return _prev;
   }
 
-  template<class T, template<class> class Ref>
-  const Ref<T> branch<T, Ref>::prev() const {
-    return const_cast<T&>(*this)->prev();
+  template <template <class, auto ...> class R, auto ...A>
+  const typename branch<R, A...>::ref_t branch<R, A...>::prev() const {
+    return const_cast<branch&>(*this).prev();
   }
 
-  template<class T, template<class> class Ref>
-  Ref<T> branch<T, Ref>::next() {
+  template <template <class, auto ...> class R, auto ...A>
+  typename branch<R, A...>::ref_t branch<R, A...>::next() {
     return _next;
   }
 
-  template<class T, template<class> class Ref>
-  const Ref<T> branch<T, Ref>::next() const {
-    return const_cast<T&>(*this)->next();
+  template <template <class, auto ...> class R, auto ...A>
+  const typename branch<R, A...>::ref_t branch<R, A...>::next() const {
+    return const_cast<branch&>(*this).next();
   }
 
-  template<class T, template<class> class Ref>
-  Ref<T> branch<T, Ref>::child(sides side) {
+  template <template <class, auto ...> class R, auto ...A>
+  typename branch<R, A...>::ref_t branch<R, A...>::child(sides_t side) {
     switch (side) {
-      case sides::root:
-        return Ref<T>{};
-      case sides::prev:
+      case sides_t::root:
+        return ref_t{};
+      case sides_t::prev:
         return _prev;
-      case sides::next:
+      case sides_t::next:
         return _next;
     }
   }
 
-  template<class T, template<class> class Ref>
-  const Ref<T> branch<T, Ref>::child(sides side) const {
-    return const_cast<T&>(*this)->child(side);
+  template <template <class, auto ...> class R, auto ...A>
+  const typename branch<R, A...>::ref_t branch<R, A...>::child(sides_t side) const {
+    return const_cast<branch&>(*this).child(side);
   }
 
-  template<class T, template<class> class Ref>
-  Ref<T> branch<T, Ref>::root() {
+  template <template <class, auto ...> class R, auto ...A>
+  typename branch<R, A...>::ref_t branch<R, A...>::root() {
     auto* current_ptr = this;
-    auto current_ref = Ref<T>{this};
+    auto current_ref = ref_t{this};
     while (current_ptr->head()) {
       current_ref = current_ptr->head();
       current_ptr = current_ref();
@@ -179,15 +178,15 @@ namespace hatch {
     return current_ref;
   }
 
-  template<class T, template<class> class Ref>
-  const Ref<T> branch<T, Ref>::root() const {
-    return const_cast<branch<T, Ref>*>(this)->root();
+  template <template <class, auto ...> class R, auto ...A>
+  const typename branch<R, A...>::ref_t branch<R, A...>::root() const {
+    return const_cast<branch&>(*this).root();
   }
 
-  template<class T, template<class> class Ref>
-  Ref<T> branch<T, Ref>::minimum() {
+  template <template <class, auto ...> class R, auto ...A>
+  typename branch<R, A...>::ref_t branch<R, A...>::minimum() {
     auto* current_ptr = this;
-    auto current_ref = Ref<T>{this};
+    auto current_ref = ref_t{this};
     while (current_ptr->prev()) {
       current_ref = current_ptr->prev();
       current_ptr = current_ref();
@@ -195,15 +194,15 @@ namespace hatch {
     return current_ref;
   }
 
-  template<class T, template<class> class Ref>
-  const Ref<T> branch<T, Ref>::minimum() const {
-    return const_cast<branch<T, Ref>*>(this)->minimum();
+  template <template <class, auto ...> class R, auto ...A>
+  const typename branch<R, A...>::ref_t branch<R, A...>::minimum() const {
+    return const_cast<branch&>(*this).minimum();
   }
 
-  template<class T, template<class> class Ref>
-  Ref<T> branch<T, Ref>::maximum() {
+  template <template <class, auto ...> class R, auto ...A>
+  typename branch<R, A...>::ref_t branch<R, A...>::maximum() {
     auto* current_ptr = this;
-    auto current_ref = Ref<T>{this};
+    auto current_ref = ref_t{this};
     while (current_ptr->next()) {
       current_ref = current_ptr->next();
       current_ptr = current_ref();
@@ -211,70 +210,70 @@ namespace hatch {
     return current_ref;
   }
 
-  template<class T, template<class> class Ref>
-  const Ref<T> branch<T, Ref>::maximum() const {
-    return const_cast<branch<T, Ref>*>(this)->maximum();
+  template <template <class, auto ...> class R, auto ...A>
+  const typename branch<R, A...>::ref_t branch<R, A...>::maximum() const {
+    return const_cast<branch&>(*this).maximum();
   }
 
-  template<class T, template<class> class Ref>
-  Ref<T> branch<T, Ref>::predecessor() {
+  template <template <class, auto ...> class R, auto ...A>
+  typename branch<R, A...>::ref_t branch<R, A...>::predecessor() {
     if (prev()) {
       return prev()->maximum();
     } else {
       auto current_ptr = this;
-      auto current_ref = Ref<T>{this};
-      while (current_ptr->side() == sides::prev) {
+      auto current_ref = ref_t{this};
+      while (current_ptr->side() == sides_t::prev) {
         current_ref = current_ptr->head();
         current_ptr = current_ref();
       }
-      return current_ptr->head() ? current_ptr->head() : Ref<T>{};
+      return current_ptr->head() ? current_ptr->head() : ref_t{};
     }
   }
 
-  template<class T, template<class> class Ref>
-  const Ref<T> branch<T, Ref>::predecessor() const {
-    return const_cast<branch<T, Ref>*>(this)->predecessor();
+  template <template <class, auto ...> class R, auto ...A>
+  const typename branch<R, A...>::ref_t branch<R, A...>::predecessor() const {
+    return const_cast<branch&>(*this).predecessor();
   }
 
-  template<class T, template<class> class Ref>
-  Ref<T> branch<T, Ref>::successor() {
+  template <template <class, auto ...> class R, auto ...A>
+  typename branch<R, A...>::ref_t branch<R, A...>::successor() {
     if (next()) {
       return next()->minimum();
     } else {
       auto* current_ptr = this;
-      auto current_ref = Ref<T>{this};
-      while (current_ptr->side() == sides::next) {
+      auto current_ref = ref_t{this};
+      while (current_ptr->side() == sides_t::next) {
         current_ref = current_ptr->head();
         current_ptr = current_ref();
       }
-      return current_ptr->head() ? current_ptr->head() : Ref<T>{};
+      return current_ptr->head() ? current_ptr->head() : ref_t{};
     }
   }
 
-  template<class T, template<class> class Ref>
-  const Ref<T> branch<T, Ref>::successor() const {
-    return const_cast<branch<T, Ref>*>(this)->successor();
+  template <template <class, auto ...> class R, auto ...A>
+  const typename branch<R, A...>::ref_t branch<R, A...>::successor() const {
+    return const_cast<branch&>(*this).successor();
   }
 
-  ///////////////
-  // Mutators. //
-  ///////////////
+  /**
+   * Mutators
+   */
 
-  template<class T, template<class> class Ref>
-  void branch<T, Ref>::make_head(Ref<T> new_head, sides new_side) {
+  template <template <class, auto ...> class R, auto ...A>
+  void branch<R, A...>::make_head(ref_t new_head, sides_t new_side) {
     auto old_head = _head;
     auto old_side = _side;
 
     if (old_head) {
       switch (old_side) {
-        case sides::root:
+        case sides_t::root:
           // should never occur.
           break;
-        case sides::prev:
-          old_head->_prev = Ref<T>{};
+        case sides_t::prev:
+          old_head->_prev = ref_t{};
           break;
-        case sides::next:
-          old_head->_next = Ref<T>{};
+        case sides_t::next:
+          old_head->_next = ref_t{};
           break;
       }
     }
@@ -282,26 +281,26 @@ namespace hatch {
     if (new_head) {
       auto* new_head_ptr = new_head();
       switch (new_side) {
-        case sides::root:
+        case sides_t::root:
           // should never occur.
           break;
-        case sides::prev:
+        case sides_t::prev:
           if (new_head_ptr->prev()) {
             auto old_prev_ref = new_head_ptr->prev();
             auto* old_prev_ptr = old_prev_ref();
-            old_prev_ptr->_side = sides::root;
-            old_prev_ptr->_head = Ref<T>{};
+            old_prev_ptr->_side = sides_t::root;
+            old_prev_ptr->_head = ref_t{};
           }
-          new_head_ptr->_prev = Ref<T>{this};
+          new_head_ptr->_prev = ref_t{this};
           break;
-        case sides::next:
+        case sides_t::next:
           if (new_head_ptr->next()) {
             auto old_next_ref = new_head_ptr->next();
             auto* old_next_ptr = old_next_ref();
-            old_next_ptr->_side = sides::root;
-            old_next_ptr->_head = Ref<T>{};
+            old_next_ptr->_side = sides_t::root;
+            old_next_ptr->_head = ref_t{};
           }
-          new_head_ptr->_next = Ref<T>{this};
+          new_head_ptr->_next = ref_t{this};
           break;
       }
     }
@@ -310,22 +309,22 @@ namespace hatch {
     _side = new_side;
   }
 
-  template<class T, template<class> class Ref>
-  void branch<T, Ref>::make_child(Ref<T> new_child, sides new_side) {
+  template <template <class, auto ...> class R, auto ...A>
+  void branch<R, A...>::make_child(ref_t new_child, sides_t new_side) {
     if (auto old_child_ref = child(new_side)) {
       auto* old_child_ptr = old_child_ref();
-      old_child_ptr->_side = sides::root;
-      old_child_ptr->_head = Ref<T>{};
+      old_child_ptr->_side = sides_t::root;
+      old_child_ptr->_head = ref_t{};
     }
 
     switch (new_side) {
-      case sides::root:
+      case sides_t::root:
         // should never occur.
         break;
-      case sides::prev:
+      case sides_t::prev:
         _prev = new_child;
         break;
-      case sides::next:
+      case sides_t::next:
         _next = new_child;
         break;
     }
@@ -333,58 +332,58 @@ namespace hatch {
     if (new_child) {
       auto* new_child_ptr = new_child();
       new_child_ptr->_side = new_side;
-      new_child_ptr->_head = Ref<T>{this};
+      new_child_ptr->_head = ref_t{this};
     }
   }
 
-  template<class T, template<class> class Ref>
-  void branch<T, Ref>::make_prev(Ref<T> new_prev) {
+  template <template <class, auto ...> class R, auto ...A>
+  void branch<R, A...>::make_prev(ref_t new_prev) {
     if (auto old_prev = prev()) {
       auto* old_prev_ptr = old_prev();
-      old_prev_ptr->_side = sides::root;
-      old_prev_ptr->_head = Ref<T>{};
+      old_prev_ptr->_side = sides_t::root;
+      old_prev_ptr->_head = ref_t{};
     }
 
     _prev = new_prev;
 
     if (new_prev) {
       auto* new_prev_ptr = new_prev();
-      new_prev_ptr->_side = sides::prev;
-      new_prev_ptr->_head = Ref<T>{this};
+      new_prev_ptr->_side = sides_t::prev;
+      new_prev_ptr->_head = ref_t{this};
     }
   }
 
 
-  template<class T, template<class> class Ref>
-  void branch<T, Ref>::make_next(Ref<T> new_next) {
+  template <template <class, auto ...> class R, auto ...A>
+  void branch<R, A...>::make_next(ref_t new_next) {
     if (auto old_next = next()) {
       auto* old_next_ptr = old_next();
-      old_next_ptr->_side = sides::root;
-      old_next_ptr->_head = Ref<T>{};
+      old_next_ptr->_side = sides_t::root;
+      old_next_ptr->_head = ref_t{};
     }
 
     _next = new_next;
 
     if (new_next) {
       auto* new_next_ptr = new_next();
-      new_next_ptr->_side = sides::next;
-      new_next_ptr->_head = Ref<T>{this};
+      new_next_ptr->_side = sides_t::next;
+      new_next_ptr->_head = ref_t{this};
     }
   }
 
-  template<class T, template<class> class Ref>
-  void branch<T, Ref>::detach() {
-    make_head(Ref<T>{}, sides::root);
+  template <template <class, auto ...> class R, auto ...A>
+  void branch<R, A...>::detach() {
+    make_head(ref_t{}, sides_t::root);
     make_black();
   }
 
-  template<class T, template<class> class Ref>
-  void branch<T, Ref>::rotate(sides direction) {
+  template <template <class, auto ...> class R, auto ...A>
+  void branch<R, A...>::rotate(sides_t direction) {
     if (auto rotated = child(swap(direction))) {
       auto* rotated_ptr = rotated();
       auto pivoted = rotated_ptr->child(direction);
 
-      auto self = Ref<T>{this};
+      auto self = ref_t{this};
       auto new_head = head();
       auto new_side = side();
 
@@ -394,8 +393,8 @@ namespace hatch {
     }
   }
 
-  template<class T, template<class> class Ref>
-  void branch<T, Ref>::exchange(Ref<T> that) {
+  template <template <class, auto ...> class R, auto ...A>
+  void branch<R, A...>::exchange(ref_t that) {
     if (that && that != this) {
       auto this_color = this->color();
       auto that_color = that->color();
@@ -447,23 +446,23 @@ namespace hatch {
     }
   }
 
-  template<class T, template<class> class Ref>
-  void branch<T, Ref>::insert(branch <T, Ref>& node) {
-    node.remove();
-    node.make_red();
-
-    auto* current = &node;
+  template <template <class, auto ...> class R, auto ...A>
+  void branch<R, A...>::insert(ref_t node) {
+    auto* current = node();
     auto* parent = this;
+
+    current->remove();
+    current->make_red();
 
     // here we simply go through the binary search tree insertion procedure. at
     // the end, parent will point to the head of the inserted node.
     while (true) {
       if (current->get() < parent->get()) {
         if (parent->prev()) {
-          parent = parent->prev();
+          parent = parent->prev()();
           continue;
         } else {
-          parent->make_child(current, sides::prev);
+          parent->make_child(ref_t{current}, sides_t::prev);
           break;
         }
       } else {
@@ -471,7 +470,7 @@ namespace hatch {
           parent = parent->next();
           continue;
         } else {
-          parent->make_child(current, sides::next);
+          parent->make_child(current, sides_t::next);
           break;
         }
       }
@@ -505,7 +504,7 @@ namespace hatch {
         // this node's parent has either a black sibling or no sibling.
         //
         // -> rotate the grandparent away putting the parent in its place, then
-        //    swap the the colors of the grandparent and the parent.
+        //    swap the colors of the grandparent and the parent.
         //
         if (current->side() == parent_away_side) {
           // this node is on a different side of its parent than its parent is
@@ -540,15 +539,15 @@ namespace hatch {
     }
   }
 
-  template<class T, template<class> class Ref>
-  void branch<T, Ref>::remove() {
+  template <template <class, auto ...> class R, auto ...A>
+  void branch<R, A...>::remove() {
     if (!alone()) {
 
-      auto is_null_or_black = [](Ref<T> node) {
+      auto is_null_or_black = [](ref_t node) {
         return !node || node->is_black();
       };
 
-      auto is_real_and_red = [](Ref<T> node) {
+      auto is_real_and_red = [](ref_t node) {
         return node && node->is_red();
       };
 
@@ -585,9 +584,11 @@ namespace hatch {
           // tree.  so we have to look at the environment of the node and figure
           // out how to compensate.
           //
+
+
           auto* target = this;
           while (target->head()) {
-            auto target_self_side = *target->side();
+            auto target_self_side = target->side();
             auto target_away_side = swap(target_self_side);
 
             auto* parent = target->head();

@@ -7,9 +7,8 @@
 
 namespace hatch {
 
-  template <template <class> class Ref>
+  template <template <class, auto...> class R, auto ...A>
   class chain {
-
     /**
      * Construction and assignment.
      */
@@ -30,8 +29,8 @@ namespace hatch {
      */
 
   protected:
-    Ref<chain> _prev;
-    Ref<chain> _next;
+    R<chain, A...> _prev;
+    R<chain, A...> _next;
 
     /**
      * Accessors.
@@ -40,18 +39,18 @@ namespace hatch {
   protected:
     bool alone() const;
 
-    Ref<chain> prev();
-    const Ref<chain> prev() const;
+    R<chain, A...> prev();
+    const R<chain, A...> prev() const;
 
-    Ref<chain> next();
-    const Ref<chain> next() const;
+    R<chain, A...> next();
+    const R<chain, A...> next() const;
 
     /**
      * Mutators.
      */
 
   protected:
-    void splice(Ref<chain> node);
+    void splice(R<chain, A...> node);
   };
 
 } // namespace hatch

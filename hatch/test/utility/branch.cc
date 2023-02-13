@@ -12,7 +12,7 @@ namespace hatch {
 
   class BranchTest : public ::testing::Test {
   public:
-    class test_pointed_branch : public branch<test_pointed_branch, pointed> {
+    class test_pointed_branch : public branch<pointed> {
     public:
       test_pointed_branch(uint64_t value) :
         value{value} {
@@ -23,20 +23,20 @@ namespace hatch {
       }
 
       bool is_red() const {
-        return branch<test_pointed_branch, pointed>::is_red();
+        return branch<pointed>::is_red();
       }
 
       bool is_black() const {
-        return branch<test_pointed_branch, pointed>::is_black();
+        return branch<pointed>::is_black();
       }
 
       bool alone() const {
-        return branch<test_pointed_branch, pointed>::alone();
+        return branch<pointed>::alone();
       }
 
-//      void insert(test_branch& other) {
-//        return branch<test_branch, pointed>::insert(other);
-//      }
+      void insert(test_branch& other) {
+        return branch<test_branch, pointed>::insert(other);
+      }
 
     public:
       class rb_failure {
@@ -53,18 +53,21 @@ namespace hatch {
       int black_depth() const {
         int depth = is_black() ? 1 : 0;
 
-        if (_prev && _next) {
-          int prev = _prev->black_depth();
-          int next = _next->black_depth();
+        auto* prev_p = static_cast<const test_pointed_branch*>(_prev());
+        auto* next_p = static_cast<const test_pointed_branch*>(_next());
+
+        if (prev_p && next_p) {
+          int prev = prev_p->black_depth();
+          int next = next_p->black_depth();
           if (prev >= 0 && next >= 0 && prev == next) {
             depth += (prev + next) / 2;
           } else {
-            throw rb_failure(value, _prev->value, _next->value);
+            throw rb_failure(value, prev_p->value, next_p->value);
           }
-        } else if (_prev) {
-          depth += _prev->black_depth();
-        } else if (_next) {
-          depth += _next->black_depth();
+        } else if (prev_p) {
+          depth += prev_p->black_depth();
+        } else if (next_p) {
+          depth += next_p->black_depth();
         }
 
         return depth;
@@ -109,7 +112,6 @@ namespace hatch {
     EXPECT_TRUE(_test_pointed_branches[0].is_black());
   }
 
-  /*
   TEST_F(BranchTest, SimpleEasyBranch) {
     _root->insert(_branches[3]);
     _tree.insert(_branches[1]);
@@ -175,6 +177,8 @@ namespace hatch {
       EXPECT_EQ(_branches[index].root(), &_branches[3]);
     }
   }
+
+  /*
 
   TEST_F(BranchTest, SimpleTougherBranch) {
     _tree.insert(_branches[0]);

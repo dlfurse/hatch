@@ -3,7 +3,7 @@
 
 namespace hatch {
 
-  template<class T>
+  template <class T>
   class pointed;
 
 } // namespace hatch

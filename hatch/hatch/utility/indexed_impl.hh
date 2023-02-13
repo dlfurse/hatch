@@ -7,109 +7,109 @@
 
 namespace hatch {
 
-  template <class T, widths Width, unsigned_t<Width> Stride, unsigned_t<Width> Offset>
+  template <class T, widths W, size_t S, size_t O>
   template <class U>
-  indexed<T, Width, Stride, Offset>::context::context(U* address) {
-    indexed::_context = reinterpret_cast<std::byte*>(address);
+  indexed<T, W, S, O>::context::context(U* address) {
+    _context = reinterpret_cast<std::byte*>(address);
   }
 
-  template <class T, widths Width, unsigned_t<Width> Stride, unsigned_t<Width> Offset>
-  indexed<T, Width, Stride, Offset>::context::~context() {
-    indexed::_context = nullptr;
+  template <class T, widths W, size_t S, size_t O>
+  indexed<T, W, S, O>::context::~context() {
+    _context = nullptr;
   }
 
-  template <class T, widths Width, unsigned_t<Width> Stride, unsigned_t<Width> Offset>
-  __thread std::byte* indexed<T, Width, Stride, Offset>::_context = nullptr;
+  template <class T, widths W, size_t S, size_t O>
+  __thread std::byte* indexed<T, W, S, O>::_context = nullptr;
 
-  template <class T, widths Width, unsigned_t<Width> Stride, unsigned_t<Width> Offset>
-  indexed<T, Width, Stride, Offset>::indexed() :
+  template <class T, widths W, size_t S, size_t O>
+  indexed<T, W, S, O>::indexed() :
       _index{null} {
   }
 
-  template <class T, widths Width, unsigned_t<Width> Stride, unsigned_t<Width> Offset>
-  indexed<T, Width, Stride, Offset>::~indexed() {
+  template <class T, widths W, size_t S, size_t O>
+  indexed<T, W, S, O>::~indexed() {
   }
 
-  template <class T, widths Width, unsigned_t<Width> Stride, unsigned_t<Width> Offset>
-  indexed<T, Width, Stride, Offset>::indexed(indexed&& moved) noexcept :
+  template <class T, widths W, size_t S, size_t O>
+  indexed<T, W, S, O>::indexed(indexed&& moved) noexcept :
       _index{moved._index} {
     moved._index = null;
   }
 
-  template <class T, widths Width, unsigned_t<Width> Stride, unsigned_t<Width> Offset>
-  indexed<T, Width, Stride, Offset>& indexed<T, Width, Stride, Offset>::operator=(indexed&& moved) noexcept {
+  template <class T, widths W, size_t S, size_t O>
+  indexed<T, W, S, O>& indexed<T, W, S, O>::operator=(indexed&& moved) noexcept {
     _index = moved._index;
     moved._index = null;
     return *this;
   }
 
-  template <class T, widths Width, unsigned_t<Width> Stride, unsigned_t<Width> Offset>
-  indexed<T, Width, Stride, Offset>::indexed(const indexed& copied) :
+  template <class T, widths W, size_t S, size_t O>
+  indexed<T, W, S, O>::indexed(const indexed& copied) :
       _index{copied._index} {
   }
 
-  template <class T, widths Width, unsigned_t<Width> Stride, unsigned_t<Width> Offset>
-  indexed<T, Width, Stride, Offset>& indexed<T, Width, Stride, Offset>::operator=(const indexed& copied) {
+  template <class T, widths W, size_t S, size_t O>
+  indexed<T, W, S, O>& indexed<T, W, S, O>::operator=(const indexed& copied) {
     _index = copied._index;
     return *this;
   }
 
-  template <class T, widths Width, unsigned_t<Width> Stride, unsigned_t<Width> Offset>
+  template <class T, widths W, size_t S, size_t O>
   template <class U>
-  indexed<T, Width, Stride, Offset>::indexed(U* address) :
-      _index{address ? (index)((reinterpret_cast<std::byte*>(address) - _context - Offset)/(Stride)) : null} {
+  indexed<T, W, S, O>::indexed(U* address) :
+      _index{address ? (index)((reinterpret_cast<std::byte*>(address) - _context - O)/(S)) : null} {
   }
 
-  template <class T, widths Width, unsigned_t<Width> Stride, unsigned_t<Width> Offset>
+  template <class T, widths W, size_t S, size_t O>
   template <class U>
-  indexed<T, Width, Stride, Offset>& indexed<T, Width, Stride, Offset>::operator=(U* address) {
-    _index = address ? (index)(reinterpret_cast<std::byte*>(address) - _context - Offset)/(Stride) : null;
+  indexed<T, W, S, O>& indexed<T, W, S, O>::operator=(U* address) {
+    _index = address ? (index)(reinterpret_cast<std::byte*>(address) - _context - O)/(S) : null;
     return *this;
   }
 
-  template <class T, widths Width, unsigned_t<Width> Stride, unsigned_t<Width> Offset>
-  indexed<T, Width, Stride, Offset>::operator bool() const {
+  template <class T, widths W, size_t S, size_t O>
+  indexed<T, W, S, O>::operator bool() const {
     return _index != null;
   }
 
-  template <class T, widths Width, unsigned_t<Width> Stride, unsigned_t<Width> Offset>
-  bool indexed<T, Width, Stride, Offset>::operator==(const indexed& other) const {
+  template <class T, widths W, size_t S, size_t O>
+  bool indexed<T, W, S, O>::operator==(const indexed& other) const {
     return _index == other._index;
   }
 
-  template <class T, widths Width, unsigned_t<Width> Stride, unsigned_t<Width> Offset>
-  bool indexed<T, Width, Stride, Offset>::operator!=(const indexed& other) const {
+  template <class T, widths W, size_t S, size_t O>
+  bool indexed<T, W, S, O>::operator!=(const indexed& other) const {
     return _index != other._index;
   }
 
-  template <class T, widths Width, unsigned_t<Width> Stride, unsigned_t<Width> Offset>
-  T* indexed<T, Width, Stride, Offset>::operator()() {
-    return reinterpret_cast<T*>(_context + _index * Stride + Offset);
+  template <class T, widths W, size_t S, size_t O>
+  T* indexed<T, W, S, O>::operator()() {
+    return reinterpret_cast<T*>(_context + _index * S + O);
   }
 
-  template <class T, widths Width, unsigned_t<Width> Stride, unsigned_t<Width> Offset>
-  const T* indexed<T, Width, Stride, Offset>::operator()() const {
-    return const_cast<indexed<T, Width, Stride, Offset>&>(*this).operator->();
+  template <class T, widths W, size_t S, size_t O>
+  const T* indexed<T, W, S, O>::operator()() const {
+    return const_cast<indexed&>(*this).operator->();
   }
 
-  template <class T, widths Width, unsigned_t<Width> Stride, unsigned_t<Width> Offset>
-  T* indexed<T, Width, Stride, Offset>::operator->() {
-    return reinterpret_cast<T*>(_context + _index * Stride + Offset);
+  template <class T, widths W, size_t S, size_t O>
+  T* indexed<T, W, S, O>::operator->() {
+    return reinterpret_cast<T*>(_context + _index * S + O);
   }
 
-  template <class T, widths Width, unsigned_t<Width> Stride, unsigned_t<Width> Offset>
-  const T* indexed<T, Width, Stride, Offset>::operator->() const {
-    return const_cast<indexed<T, Width, Stride, Offset>&>(*this).operator->();
+  template <class T, widths W, size_t S, size_t O>
+  const T* indexed<T, W, S, O>::operator->() const {
+    return const_cast<indexed&>(*this).operator->();
   }
 
-  template <class T, widths Width, unsigned_t<Width> Stride, unsigned_t<Width> Offset>
-  T& indexed<T, Width, Stride, Offset>::operator*() {
-    return *reinterpret_cast<T*>(_context + _index * Stride + Offset);
+  template <class T, widths W, size_t S, size_t O>
+  T& indexed<T, W, S, O>::operator*() {
+    return *reinterpret_cast<T*>(_context + _index * S + O);
   }
 
-  template <class T, widths Width, unsigned_t<Width> Stride, unsigned_t<Width> Offset>
-  const T& indexed<T, Width, Stride, Offset>::operator*() const {
-    return const_cast<indexed<T, Width, Stride, Offset>&>(*this).operator*();
+  template <class T, widths W, size_t S, size_t O>
+  const T& indexed<T, W, S, O>::operator*() const {
+    return const_cast<indexed&>(*this).operator*();
   }
 
 } // namespace hatch
