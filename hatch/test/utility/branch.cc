@@ -287,26 +287,16 @@ namespace hatch {
 
         next->raw_head() = head_ref;
         next->raw_side() = test_pointed_node::test_sides_t::next;
-
-//        std::cout << "head: " << head->value << " (" << head << ")" << std::endl;
-//        std::cout << "  prev: " << prev->value << " (" << prev << ")" << std::endl;
-//        std::cout << "  next: " << next->value << " (" << next << ")" << std::endl;
       } else if (prev) {
         head->raw_prev() = prev_ref;
 
         prev->raw_head() = head_ref;
         prev->raw_side() = test_pointed_node::test_sides_t::prev;
-
-//        std::cout << "head: " << head->value << " (" << head << ")" << std::endl;
-//        std::cout << "  prev: " << prev->value << " (" << prev << ")" << std::endl;
       } else if (next) {
         head->raw_next() = next_ref;
 
         next->raw_head() = head_ref;
         next->raw_side() = test_pointed_node::test_sides_t::next;
-
-//        std::cout << "head: " << head->value << " (" << head << ")" << std::endl;
-//        std::cout << "  next: " << next->value << " (" << next << ")" << std::endl;
       }
       return head;
     }
