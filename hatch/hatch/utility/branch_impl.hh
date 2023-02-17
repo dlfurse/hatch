@@ -7,6 +7,8 @@
 
 #include <algorithm>
 
+#include <iostream>
+
 namespace hatch {
 
   template <template <class, auto ...> class R, auto ...A>
@@ -261,46 +263,47 @@ namespace hatch {
 
   template <template <class, auto ...> class R, auto ...A>
   void branch<R, A...>::make_head(ref_t new_head, sides_t new_side) {
-    auto old_head = _head;
-    auto old_side = _side;
-
-    if (old_head) {
+    // if this node has an existing head, we clear out the head's reference to
+    // this node.
+    if (auto old_head = head()) {
+      auto* old_head_ptr = old_head();
+      auto old_side = side();
       switch (old_side) {
-        case sides_t::root:
-          // should never occur.
-          break;
         case sides_t::prev:
-          old_head->_prev = ref_t{};
+          old_head_ptr->_prev = ref_t{};
           break;
         case sides_t::next:
-          old_head->_next = ref_t{};
+          old_head_ptr->_next = ref_t{};
+          break;
+        case sides_t::root:
+          // should never occur: if a node has a head, it cannot be the root.
           break;
       }
     }
 
+    // if the new head has a child on the desired side, we clear that child's
+    // reference to the new head and point the new head to this node instead.
     if (new_head) {
       auto* new_head_ptr = new_head();
       switch (new_side) {
-        case sides_t::root:
-          // should never occur.
-          break;
         case sides_t::prev:
-          if (new_head_ptr->prev()) {
-            auto old_prev_ref = new_head_ptr->prev();
-            auto* old_prev_ptr = old_prev_ref();
+          if (auto old_prev = new_head_ptr->prev()) {
+            auto* old_prev_ptr = old_prev();
             old_prev_ptr->_side = sides_t::root;
             old_prev_ptr->_head = ref_t{};
           }
           new_head_ptr->_prev = ref_t{this};
           break;
         case sides_t::next:
-          if (new_head_ptr->next()) {
-            auto old_next_ref = new_head_ptr->next();
-            auto* old_next_ptr = old_next_ref();
+          if (auto old_next = new_head_ptr->next()) {
+            auto* old_next_ptr = old_next();
             old_next_ptr->_side = sides_t::root;
             old_next_ptr->_head = ref_t{};
           }
           new_head_ptr->_next = ref_t{this};
+          break;
+        case sides_t::root:
+          // should never occur: if a node has a head, it cannot be the root.
           break;
       }
     }
@@ -311,28 +314,46 @@ namespace hatch {
 
   template <template <class, auto ...> class R, auto ...A>
   void branch<R, A...>::make_child(ref_t new_child, sides_t new_side) {
-    if (auto old_child_ref = child(new_side)) {
-      auto* old_child_ptr = old_child_ref();
+    // if there was already a child on the desired side, we disconnect it and
+    // thereby make it a root.
+    if (auto old_child = child(new_side)) {
+      auto* old_child_ptr = old_child();
       old_child_ptr->_side = sides_t::root;
       old_child_ptr->_head = ref_t{};
     }
 
+    // if the new child has a head, we disconnect it from that head.
+    if (new_child) {
+      auto* new_child_ptr = new_child();
+      if (auto old_head = new_child_ptr->head()) {
+        auto* old_head_ptr = old_head();
+        auto old_side = new_child_ptr->side();
+        switch (old_side) {
+          case sides_t::prev:
+            old_head_ptr->_prev = ref_t{};
+            break;
+          case sides_t::next:
+            old_head_ptr->_next = ref_t{};
+            break;
+          case sides_t::root:
+            // should never occur: if a node has a head, it cannot be the root.
+            break;
+        }
+      }
+      new_child_ptr->_side = new_side;
+      new_child_ptr->_head = ref_t{this};
+    }
+
     switch (new_side) {
-      case sides_t::root:
-        // should never occur.
-        break;
       case sides_t::prev:
         _prev = new_child;
         break;
       case sides_t::next:
         _next = new_child;
         break;
-    }
-
-    if (new_child) {
-      auto* new_child_ptr = new_child();
-      new_child_ptr->_side = new_side;
-      new_child_ptr->_head = ref_t{this};
+      case sides_t::root:
+        // should never occur: if a node has a head, it cannot be the root.
+        break;
     }
   }
 
@@ -344,13 +365,28 @@ namespace hatch {
       old_prev_ptr->_head = ref_t{};
     }
 
-    _prev = new_prev;
-
     if (new_prev) {
       auto* new_prev_ptr = new_prev();
+      if (auto old_head = new_prev_ptr->head()) {
+        auto* old_head_ptr = old_head();
+        auto old_side = new_prev_ptr->side();
+        switch (old_side) {
+          case sides_t::prev:
+            old_head_ptr->_prev = ref_t{};
+            break;
+          case sides_t::next:
+            old_head_ptr->_next = ref_t{};
+            break;
+          case sides_t::root:
+            // should never occur: if a node has a head, it cannot be the root.
+            break;
+        }
+      }
       new_prev_ptr->_side = sides_t::prev;
       new_prev_ptr->_head = ref_t{this};
     }
+
+    _prev = new_prev;
   }
 
 
@@ -362,13 +398,28 @@ namespace hatch {
       old_next_ptr->_head = ref_t{};
     }
 
-    _next = new_next;
-
     if (new_next) {
       auto* new_next_ptr = new_next();
+      if (auto old_head = new_next_ptr->head()) {
+        auto* old_head_ptr = old_head();
+        auto old_side = new_next_ptr->side();
+        switch (old_side) {
+          case sides_t::prev:
+            old_head_ptr->_prev = ref_t{};
+            break;
+          case sides_t::next:
+            old_head_ptr->_next = ref_t{};
+            break;
+          case sides_t::root:
+            // should never occur: if a node has a head, it cannot be the root.
+            break;
+        }
+      }
       new_next_ptr->_side = sides_t::next;
       new_next_ptr->_head = ref_t{this};
     }
+
+    _next = new_next;
   }
 
   template <template <class, auto ...> class R, auto ...A>
@@ -395,23 +446,24 @@ namespace hatch {
 
   template <template <class, auto ...> class R, auto ...A>
   void branch<R, A...>::exchange(ref_t that) {
-    if (that && that != this) {
-      auto this_color = this->color();
+    auto self = ref_t{this};
+    auto null = ref_t{};
+
+    if (that && that != self) {
+      auto this_color = self->color();
       auto that_color = that->color();
 
-      this->make_color(that_color);
+      self->make_color(that_color);
       that->make_color(this_color);
 
-      static constexpr branch* null = nullptr;
-
       auto[parent, child, joined] =
-      this == that->head() ? std::make_tuple(this, that, true) :
-      that == this->head() ? std::make_tuple(that, this, true) :
+      self == that->head() ? std::make_tuple(self, that, true) :
+      that == self->head() ? std::make_tuple(that, self, true) :
       std::make_tuple(null, null, false);
 
       if (joined) {
         auto parent_side = parent->side();
-        auto child_side = *child->side();
+        auto child_side = child->side();
 
         auto head = parent->head();
         auto other = parent->child(swap(child_side));
@@ -447,7 +499,8 @@ namespace hatch {
   }
 
   template <template <class, auto ...> class R, auto ...A>
-  void branch<R, A...>::insert(ref_t node) {
+  template <class F>
+  void branch<R, A...>::insert(ref_t node, F comp) {
     auto* current = node();
     auto* parent = this;
 
@@ -457,7 +510,7 @@ namespace hatch {
     // here we simply go through the binary search tree insertion procedure. at
     // the end, parent will point to the head of the inserted node.
     while (true) {
-      if (current->get() < parent->get()) {
+      if (comp(current, parent)) {
         if (parent->prev()) {
           parent = parent->prev()();
           continue;
@@ -467,10 +520,10 @@ namespace hatch {
         }
       } else {
         if (parent->next()) {
-          parent = parent->next();
+          parent = parent->next()();
           continue;
         } else {
-          parent->make_child(current, sides_t::next);
+          parent->make_child(ref_t{current}, sides_t::next);
           break;
         }
       }
@@ -480,11 +533,11 @@ namespace hatch {
     // node we just inserted is red.
     while (parent && parent->is_red()) {
       // node has a red parent, which means it must have a grandparent as well.
-      auto parent_self_side = *parent->side();
+      auto parent_self_side = parent->side();
       auto parent_away_side = swap(parent_self_side);
 
-      auto* grandma = parent->head();
-      auto* aunt = grandma->child(parent_away_side);
+      auto* grandma = parent->head()();
+      auto* aunt = grandma->child(parent_away_side)();
 
       if (aunt && aunt->is_red()) {
         // this node's parent has a red sibling.
@@ -497,7 +550,7 @@ namespace hatch {
         aunt->make_black();
 
         current = grandma;
-        parent = current->head();
+        parent = current->head()();
 
         continue;
       } else {
@@ -530,7 +583,7 @@ namespace hatch {
     // we only get here if we break out of the loop, which might happen by
     // recursing up to the root, in which case the root will be red now.
     // if this is the case, make the root black to restore red-black properties.
-    if (current->is_root()) {
+    if (current->side() == sides_t::root) {
       // this node is the root.
       //
       // -> color it black.
@@ -543,11 +596,11 @@ namespace hatch {
   void branch<R, A...>::remove() {
     if (!alone()) {
 
-      auto is_null_or_black = [](ref_t node) {
+      auto is_null_or_black = [](branch* node) {
         return !node || node->is_black();
       };
 
-      auto is_real_and_red = [](ref_t node) {
+      auto is_real_and_red = [](branch* node) {
         return node && node->is_red();
       };
 
@@ -568,7 +621,7 @@ namespace hatch {
         // -> if red, no action needed, just fall through to disconnecting this
         //    node from its parent.
         //
-        if (auto* child = prev() ? prev() : next() ? next() : nullptr) {
+        if (auto child = prev() ? prev() : next() ? next() : ref_t{}) {
           // this node is black and has a child, which must be red, because this
           // node was chosen by construction to have only one child and the black
           // heights on both sides of it must be equal.
@@ -591,13 +644,20 @@ namespace hatch {
             auto target_self_side = target->side();
             auto target_away_side = swap(target_self_side);
 
-            auto* parent = target->head();
-            auto* sibling = parent->child(target_away_side);
-            auto* inside = sibling->child(target_self_side);
-            auto* outside = sibling->child(target_away_side);
+            auto parent = target->head();
+            auto* parent_ptr = parent();
+
+            auto sibling = parent->child(target_away_side);
+            auto* sibling_ptr = sibling();
+
+            auto inside = sibling_ptr->child(target_self_side);
+            auto* inside_ptr = inside();
+
+            auto outside = sibling_ptr->child(target_away_side);
+            auto* outside_ptr = outside();
 
             // sibling may be red or black.
-            if (is_real_and_red(sibling)) {
+            if (is_real_and_red(sibling_ptr)) {
               // sibling is red, which implies that the parent is black. this
               // further implies that the sibling has two subtrees that are one
               // greater in black height than the subtree rooted at the current
@@ -606,18 +666,23 @@ namespace hatch {
               // -> color the black parent red and the red sibling black, and
               // rotate the parent in the back direction.
               //
-              parent->make_red();
-              sibling->make_black();
+              parent_ptr->make_red();
+              sibling_ptr->make_black();
 
-              parent->rotate(target_self_side);
+              parent_ptr->rotate(target_self_side);
 
               sibling = parent->child(target_away_side);
+              sibling_ptr = sibling();
+
               inside = sibling->child(target_self_side);
+              inside_ptr = inside();
+
               outside = sibling->child(target_away_side);
+              outside_ptr = outside();
             }
 
             // sibling must be black now.
-            if (is_null_or_black(inside) && is_null_or_black(outside)) {
+            if (is_null_or_black(inside_ptr) && is_null_or_black(outside_ptr)) {
               // Sibling and its children are also black. We will reduce the black
               // height of the sibling subtree by making the sibling red, leaving
               // both the current and sibling subtrees with the same height, but
@@ -627,13 +692,13 @@ namespace hatch {
               // height of the parent subtree by making it black if it's red, or
               // recursing to address it higher up in the tree.
               //
-              sibling->make_red();
-              if (parent->is_black()) {
+              sibling_ptr->make_red();
+              if (parent_ptr->is_black()) {
                 // parent is black.
                 //
                 // -> recurse on parent.
                 //
-                target = parent;
+                target = parent_ptr;
                 continue;
               } else {
                 // parent is red.
@@ -641,23 +706,26 @@ namespace hatch {
                 // -> make parent black, restoring the black height of the parent
                 //    subtree.
                 //
-                parent->make_black();
+                parent_ptr->make_black();
                 break;
               }
             } else {
-              if (is_real_and_red(inside) && is_null_or_black(outside)) {
+              if (is_real_and_red(inside_ptr) && is_null_or_black(outside_ptr)) {
                 // sibling has a red inside child and a black outside child.
                 //
                 // -> switch sibling and inside child colors, rotate the sibling
                 //    forward.
                 //
-                sibling->make_red();
-                inside->make_black();
+                sibling_ptr->make_red();
+                inside_ptr->make_black();
 
-                sibling->rotate(target_away_side);
+                sibling_ptr->rotate(target_away_side);
 
-                sibling = parent->child(target_away_side);
-                outside = sibling->child(target_away_side);
+                sibling = parent_ptr->child(target_away_side);
+                sibling_ptr = sibling();
+
+                outside = sibling_ptr->child(target_away_side);
+                outside_ptr = outside();
               }
               // sibling must have a red outside child now, the inside child color
               // is arbitrary.
@@ -665,11 +733,11 @@ namespace hatch {
               // -> switch sibling and parent child colors, rotate the parent
               //    backward
               //
-              sibling->make_color(parent->color());
-              parent->make_black();
-              outside->make_black();
+              sibling_ptr->make_color(parent->color());
+              parent_ptr->make_black();
+              outside_ptr->make_black();
 
-              parent->rotate(target_self_side);
+              parent_ptr->rotate(target_self_side);
 
               break;
             }

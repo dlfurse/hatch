@@ -5,13 +5,15 @@
 #error "do not include branch_decl.hh directly. include branch.hh instead."
 #endif
 
+#include <functional> // function
+
 #include <cstdint> // uint8_t
 
 namespace hatch {
 
   template <template <class, auto ...> class R, auto ...A>
   class branch {
-  private:
+  protected:
     enum class colors_t : uint8_t {
       black = 0,
       red = 1,
@@ -114,14 +116,15 @@ namespace hatch {
   protected:
     void make_head(ref_t new_head, sides_t side);
     void make_child(ref_t new_child, sides_t side);
-    void make_next(ref_t new_next);
     void make_prev(ref_t new_prev);
+    void make_next(ref_t new_next);
 
     void detach();
     void rotate(sides_t side);
     void exchange(ref_t node);
 
-    void insert(ref_t node);
+    template <class F>
+    void insert(ref_t node, F comp);
     void remove();
   };
 
