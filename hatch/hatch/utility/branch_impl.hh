@@ -14,12 +14,12 @@ namespace hatch {
   template <template <class, auto ...> class R, auto ...A>
   typename branch<R, A...>::sides_t branch<R, A...>::swap(sides_t side) {
     switch (side) {
-      case sides_t::root:
-        return sides_t::root;
       case sides_t::prev:
         return sides_t::next;
       case sides_t::next:
         return sides_t::prev;
+      default:
+        return sides_t::root;
     }
   }
 
@@ -155,12 +155,12 @@ namespace hatch {
   template <template <class, auto ...> class R, auto ...A>
   typename branch<R, A...>::ref_t branch<R, A...>::child(sides_t side) {
     switch (side) {
-      case sides_t::root:
-        return ref_t{};
       case sides_t::prev:
         return _prev;
       case sides_t::next:
         return _next;
+      default:
+        return {};
     }
   }
 
@@ -597,11 +597,11 @@ namespace hatch {
     if (!alone()) {
 
       auto is_null_or_black = [](branch* node) {
-        return !node || node->is_black();
+        return node == ref_t{}() || node->is_black();
       };
 
       auto is_real_and_red = [](branch* node) {
-        return node && node->is_red();
+        return node != ref_t{}() && node->is_red();
       };
 
       if (_prev && _next) {

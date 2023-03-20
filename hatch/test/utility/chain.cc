@@ -26,6 +26,10 @@ namespace hatch {
     using test_indexed_context = test_indexed_reference::context;
 
     class test_indexed_node : public test_indexed_chain {
+      /**
+       * Construction and assignment.
+       */
+
     public:
       test_indexed_node(uint32_t left, uint32_t right) : left{left}, right{right} {
       }
@@ -47,6 +51,11 @@ namespace hatch {
         return *this;
       }
 
+      /**
+       * Accessors.
+       */
+
+    public:
       bool test_alone() const {
         return test_indexed_chain::alone();
       }
@@ -59,9 +68,18 @@ namespace hatch {
         return test_indexed_chain::prev();
       }
 
+      /**
+       * Mutators.
+       */
+
+    public:
       void test_splice(test_indexed_reference link) {
         test_indexed_chain::splice(link);
       }
+
+      /**
+       * Self: Value.
+       */
 
     public:
       uint32_t left;
@@ -77,6 +95,10 @@ namespace hatch {
     using test_pointed_reference = pointed<chain<pointed>>;
 
     class test_pointed_node : public test_pointed_chain {
+      /**
+       * Construction and assignment.
+       */
+
     public:
       test_pointed_node(uint16_t number) : value{number} {
       }
@@ -94,6 +116,11 @@ namespace hatch {
         return *this;
       }
 
+      /**
+       * Accessors.
+       */
+
+    public:
       bool test_alone() const {
         return test_pointed_chain::alone();
       }
@@ -106,59 +133,77 @@ namespace hatch {
         return test_pointed_chain::prev();
       }
 
+      /**
+       * Mutators.
+       */
+
+    public:
       void test_splice(test_pointed_reference link) {
         test_pointed_chain::splice(link);
       }
+
+      /**
+       * Self: Value.
+       */
 
     public:
       uint16_t value;
     };
 
     /**
-     * Memory initialization.
+     * Test initialization.
      */
 
     std::aligned_storage_t<test_capacity * test_stride, alignof(test_indexed_node)> test_indexed_memory{};
-    std::aligned_storage_t<test_capacity * sizeof(test_pointed_node), alignof(test_pointed_node)> test_pointed_memory{};
-
     std::byte* test_indexed_address{reinterpret_cast<std::byte*>(&test_indexed_memory)};
-    std::byte* test_pointed_address{reinterpret_cast<std::byte*>(&test_pointed_memory)};
+    std::array<test_indexed_node*, test_count> test_indexed_nodes{};
 
-    std::array<test_indexed_node*, test_count> test_indexed_refs{};
-    std::array<test_pointed_node*, test_count> test_pointed_refs{};
+    std::aligned_storage_t<test_capacity * sizeof(test_pointed_node), alignof(test_pointed_node)> test_pointed_memory{};
+    std::byte* test_pointed_address{reinterpret_cast<std::byte*>(&test_pointed_memory)};
+    std::array<test_pointed_node*, test_count> test_pointed_nodes{};
 
     void SetUp() override {
       auto context = test_indexed_context(&test_indexed_memory);
       for (auto index = 0lu; index < test_count; ++index) {
         auto left = static_cast<uint32_t>(3 * index + 2);
         auto right = static_cast<uint32_t>(4 * index + 1);
-        test_indexed_refs[index] = new(test_indexed_address + index * test_stride + test_offset) test_indexed_node{left, right};
+        test_indexed_nodes[index] = new (test_indexed_address + index * test_stride + test_offset) test_indexed_node{left, right};
 
         auto number = static_cast<uint16_t>(2 * index + 5);
-        test_pointed_refs[index] = new (test_pointed_address + index * sizeof(test_pointed_node)) test_pointed_node{number};
+        test_pointed_nodes[index] = new (test_pointed_address + index * sizeof(test_pointed_node)) test_pointed_node{number};
+      }
+    }
+    
+    void TearDown() override {
+      auto context = test_indexed_context(&test_indexed_memory);
+      for (auto index = 0lu; index < test_count; ++index) {
+        test_indexed_nodes[index]->~test_indexed_node();
+        test_indexed_nodes[index] = nullptr;
+        test_pointed_nodes[index]->~test_pointed_node();
+        test_pointed_nodes[index] = nullptr;
       }
     }
   };
 
   TEST_F(ChainTest, EmptyIndexedTest) {
-    auto context = test_indexed_context(&test_indexed_memory);
+    auto context = test_indexed_context(test_indexed_address);
     for (auto index = 0lu; index < test_count; ++index) {
-      EXPECT_TRUE(test_indexed_refs[index]->test_alone());
+      EXPECT_TRUE(test_indexed_nodes[index]->test_alone());
     }
   }
 
   TEST_F(ChainTest, EmptyPointedTest) {
     for (auto index = 0lu; index < test_count; ++index) {
-      EXPECT_TRUE(test_pointed_refs[index]->test_alone());
+      EXPECT_TRUE(test_pointed_nodes[index]->test_alone());
     }
   }
 
   TEST_F(ChainTest, SimpleIndexedSpliceTest) {
-    auto context = test_indexed_context(&test_indexed_memory);
+    auto context = test_indexed_context(test_indexed_address);
 
-    auto* first = test_indexed_refs[0];
-    auto* second = test_indexed_refs[1];
-    auto* third = test_indexed_refs[2];
+    auto* first = test_indexed_nodes[0];
+    auto* second = test_indexed_nodes[1];
+    auto* third = test_indexed_nodes[2];
 
     EXPECT_TRUE(first->test_alone());
     EXPECT_TRUE(second->test_alone());
@@ -212,9 +257,9 @@ namespace hatch {
   }
 
   TEST_F(ChainTest, SimplePointedSpliceTest) {
-    auto* first = test_pointed_refs[0];
-    auto* second = test_pointed_refs[1];
-    auto* third = test_pointed_refs[2];
+    auto* first = test_pointed_nodes[0];
+    auto* second = test_pointed_nodes[1];
+    auto* third = test_pointed_nodes[2];
 
     EXPECT_TRUE(first->test_alone());
     EXPECT_TRUE(second->test_alone());
@@ -268,14 +313,14 @@ namespace hatch {
   }
 
   TEST_F(ChainTest, MultipleIndexedSpliceTest) {
-    auto context = test_indexed_context(&test_indexed_memory);
+    auto context = test_indexed_context(test_indexed_address);
 
-    auto* first = test_indexed_refs[0];
-    auto* second = test_indexed_refs[1];
-    auto* third = test_indexed_refs[2];
-    auto* fourth = test_indexed_refs[3];
-    auto* fifth = test_indexed_refs[4];
-    auto* sixth = test_indexed_refs[5];
+    auto* first = test_indexed_nodes[0];
+    auto* second = test_indexed_nodes[1];
+    auto* third = test_indexed_nodes[2];
+    auto* fourth = test_indexed_nodes[3];
+    auto* fifth = test_indexed_nodes[4];
+    auto* sixth = test_indexed_nodes[5];
 
     EXPECT_TRUE(first->test_alone());
     EXPECT_TRUE(second->test_alone());
@@ -316,12 +361,12 @@ namespace hatch {
   }
 
   TEST_F(ChainTest, MultiplePointedSpliceTest) {
-    auto* first = test_pointed_refs[0];
-    auto* second = test_pointed_refs[1];
-    auto* third = test_pointed_refs[2];
-    auto* fourth = test_pointed_refs[3];
-    auto* fifth = test_pointed_refs[4];
-    auto* sixth = test_pointed_refs[5];
+    auto* first = test_pointed_nodes[0];
+    auto* second = test_pointed_nodes[1];
+    auto* third = test_pointed_nodes[2];
+    auto* fourth = test_pointed_nodes[3];
+    auto* fifth = test_pointed_nodes[4];
+    auto* sixth = test_pointed_nodes[5];
 
     EXPECT_TRUE(first->test_alone());
     EXPECT_TRUE(second->test_alone());
@@ -362,12 +407,12 @@ namespace hatch {
   }
 
   TEST_F(ChainTest, IndexedMoveConstructorTest) {
-    auto context = test_indexed_context(&test_indexed_memory);
+    auto context = test_indexed_context(test_indexed_address);
 
-    auto* first = test_indexed_refs[0];
-    auto* second = test_indexed_refs[1];
-    auto* third = test_indexed_refs[2];
-    auto* fourth = test_indexed_refs[3];
+    auto* first = test_indexed_nodes[0];
+    auto* second = test_indexed_nodes[1];
+    auto* third = test_indexed_nodes[2];
+    auto* fourth = test_indexed_nodes[3];
 
     first->test_splice(test_indexed_reference{second});
     first->test_splice(test_indexed_reference{third});
@@ -405,10 +450,10 @@ namespace hatch {
   }
 
   TEST_F(ChainTest, PointedMoveConstructorTest) {
-    auto* first = test_pointed_refs[0];
-    auto* second = test_pointed_refs[1];
-    auto* third = test_pointed_refs[2];
-    auto* fourth = test_pointed_refs[3];
+    auto* first = test_pointed_nodes[0];
+    auto* second = test_pointed_nodes[1];
+    auto* third = test_pointed_nodes[2];
+    auto* fourth = test_pointed_nodes[3];
 
     first->test_splice(test_pointed_reference{second});
     first->test_splice(test_pointed_reference{third});
@@ -446,13 +491,13 @@ namespace hatch {
   }
 
   TEST_F(ChainTest, IndexedMoveAssignmentTest) {
-    auto context = test_indexed_context(&test_indexed_memory);
+    auto context = test_indexed_context(test_indexed_address);
 
-    auto* first = test_indexed_refs[0];
-    auto* second = test_indexed_refs[1];
-    auto* third = test_indexed_refs[2];
-    auto* fourth = test_indexed_refs[3];
-    auto* fifth = test_indexed_refs[4];
+    auto* first = test_indexed_nodes[0];
+    auto* second = test_indexed_nodes[1];
+    auto* third = test_indexed_nodes[2];
+    auto* fourth = test_indexed_nodes[3];
+    auto* fifth = test_indexed_nodes[4];
 
     first->test_splice(test_indexed_reference{second});
     first->test_splice(test_indexed_reference{third});
@@ -489,11 +534,11 @@ namespace hatch {
   }
 
   TEST_F(ChainTest, PointedMoveAssignmentTest) {
-    auto* first = test_pointed_refs[0];
-    auto* second = test_pointed_refs[1];
-    auto* third = test_pointed_refs[2];
-    auto* fourth = test_pointed_refs[3];
-    auto* fifth = test_pointed_refs[4];
+    auto* first = test_pointed_nodes[0];
+    auto* second = test_pointed_nodes[1];
+    auto* third = test_pointed_nodes[2];
+    auto* fourth = test_pointed_nodes[3];
+    auto* fifth = test_pointed_nodes[4];
 
     first->test_splice(test_pointed_reference{second});
     first->test_splice(test_pointed_reference{third});

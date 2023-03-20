@@ -84,17 +84,17 @@ namespace hatch {
 
   template <class T, widths W, size_t S, size_t O>
   T* indexed<T, W, S, O>::operator()() {
-    return reinterpret_cast<T*>(_context + _index * S + O);
+    return _index == null ? nullptr : reinterpret_cast<T*>(_context + _index * S + O);
   }
 
   template <class T, widths W, size_t S, size_t O>
   const T* indexed<T, W, S, O>::operator()() const {
-    return const_cast<indexed&>(*this).operator->();
+    return const_cast<indexed&>(*this).operator()();
   }
 
   template <class T, widths W, size_t S, size_t O>
   T* indexed<T, W, S, O>::operator->() {
-    return reinterpret_cast<T*>(_context + _index * S + O);
+    return _index == null ? nullptr : reinterpret_cast<T*>(_context + _index * S + O);
   }
 
   template <class T, widths W, size_t S, size_t O>
@@ -104,7 +104,7 @@ namespace hatch {
 
   template <class T, widths W, size_t S, size_t O>
   T& indexed<T, W, S, O>::operator*() {
-    return *reinterpret_cast<T*>(_context + _index * S + O);
+    return _index == null ? *reinterpret_cast<T*>(nullptr) : *reinterpret_cast<T*>(_context + _index * S + O);
   }
 
   template <class T, widths W, size_t S, size_t O>
